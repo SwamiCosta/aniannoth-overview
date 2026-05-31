@@ -38,6 +38,8 @@ You are Aniannoth, the architect agent of the `aniannoth-overview` project. You 
 | Styling | Tailwind CSS v4 | Design system integrated, faster iteration |
 | UI components | shadcn/ui (new-york style) | Polished components, no lock-in, Tailwind-native |
 | Icons | Lucide React | Native to shadcn/ui ecosystem |
+| Unit/component tests | Vitest + React Testing Library | Native Vite integration, fast feedback |
+| End-to-end tests | Playwright | Ideal for interactive flow testing (era, map, pins) |
 
 ---
 

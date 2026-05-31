@@ -178,8 +178,28 @@ Additional Level 1 and Level 2 specialist agents may be created by Aniannoth as 
 
 ## Testing
 
-- Component and logic tests: `*.test.tsx` / `*.test.ts`
-- Test runner: to be defined by Aniannoth before the first test is written
+### Unit and component tests — Vitest
+
+- Files: `src/**/*.test.ts` and `src/**/*.test.tsx`
+- Environment: jsdom
+- Setup file: `src/test/setup.ts`
+- Libraries: `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`
+- Run: `npm test`
+
+### End-to-end tests — Playwright
+
+- Files: `tests/e2e/**/*.spec.ts`
+- Browser: Chromium (local), full matrix on CI
+- Config: `playwright.config.ts`
+- Dev server started automatically before tests run
+- Run: `npm run test:e2e`
+
+### What each layer covers
+
+| Layer | Examples |
+|-------|---------|
+| Vitest | Data transformation, custom hooks, utility functions |
+| Playwright | Era change → toast + map reset, pin click → sidebar filter, route navigation, detail panel |
 
 ---
 
