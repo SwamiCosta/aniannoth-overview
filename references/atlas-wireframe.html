@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>aniannoth-overview — UI Wireframe</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; padding: 2rem; }
+  h1 { font-size: 14px; font-weight: 500; color: #888; margin-bottom: 1.5rem; letter-spacing: 0.05em; text-transform: uppercase; }
+  .screen { border: 1px solid #ddd; border-radius: 12px; overflow: hidden; background: #f0ede6; max-width: 900px; margin: 0 auto; }
+  .topbar { background: #fff; border-bottom: 1px solid #e8e6e0; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 15px; font-weight: 500; color: #1a1a1a; display: flex; align-items: center; gap: 8px; }
+  .logo i { font-size: 18px; color: #7F77DD; }
+  .nav-links { display: flex; gap: 4px; }
+  .nav-link { font-size: 13px; color: #888; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s; }
+  .nav-link:hover { background: #f5f4f0; color: #444; }
+  .nav-link.active { background: #EEEDFE; color: #534AB7; }
+  .timeline-bar { background: #fff; border-bottom: 1px solid #e8e6e0; padding: 10px 20px 14px; }
+  .timeline-label { font-size: 10px; color: #aaa; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .timeline-track { display: flex; align-items: flex-start; position: relative; }
+  .timeline-line { position: absolute; top: 5px; left: 0; right: 0; height: 1px; background: #ddd; z-index: 0; }
+  .era { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; position: relative; z-index: 1; cursor: pointer; }
+  .era-dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; border: 1.5px solid #ccc; transition: all 0.15s; }
+  .era-dot.active { background: #534AB7; border-color: #534AB7; }
+  .era-dot.abstract { background: #f5f4f0; border: 1.5px dashed #aaa; }
+  .era-name { font-size: 10px; color: #aaa; white-space: nowrap; transition: color 0.15s; }
+  .era-name.active { color: #534AB7; font-weight: 500; }
+  .main-area { display: grid; grid-template-columns: 1fr 280px; min-height: 340px; }
+  .map-area { position: relative; background: #c8dfc4; min-height: 340px; overflow: hidden; }
+  .map-svg { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+  .map-overlay { position: absolute; top: 10px; left: 10px; }
+  .map-badge { background: #fff; border: 1px solid #e0ddd6; border-radius: 6px; padding: 5px 10px; font-size: 11px; color: #666; display: flex; align-items: center; gap: 5px; }
+  .map-selector { position: absolute; top: 10px; right: 10px; background: #fff; border: 1px solid #e0ddd6; border-radius: 6px; padding: 5px 10px; font-size: 11px; color: #666; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .pin { position: absolute; display: flex; flex-direction: column; align-items: center; cursor: pointer; transform: translateX(-50%); }
+  .pin-dot { width: 9px; height: 9px; border-radius: 50%; background: #534AB7; border: 1.5px solid #fff; transition: all 0.15s; }
+  .pin-dot.active { background: #D85A30; width: 11px; height: 11px; }
+  .pin-label { font-size: 9px; color: #26215C; background: rgba(255,255,255,0.88); padding: 1px 5px; border-radius: 3px; margin-top: 3px; white-space: nowrap; }
+  .sidebar { background: #fff; display: flex; flex-direction: column; border-left: 1px solid #e8e6e0; }
+  .sidebar-header { padding: 12px 14px; border-bottom: 1px solid #f0ede6; }
+  .sidebar-title { font-size: 13px; font-weight: 500; color: #1a1a1a; display: flex; align-items: center; gap: 6px; }
+  .sidebar-title i { font-size: 15px; color: #534AB7; }
+  .sidebar-sub { font-size: 11px; color: #aaa; margin-top: 3px; }
+  .filter-row { padding: 8px 12px; border-bottom: 1px solid #f0ede6; display: flex; gap: 5px; flex-wrap: wrap; }
+  .filter-chip { font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid #e0ddd6; color: #888; cursor: pointer; background: #fff; transition: all 0.15s; }
+  .filter-chip:hover { border-color: #AFA9EC; color: #534AB7; }
+  .filter-chip.active { background: #EEEDFE; color: #534AB7; border-color: #AFA9EC; }
+  .content-list { padding: 8px; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; flex: 1; max-height: 260px; }
+  .content-card { border: 1px solid #e8e6e0; border-radius: 7px; padding: 8px 10px; cursor: pointer; background: #fff; transition: all 0.15s; }
+  .content-card:hover { border-color: #AFA9EC; }
+  .content-card.active { border-color: #AFA9EC; background: #EEEDFE; }
+  .card-type { font-size: 10px; color: #534AB7; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+  .card-name { font-size: 13px; font-weight: 500; color: #1a1a1a; }
+  .card-desc { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .detail-panel { grid-column: 1 / -1; border-top: 1px solid #e8e6e0; background: #fff; padding: 14px 16px; display: grid; grid-template-columns: 84px 1fr; gap: 14px; align-items: start; }
+  .detail-img { width: 84px; height: 84px; border-radius: 8px; background: #f5f4f0; border: 1px solid #e8e6e0; display: flex; align-items: center; justify-content: center; }
+  .detail-img i { font-size: 28px; color: #ccc; }
+  .detail-title { font-size: 15px; font-weight: 500; color: #1a1a1a; }
+  .detail-meta { font-size: 11px; color: #aaa; margin-top: 3px; display: flex; gap: 8px; }
+  .detail-body { font-size: 12px; color: #666; margin-top: 8px; line-height: 1.7; }
+  .tag { font-size: 10px; padding: 2px 7px; border-radius: 20px; background: #f5f4f0; color: #888; border: 1px solid #e8e6e0; }
+  .tags { display: flex; gap: 4px; margin-top: 7px; flex-wrap: wrap; }
+  .toast { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); background: #3C3489; color: #CECBF6; padding: 8px 16px; border-radius: 7px; font-size: 12px; display: flex; align-items: center; gap: 7px; white-space: nowrap; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 10; }
+  .toast.visible { opacity: 1; }
+</style>
+</head>
+<body>
+<h1>aniannoth-overview — UI Wireframe Reference</h1>
+
+<div class="screen">
+
+  <div class="topbar">
+    <div class="logo"><i class="ti ti-map-2"></i> Atlas</div>
+    <div class="nav-links">
+      <span class="nav-link active">Explore</span>
+      <span class="nav-link">Characters</span>
+      <span class="nav-link">Places</span>
+      <span class="nav-link">Items</span>
+      <span class="nav-link">Lore</span>
+    </div>
+  </div>
+
+  <div style="background:#fff; border-bottom:1px solid #e8e6e0; padding:10px 20px 0;">
+    <div class="timeline-label">timeline</div>
+    <div class="timeline-track">
+      <div class="timeline-line"></div>
+      <div class="era" onclick="selectEra(this, 0)">
+        <div class="era-dot abstract"></div>
+        <span class="era-name">Primordial</span>
+      </div>
+      <div class="era" onclick="selectEra(this, 1)">
+        <div class="era-dot"></div>
+        <span class="era-name">Creation</span>
+      </div>
+      <div class="era" onclick="selectEra(this, 2)">
+        <div class="era-dot active"></div>
+        <span class="era-name active">Age of Darkness</span>
+      </div>
+      <div class="era" onclick="selectEra(this, 3)">
+        <div class="era-dot"></div>
+        <span class="era-name">Great War</span>
+      </div>
+      <div class="era" onclick="selectEra(this, 4)">
+        <div class="era-dot"></div>
+        <span class="era-name">Reconstruction</span>
+      </div>
+      <div class="era" onclick="selectEra(this, 5)">
+        <div class="era-dot"></div>
+        <span class="era-name">Current Age</span>
+      </div>
+    </div>
+    <div style="height:12px;"></div>
+  </div>
+
+  <div class="main-area">
+    <div class="map-area">
+      <svg class="map-svg" viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+        <rect width="500" height="340" fill="#c8dfc4"/>
+        <ellipse cx="210" cy="165" rx="155" ry="120" fill="#a8c8a0" opacity="0.7"/>
+        <ellipse cx="340" cy="210" rx="75" ry="55" fill="#a8c8a0" opacity="0.6"/>
+        <ellipse cx="70" cy="125" rx="55" ry="45" fill="#a8c8a0" opacity="0.5"/>
+        <path d="M90 210 Q135 188 175 218 Q215 248 240 208" stroke="#8ab8e8" stroke-width="2" fill="none" opacity="0.7"/>
+        <path d="M220 105 Q265 128 285 170 Q305 212 330 190" stroke="#8ab8e8" stroke-width="1.5" fill="none" opacity="0.5"/>
+        <text x="250" y="310" text-anchor="middle" font-size="10" fill="#5a7a55" opacity="0.5" font-family="sans-serif">illustrative map placeholder</text>
+      </svg>
+
+      <div class="map-overlay">
+        <div class="map-badge"><i class="ti ti-map-pin" style="font-size:13px"></i> Southern Continent</div>
+      </div>
+      <div class="map-selector">
+        <i class="ti ti-layers-subtract" style="font-size:13px"></i> change map <i class="ti ti-chevron-down" style="font-size:12px"></i>
+      </div>
+
+      <div class="pin" style="top:38%; left:43%;" onclick="selectPin(this,'Valdur')">
+        <div class="pin-dot active"></div>
+        <div class="pin-label">Valdur</div>
+      </div>
+      <div class="pin" style="top:53%; left:56%;" onclick="selectPin(this,'Ered Dun')">
+        <div class="pin-dot"></div>
+        <div class="pin-label">Ered Dun</div>
+      </div>
+      <div class="pin" style="top:30%; left:63%;" onclick="selectPin(this,'Black Tower')">
+        <div class="pin-dot"></div>
+        <div class="pin-label">Black Tower</div>
+      </div>
+      <div class="pin" style="top:61%; left:33%;" onclick="selectPin(this,'Grey Port')">
+        <div class="pin-dot"></div>
+        <div class="pin-label">Grey Port</div>
+      </div>
+
+      <div class="toast" id="toast"><i class="ti ti-info-circle"></i> Map unavailable for this era. Redirecting...</div>
+    </div>
+
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title"><i class="ti ti-pin"></i> <span id="sidebar-title">Valdur</span></div>
+        <div class="sidebar-sub" id="sidebar-sub">Age of Darkness · Southern Continent</div>
+      </div>
+      <div class="filter-row">
+        <span class="filter-chip active" onclick="selectChip(this)">All</span>
+        <span class="filter-chip" onclick="selectChip(this)">Characters</span>
+        <span class="filter-chip" onclick="selectChip(this)">Events</span>
+        <span class="filter-chip" onclick="selectChip(this)">Items</span>
+      </div>
+      <div class="content-list">
+        <div class="content-card active" onclick="selectCard(this)">
+          <div class="card-type">Character</div>
+          <div class="card-name">Kael the Grey</div>
+          <div class="card-desc">Guardian of Valdur's walls</div>
+        </div>
+        <div class="content-card" onclick="selectCard(this)">
+          <div class="card-type">Event</div>
+          <div class="card-name">Siege of Valdur</div>
+          <div class="card-desc">Anno 487 — lasted 3 years</div>
+        </div>
+        <div class="content-card" onclick="selectCard(this)">
+          <div class="card-type">Item</div>
+          <div class="card-name">Twilight Sword</div>
+          <div class="card-desc">Forged in the royal furnaces</div>
+        </div>
+        <div class="content-card" onclick="selectCard(this)">
+          <div class="card-type">Character</div>
+          <div class="card-name">Lyra the Shadow</div>
+          <div class="card-desc">Imperial court spy</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-panel">
+      <div class="detail-img"><i class="ti ti-user"></i></div>
+      <div>
+        <div class="detail-title" id="detail-title">Kael the Grey</div>
+        <div class="detail-meta">
+          <span>Character</span><span>·</span>
+          <span>Valdur, Southern Continent</span><span>·</span>
+          <span>Age of Darkness</span>
+        </div>
+        <div class="tags">
+          <span class="tag">warrior</span>
+          <span class="tag">canon</span>
+          <span class="tag">protagonist</span>
+        </div>
+        <div class="detail-body" id="detail-body">
+          Veteran of the border wars, Kael assumed the post of guardian after the fall of General Vorn.
+          Known for his worn grey armor and for never having lost a wall under his command...
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function selectEra(el, index) {
+    document.querySelectorAll('.era-dot').forEach(d => d.classList.remove('active'));
+    document.querySelectorAll('.era-name').forEach(n => n.classList.remove('active'));
+    el.querySelector('.era-dot').classList.add('active');
+    el.querySelector('.era-name').classList.add('active');
+    if (index === 0) {
+      const toast = document.getElementById('toast');
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 2500);
+    }
+  }
+
+  function selectPin(el, name) {
+    document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('active'));
+    el.querySelector('.pin-dot').classList.add('active');
+    document.getElementById('sidebar-title').textContent = name;
+  }
+
+  function selectChip(el) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function selectCard(el) {
+    document.querySelectorAll('.content-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('detail-title').textContent = el.querySelector('.card-name').textContent;
+    document.getElementById('detail-body').textContent = el.querySelector('.card-desc').textContent;
+  }
+</script>
+</body>
+</html>
