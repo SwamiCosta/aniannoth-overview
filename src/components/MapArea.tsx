@@ -33,21 +33,21 @@ export default function MapArea() {
     }
   }, [])
 
-  // Toast on map reset
+  // Toast on map reset — cleanup lives in a separate unmount-only effect
+  // to prevent the re-render triggered by clearMapResetTrigger() from cancelling the timer
   useEffect(() => {
-    if (ctx.mapResetTriggered) {
-      setShowToast(true)
-      ctx.clearMapResetTrigger()
-      toastTimeoutRef.current = setTimeout(() => {
-        setShowToast(false)
-      }, 2500)
-    }
-    return () => {
-      if (toastTimeoutRef.current !== null) {
-        clearTimeout(toastTimeoutRef.current)
-      }
-    }
+    if (!ctx.mapResetTriggered) return
+    if (toastTimeoutRef.current !== null) clearTimeout(toastTimeoutRef.current)
+    setShowToast(true)
+    ctx.clearMapResetTrigger()
+    toastTimeoutRef.current = setTimeout(() => setShowToast(false), 2500)
   }, [ctx.mapResetTriggered])
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current !== null) clearTimeout(toastTimeoutRef.current)
+    }
+  }, [])
 
   function handleMapSelect(mapId: string) {
     ctx.setMap(mapId)
