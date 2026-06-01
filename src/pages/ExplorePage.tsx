@@ -1,4 +1,5 @@
 import MapArea from '@/components/MapArea'
+import Sidebar from '@/components/Sidebar'
 
 export default function ExplorePage() {
   return (
@@ -6,8 +7,8 @@ export default function ExplorePage() {
       {/* Zone 3: map + sidebar */}
       <div className="flex flex-row flex-1">
         <MapArea />
-        <div className="w-80 border-l border-border flex items-center justify-center text-muted text-sm">
-          Sidebar — coming next
+        <div className="w-80 border-l border-border">
+          <Sidebar />
         </div>
       </div>
 
