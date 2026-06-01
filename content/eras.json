@@ -1,0 +1,12 @@
+[
+  {
+    "id": "primordial",
+    "name": "The Primordial Era",
+    "order": 0,
+    "period": "Before Creation",
+    "summary": "The age before the material world came into being — a time of pure essence, divine forces, and the foundation upon which all existence would be built. No navigable world exists here; only the infinite.",
+    "mapType": "abstract",
+    "defaultMap": "omniverse",
+    "color": "#7c3aed"
+  }
+]
