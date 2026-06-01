@@ -1,5 +1,6 @@
 import MapArea from '@/components/MapArea'
 import Sidebar from '@/components/Sidebar'
+import DetailPanel from '@/components/DetailPanel'
 
 export default function ExplorePage() {
   return (
@@ -13,9 +14,7 @@ export default function ExplorePage() {
       </div>
 
       {/* Zone 4: detail panel */}
-      <div className="border-t border-border h-48 flex items-center justify-center text-muted text-sm">
-        Detail panel — coming next
-      </div>
+      <DetailPanel />
     </div>
   )
 }
