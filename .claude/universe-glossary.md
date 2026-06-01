@@ -13,23 +13,23 @@
 
 ## D
 
-### docentena
-**English equivalent:** dohundred
+### dohundred
 **Value:** 144 (a dozen dozens)
 
-Many peoples of the Keynor universe use a base-twelve (duodecimal) counting system. Where cultures rooted in base-ten count in hundreds, these peoples count in docentenas.
+> **Input note:** The user may refer to this concept in Portuguese as *docentena*, *domilhar*, or *domilhão*. These are Portuguese-only input terms — they must **never** appear in any output, text, or data produced by any agent. Always use the English forms.
+
+Many peoples of the Keynor universe use a base-twelve (duodecimal) counting system. Where cultures rooted in base-ten count in hundreds, these peoples count in dohundreds.
 
 The same pattern extends to larger units:
 
-| Term | English | Value |
-|------|---------|-------|
-| docentena | dohundred | 144 (12²) |
-| domilhar | dothousand | 1,728 (12³) |
-| domilhão | domilion | 20,736 (12⁴) |
+| English term | Value |
+|-------------|-------|
+| dohundred | 144 (12²) |
+| dothousand | 1,728 (12³) |
+| domilion | 20,736 (12⁴) |
 
 **Usage notes:**
-- Use the native term (`docentena`) in literary and in-universe narrative text
-- Use the English equivalent (`dohundred`) in English-language prose where the native term would interrupt readability — always on first use, provide a gloss or context clue
+- Always use the English terms (`dohundred`, `dothousand`, `domilion`) in all produced text and data
 - When a number is given in-universe, assume it is base-twelve unless the context specifies otherwise
 
 ---
@@ -44,7 +44,7 @@ The same pattern extends to larger units:
 
 **Scope — who counts as valkani:**
 - Any mortal, conscious being capable of reason and culture
-- Applies across all races (humans, orcs, elves, etc.)
+- Applies across all races (orcs, elves, dwarves, etc.)
 - Applies regardless of gender or social standing
 
 **Scope — who does NOT count as valkani:**
@@ -55,7 +55,7 @@ The same pattern extends to larger units:
 
 **Usage examples:**
 - One orc at a table: *"an orc"* — the specific race is used when individuating
-- One orc and one elf together: *"two valkani"* — the shared term replaces individual race names
+- One orc and one dwarf together: *"two valkani"* — the shared term replaces individual race names
 - Referring to mortal peoples collectively: *"the Kingdom of the Valkani"*
 
 **Etymology:** `valk` (people, person) + `ani` (one)
