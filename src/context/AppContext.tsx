@@ -12,12 +12,14 @@ interface AppState {
   selectedEra: string
   selectedMap: string
   filters: Filters
+  selectedEntityId: string | null
 }
 
 interface AppContextValue extends AppState {
   setEra: (eraId: string) => void
   setMap: (mapId: string) => void
   setFilter: (category: string | null) => void
+  setSelectedEntity: (id: string | null) => void
   mapResetTriggered: boolean
   clearMapResetTrigger: () => void
 }
@@ -33,6 +35,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedEra, setSelectedEra] = useState<string>(firstEra?.id ?? '')
   const [selectedMap, setSelectedMap] = useState<string>(firstEra?.defaultMap ?? '')
   const [filters, setFilters] = useState<Filters>({ category: null, tags: [] })
+  const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null)
   const [mapResetTriggered, setMapResetTriggered] = useState(false)
 
   function setEra(eraId: string) {
@@ -57,6 +60,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setFilters(prev => ({ ...prev, category }))
   }
 
+  function setSelectedEntity(id: string | null) {
+    setSelectedEntityId(id)
+  }
+
   function clearMapResetTrigger() {
     setMapResetTriggered(false)
   }
@@ -67,9 +74,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         selectedEra,
         selectedMap,
         filters,
+        selectedEntityId,
         setEra,
         setMap,
         setFilter,
+        setSelectedEntity,
         mapResetTriggered,
         clearMapResetTrigger,
       }}
