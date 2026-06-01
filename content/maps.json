@@ -1,0 +1,9 @@
+[
+  {
+    "id": "omniverse",
+    "name": "The Omniverse",
+    "type": "abstract",
+    "image": "",
+    "availableInEras": ["primordial"]
+  }
+]
