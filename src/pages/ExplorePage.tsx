@@ -4,7 +4,7 @@ import DetailPanel from '@/components/DetailPanel'
 
 export default function ExplorePage() {
   return (
-    <div className="min-h-screen flex flex-col pt-[calc(3rem+5rem)]">
+    <div className="flex flex-col flex-1 overflow-hidden">
       {/* Zone 3: map + sidebar */}
       <div className="flex flex-row flex-1">
         <MapArea />

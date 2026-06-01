@@ -12,7 +12,7 @@ const NAV_LINKS = [
 
 export default function TopBar() {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-12 bg-surface border-b border-border flex items-center px-6 gap-8">
+    <header className="sticky top-0 z-50 h-12 bg-surface border-b border-border flex items-center px-6 gap-8">
       {/* Logo */}
       <div className="flex items-center gap-2 text-foreground font-medium select-none">
         <Map size={18} className="text-primary" />

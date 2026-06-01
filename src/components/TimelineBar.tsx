@@ -7,7 +7,7 @@ export default function TimelineBar() {
   const ctx = useAppContext()
 
   return (
-    <div className="fixed top-12 left-0 right-0 z-40 bg-surface border-b border-border px-6 py-3">
+    <div className="sticky top-12 z-40 bg-surface border-b border-border px-6 py-3">
       {/* Label */}
       <span className="block text-[10px] uppercase tracking-widest text-muted font-medium mb-2">
         timeline

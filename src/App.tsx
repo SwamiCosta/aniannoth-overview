@@ -12,7 +12,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppProvider>
-        <div className="min-h-screen bg-background text-foreground">
+        <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
           <TopBar />
           <TimelineBar />
           <Routes>
