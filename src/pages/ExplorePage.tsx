@@ -1,7 +1,20 @@
+import MapArea from '@/components/MapArea'
+
 export default function ExplorePage() {
   return (
-    <div className="flex items-center justify-center h-full text-muted-foreground">
-      Explore — coming next
+    <div className="min-h-screen flex flex-col pt-[calc(3rem+5rem)]">
+      {/* Zone 3: map + sidebar */}
+      <div className="flex flex-row flex-1">
+        <MapArea />
+        <div className="w-80 border-l border-border flex items-center justify-center text-muted text-sm">
+          Sidebar — coming next
+        </div>
+      </div>
+
+      {/* Zone 4: detail panel */}
+      <div className="border-t border-border h-48 flex items-center justify-center text-muted text-sm">
+        Detail panel — coming next
+      </div>
     </div>
   )
 }
