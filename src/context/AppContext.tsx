@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useEras } from '@/hooks/useEras'
 import { useMaps } from '@/hooks/useMaps'
@@ -22,21 +22,29 @@ interface AppContextValue extends AppState {
   setSelectedEntity: (id: string | null) => void
   mapResetTriggered: boolean
   clearMapResetTrigger: () => void
+  erasLoading: boolean
+  mapsLoading: boolean
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const eras = useEras()
-  const maps = useMaps()
+  const { data: eras, loading: erasLoading } = useEras()
+  const { data: maps, loading: mapsLoading } = useMaps()
 
-  const firstEra = [...eras].sort((a, b) => a.order - b.order)[0]
-
-  const [selectedEra, setSelectedEra] = useState<string>(firstEra?.id ?? '')
-  const [selectedMap, setSelectedMap] = useState<string>(firstEra?.defaultMap ?? '')
+  const [selectedEra, setSelectedEra] = useState<string>('')
+  const [selectedMap, setSelectedMap] = useState<string>('')
   const [filters, setFilters] = useState<Filters>({ category: null, tags: [] })
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null)
   const [mapResetTriggered, setMapResetTriggered] = useState(false)
+
+  useEffect(() => {
+    if (eras.length > 0 && !selectedEra) {
+      const firstEra = [...eras].sort((a, b) => a.order - b.order)[0]
+      setSelectedEra(firstEra.id)
+      setSelectedMap(firstEra.defaultMap)
+    }
+  }, [eras, selectedEra])
 
   function setEra(eraId: string) {
     const era = eras.find(e => e.id === eraId)
@@ -81,6 +89,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setSelectedEntity,
         mapResetTriggered,
         clearMapResetTrigger,
+        erasLoading,
+        mapsLoading,
       }}
     >
       {children}
