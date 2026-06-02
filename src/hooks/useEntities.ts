@@ -1,23 +1,47 @@
+import { useState, useEffect } from 'react'
+import { fetchEntities } from '@/api/entityApi'
 import type { Entity } from '@/types/universe'
 
-const modules = import.meta.glob('/content/*/*.json', { eager: true })
-
-function buildEntityIndex(): Map<string, Entity[]> {
-  const index = new Map<string, Entity[]>()
-  for (const [path, mod] of Object.entries(modules)) {
-    const category = path.split('/')[2]
-    const entity = (mod as { default: Entity }).default
-    index.set(category, [...(index.get(category) ?? []), entity])
-  }
-  return index
+export interface UseEntitiesResult {
+  data: Entity[]
+  loading: boolean
+  error: Error | null
 }
 
-const entityIndex = buildEntityIndex()
+const CATEGORIES = ['characters', 'places', 'factions', 'items', 'events', 'lore']
 
-export function useEntities(category: string): Entity[] {
-  return entityIndex.get(category) ?? []
+export function useEntities(category: string): UseEntitiesResult {
+  const [data, setData] = useState<Entity[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+    fetchEntities(category)
+      .then(entities => { if (!cancelled) setData(entities) })
+      .catch(err => { if (!cancelled) setError(err instanceof Error ? err : new Error(String(err))) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [category])
+
+  return { data, loading, error }
 }
 
-export function useAllEntities(): Entity[] {
-  return Array.from(entityIndex.values()).flat()
+export function useAllEntities(): UseEntitiesResult {
+  const [data, setData] = useState<Entity[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    Promise.all(CATEGORIES.map(cat => fetchEntities(cat)))
+      .then(results => { if (!cancelled) setData(results.flat()) })
+      .catch(err => { if (!cancelled) setError(err instanceof Error ? err : new Error(String(err))) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  return { data, loading, error }
 }
