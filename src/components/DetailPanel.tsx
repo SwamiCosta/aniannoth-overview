@@ -1,8 +1,76 @@
-import { User, XCircle } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronLeft, ChevronRight, User, XCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { useAppContext } from '@/context/AppContext'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useEras } from '@/hooks/useEras'
+
+function ImageGallery({ images, name }: { images: string[]; name: string }) {
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  if (images.length === 0) {
+    return (
+      <div
+        className="bg-border rounded-lg w-full h-full flex items-center justify-center"
+        aria-label="No images available"
+      >
+        <User size={32} className="text-muted" />
+      </div>
+    )
+  }
+
+  const hasManyImages = images.length > 1
+
+  return (
+    <div className="flex flex-col gap-2 w-full h-full">
+      {/* Main image */}
+      <div className="relative rounded-lg overflow-hidden bg-border flex-1">
+        <img
+          src={images[activeIndex]}
+          alt={`${name} — image ${activeIndex + 1} of ${images.length}`}
+          className="w-full h-full object-cover"
+        />
+        {hasManyImages && (
+          <>
+            <button
+              onClick={() => setActiveIndex(i => (i - 1 + images.length) % images.length)}
+              className="absolute left-1 top-1/2 -translate-y-1/2 bg-surface text-muted hover:text-foreground rounded-full p-0.5 transition-colors"
+              aria-label="Previous image"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <button
+              onClick={() => setActiveIndex(i => (i + 1) % images.length)}
+              className="absolute right-1 top-1/2 -translate-y-1/2 bg-surface text-muted hover:text-foreground rounded-full p-0.5 transition-colors"
+              aria-label="Next image"
+            >
+              <ChevronRight size={14} />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Thumbnail strip — only when there are multiple images */}
+      {hasManyImages && (
+        <div className="flex gap-1 overflow-x-auto">
+          {images.map((src, index) => (
+            <button
+              key={index}
+              onClick={() => setActiveIndex(index)}
+              className={[
+                'shrink-0 w-8 h-8 rounded overflow-hidden border-2 transition-colors',
+                index === activeIndex ? 'border-primary' : 'border-border',
+              ].join(' ')}
+              aria-label={`View image ${index + 1}`}
+            >
+              <img src={src} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function DetailPanel() {
   const ctx = useAppContext()
@@ -44,19 +112,9 @@ export default function DetailPanel() {
         <XCircle size={16} />
       </button>
 
-      {/* Left column — image */}
+      {/* Left column — image gallery */}
       <div className="w-32 flex-shrink-0">
-        {entity.image ? (
-          <img
-            src={entity.image}
-            alt={entity.name}
-            className="w-full h-full object-cover rounded-lg"
-          />
-        ) : (
-          <div className="bg-border rounded-lg w-full h-full flex items-center justify-center">
-            <User size={32} className="text-muted" />
-          </div>
-        )}
+        <ImageGallery images={entity.images} name={entity.name} />
       </div>
 
       {/* Right column — details */}

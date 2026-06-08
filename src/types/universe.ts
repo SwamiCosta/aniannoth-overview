@@ -30,7 +30,7 @@ export interface Entity {
   name: string
   category: string
   tags: string[]
-  image: string
+  images: string[]
   summary: string
   body: string
   location: string
