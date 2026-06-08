@@ -10,7 +10,7 @@ import type { GameMap } from '@/types/universe'
 
 export default function MapArea() {
   const ctx = useAppContext()
-  const maps = useMaps()
+  const { data: maps } = useMaps()
 
   const selectedMap = maps.find(m => m.id === ctx.selectedMap)
   const availableMaps = maps.filter(m => m.availableInEras.includes(ctx.selectedEra))

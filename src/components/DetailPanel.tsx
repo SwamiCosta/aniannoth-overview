@@ -6,8 +6,8 @@ import { useEras } from '@/hooks/useEras'
 
 export default function DetailPanel() {
   const ctx = useAppContext()
-  const entities = useAllEntities()
-  const eras = useEras()
+  const { data: entities } = useAllEntities()
+  const { data: erasData } = useEras()
 
   if (!ctx.selectedEntityId) {
     return (
@@ -27,7 +27,7 @@ export default function DetailPanel() {
     )
   }
 
-  const eraName = eras.find(e => e.id === entity.timeline.era)?.name
+  const eraName = erasData.find(e => e.id === entity.timeline.era)?.name
 
   const metadataParts = [entity.category, entity.location, eraName].filter(
     (part): part is string => Boolean(part)

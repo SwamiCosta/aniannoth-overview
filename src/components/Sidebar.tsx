@@ -11,8 +11,8 @@ const FILTER_CHIPS: { label: string; value: string | null }[] = [
 
 export default function Sidebar() {
   const ctx = useAppContext()
-  const eras = useEras()
-  const allEntities = useAllEntities()
+  const { data: eras } = useEras()
+  const { data: allEntities } = useAllEntities()
 
   const currentEra = eras.find(era => era.id === ctx.selectedEra)
 
