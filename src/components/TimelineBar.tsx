@@ -3,7 +3,8 @@ import { useAppContext } from '@/context/AppContext'
 import { cn } from '@/lib/utils'
 
 export default function TimelineBar() {
-  const eras = [...useEras()].sort((a, b) => a.order - b.order)
+  const { data: erasData } = useEras()
+  const eras = [...erasData].sort((a, b) => a.order - b.order)
   const ctx = useAppContext()
 
   return (
