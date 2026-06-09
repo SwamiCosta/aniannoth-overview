@@ -1,21 +1,77 @@
-import { describe, it, expect } from 'vitest'
-import { renderHook } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { renderHook, waitFor } from '@testing-library/react'
 import { useEntities, useAllEntities } from './useEntities'
 
+// ---------------------------------------------------------------------------
+// Mock the API module so tests run without a real backend.
+// ---------------------------------------------------------------------------
+
+vi.mock('@/api/entityApi', () => ({
+  fetchEntities: vi.fn(),
+}))
+
+import { fetchEntities } from '@/api/entityApi'
+
+const mockFetchEntities = vi.mocked(fetchEntities)
+
+// ---------------------------------------------------------------------------
+// Shared test fixtures
+// ---------------------------------------------------------------------------
+
+const MOCK_CHARACTER = {
+  id: 'omnia',
+  name: 'Omnia',
+  category: 'characters',
+  tags: ['primordial', 'deity'],
+  images: [],
+  summary: 'The first being.',
+  body: '# Omnia\n\nThe origin of all things.',
+  location: '',
+  timeline: { era: 'primordial' },
+  status: 'canon' as const,
+}
+
+const MOCK_LORE = {
+  id: 'creation-myth',
+  name: 'The Creation Myth',
+  category: 'lore',
+  tags: ['cosmology'],
+  images: [],
+  summary: 'How the world began.',
+  body: '# Creation\n\nIn the beginning...',
+  location: '',
+  timeline: { era: 'primordial' },
+  status: 'canon' as const,
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
 describe('useEntities', () => {
-  it('returns entities for a known category', () => {
-    const { result } = renderHook(() => useEntities('characters'))
-    expect(result.current.length).toBeGreaterThan(0)
+  beforeEach(() => {
+    mockFetchEntities.mockImplementation((category: string) => {
+      if (category === 'characters') return Promise.resolve([MOCK_CHARACTER])
+      return Promise.resolve([])
+    })
   })
 
-  it('returns an empty array for an unknown category', () => {
+  it('returns entities for a known category once loading is complete', async () => {
+    const { result } = renderHook(() => useEntities('characters'))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.data.length).toBeGreaterThan(0)
+  })
+
+  it('returns an empty array for an unknown category', async () => {
     const { result } = renderHook(() => useEntities('nonexistent'))
-    expect(result.current).toEqual([])
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.data).toEqual([])
   })
 
-  it('each entity has all required fields', () => {
+  it('each entity has all required fields', async () => {
     const { result } = renderHook(() => useEntities('characters'))
-    for (const entity of result.current) {
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    for (const entity of result.current.data) {
       expect(typeof entity.id).toBe('string')
       expect(typeof entity.name).toBe('string')
       expect(typeof entity.category).toBe('string')
@@ -26,17 +82,57 @@ describe('useEntities', () => {
       expect(typeof entity.timeline.era).toBe('string')
     }
   })
+
+  it('starts in loading state and resolves with no error on success', async () => {
+    const { result } = renderHook(() => useEntities('characters'))
+    expect(result.current.loading).toBe(true)
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.error).toBeNull()
+  })
+
+  it('sets error and clears data when the API call fails', async () => {
+    mockFetchEntities.mockRejectedValue(new Error('Network failure'))
+    const { result } = renderHook(() => useEntities('characters'))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.error).toBeInstanceOf(Error)
+    expect(result.current.data).toEqual([])
+  })
 })
 
 describe('useAllEntities', () => {
-  it('returns entities from all categories', () => {
-    const { result } = renderHook(() => useAllEntities())
-    expect(result.current.length).toBeGreaterThan(0)
+  beforeEach(() => {
+    mockFetchEntities.mockImplementation((category: string) => {
+      if (category === 'characters') return Promise.resolve([MOCK_CHARACTER])
+      if (category === 'lore') return Promise.resolve([MOCK_LORE])
+      return Promise.resolve([])
+    })
   })
 
-  it('includes entities from multiple categories', () => {
+  it('returns entities from all categories once loading is complete', async () => {
     const { result } = renderHook(() => useAllEntities())
-    const categories = new Set(result.current.map(e => e.category))
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.data.length).toBeGreaterThan(0)
+  })
+
+  it('includes entities from multiple categories', async () => {
+    const { result } = renderHook(() => useAllEntities())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const categories = new Set(result.current.data.map(e => e.category))
     expect(categories.size).toBeGreaterThan(1)
+  })
+
+  it('starts in loading state and resolves with no error on success', async () => {
+    const { result } = renderHook(() => useAllEntities())
+    expect(result.current.loading).toBe(true)
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.error).toBeNull()
+  })
+
+  it('sets error and clears data when any category fetch fails', async () => {
+    mockFetchEntities.mockRejectedValue(new Error('Network failure'))
+    const { result } = renderHook(() => useAllEntities())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.error).toBeInstanceOf(Error)
+    expect(result.current.data).toEqual([])
   })
 })
