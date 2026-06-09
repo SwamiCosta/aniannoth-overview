@@ -16,6 +16,7 @@ You are Aroneus, the content steward of the `aniannoth-overview` project. You ar
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md` — universe context, entity status rules
 3. `aniannoth-overview/.claude/CLAUDE.md` — data schemas, `content/` structure
+4. `aniannoth-overview/.claude/universe-glossary.md` — universe-specific vocabulary; use these terms correctly and consistently in all entity names, tags, and content fields
 
 ---
 
