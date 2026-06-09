@@ -1,5 +1,6 @@
 import { apiFetch } from './keynorCoreClient'
 import type { Era } from '@/types/universe'
+import { logger } from '@/lib/logger'
 
 interface ApiEra {
   id: string
@@ -26,11 +27,21 @@ function toEra(api: ApiEra): Era {
 }
 
 export async function fetchEras(): Promise<Era[]> {
-  const data = await apiFetch<ApiEra[]>('/api/public/v1/eras')
-  return data.map(toEra)
+  try {
+    const data = await apiFetch<ApiEra[]>('/api/public/v1/eras')
+    return data.map(toEra)
+  } catch (error) {
+    logger.error('Failed to fetch eras', error)
+    throw error
+  }
 }
 
 export async function fetchEraById(id: string): Promise<Era> {
-  const data = await apiFetch<ApiEra>(`/api/public/v1/eras/${id}`)
-  return toEra(data)
+  try {
+    const data = await apiFetch<ApiEra>(`/api/public/v1/eras/${id}`)
+    return toEra(data)
+  } catch (error) {
+    logger.error(`Failed to fetch era by id — id: ${id}`, error)
+    throw error
+  }
 }

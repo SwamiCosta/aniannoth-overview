@@ -1,5 +1,6 @@
 import { apiFetch } from './keynorCoreClient'
 import type { GameMap } from '@/types/universe'
+import { logger } from '@/lib/logger'
 
 interface ApiMap {
   id: string
@@ -20,16 +21,31 @@ function toGameMap(api: ApiMap): GameMap {
 }
 
 export async function fetchMaps(): Promise<GameMap[]> {
-  const data = await apiFetch<ApiMap[]>('/api/public/v1/maps')
-  return data.map(toGameMap)
+  try {
+    const data = await apiFetch<ApiMap[]>('/api/public/v1/maps')
+    return data.map(toGameMap)
+  } catch (error) {
+    logger.error('Failed to fetch maps', error)
+    throw error
+  }
 }
 
 export async function fetchMapsByEra(eraId: string): Promise<GameMap[]> {
-  const data = await apiFetch<ApiMap[]>(`/api/public/v1/maps?eraId=${encodeURIComponent(eraId)}`)
-  return data.map(toGameMap)
+  try {
+    const data = await apiFetch<ApiMap[]>(`/api/public/v1/maps?eraId=${encodeURIComponent(eraId)}`)
+    return data.map(toGameMap)
+  } catch (error) {
+    logger.error(`Failed to fetch maps by era — eraId: ${eraId}`, error)
+    throw error
+  }
 }
 
 export async function fetchMapById(id: string): Promise<GameMap> {
-  const data = await apiFetch<ApiMap>(`/api/public/v1/maps/${id}`)
-  return toGameMap(data)
+  try {
+    const data = await apiFetch<ApiMap>(`/api/public/v1/maps/${id}`)
+    return toGameMap(data)
+  } catch (error) {
+    logger.error(`Failed to fetch map by id — id: ${id}`, error)
+    throw error
+  }
 }
