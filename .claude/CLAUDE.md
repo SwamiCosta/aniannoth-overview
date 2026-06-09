@@ -30,6 +30,14 @@ A React + TypeScript web application for exploring the Keynor universe. Acts as 
 
 ---
 
+## Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_LOG_LEVEL` | `error` | Controls the minimum log level emitted by `src/lib/logger.ts`. Valid values: `debug`, `info`, `warn`, `error`. Set to `debug` or `info` in `.env.local` for local development. Never committed. See `.claude/skills/logging-conventions.md`. |
+
+---
+
 ## Project structure
 
 ```
@@ -52,6 +60,7 @@ aniannoth-overview/
 │   │   ├── MapArea.tsx       ← map surface + overlays (Zone 3 left)
 │   │   ├── Sidebar.tsx       ← entity list + filters (Zone 3 right)
 │   │   ├── DetailPanel.tsx   ← entity detail view (Zone 4)
+│   │   ├── ErrorBoundary.tsx ← root-level React error boundary (wraps App in main.tsx)
 │   │   └── ui/               ← shadcn/ui components (added via CLI as needed)
 │   ├── context/
 │   │   └── AppContext.tsx    ← global state provider and useAppContext hook
@@ -68,7 +77,8 @@ aniannoth-overview/
 │   ├── types/
 │   │   └── universe.ts       ← Era, GameMap, Entity, EntityTimeline interfaces
 │   ├── lib/
-│   │   └── utils.ts          ← cn() utility (clsx + tailwind-merge)
+│   │   ├── utils.ts          ← cn() utility (clsx + tailwind-merge)
+│   │   └── logger.ts         ← level-controlled logger wrapping console.*, reads VITE_LOG_LEVEL
 │   ├── test/
 │   │   └── setup.ts          ← Vitest globals + @testing-library/jest-dom
 │   ├── App.tsx               ← router shell, global layout
@@ -149,11 +159,14 @@ App.tsx outer div: h-screen flex flex-col overflow-hidden
 
 | Component | Zone | Reads from context | Writes to context |
 |-----------|------|--------------------|-------------------|
+| `ErrorBoundary` | structural wrapper | — | — |
 | `TopBar` | 1 | — | — |
 | `TimelineBar` | 2 | `selectedEra` | `setEra` |
 | `MapArea` | 3 left | `selectedMap`, `selectedEra`, `mapResetTriggered` | `setMap`, `clearMapResetTrigger` |
 | `Sidebar` | 3 right | `selectedEra`, `filters`, `selectedEntityId` | `setFilter`, `setSelectedEntity` |
 | `DetailPanel` | 4 | `selectedEntityId` | `setSelectedEntity` (close) |
+
+`ErrorBoundary` is a root-level structural wrapper (`src/components/ErrorBoundary.tsx`) that catches unhandled render exceptions for the entire application tree. It reads no context — it sits outside `AppContext`. See `.claude/skills/logging-conventions.md` for usage rules.
 
 ---
 
@@ -329,4 +342,4 @@ Analysis performed on stale or feature branches may produce incorrect assessment
 
 ---
 
-*Last updated: 2026-06-08*
+*Last updated: 2026-06-09*

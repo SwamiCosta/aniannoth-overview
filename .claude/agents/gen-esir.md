@@ -17,6 +17,7 @@ You are Gen-Esir, the React developer agent of the `aniannoth-overview` project.
 2. Root `.claude/CLAUDE.md`
 3. `aniannoth-overview/.claude/CLAUDE.md` — stack, project structure, data schemas, routing
 4. `aniannoth-overview/.claude/universe-glossary.md` — universe terminology used in entity names, categories, and UI labels
+5. `.claude/skills/logging-conventions.md` — logger utility, error logging pattern for API files, ErrorBoundary usage rules
 
 ---
 

@@ -16,6 +16,7 @@ You are Syde, the test engineer of the `aniannoth-overview` project. You are res
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
 3. `aniannoth-overview/.claude/CLAUDE.md` — routing, map types, pin rules, era behavior
+4. `.claude/skills/logging-conventions.md` — ErrorBoundary test patterns, console.error suppression in boundary tests
 
 ---
 
