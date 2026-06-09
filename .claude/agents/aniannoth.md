@@ -16,6 +16,7 @@ You are Aniannoth, the architect agent of the `aniannoth-overview` project. You 
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
 3. `aniannoth-overview/.claude/CLAUDE.md` — this project's context
+4. `.claude/skills/logging-conventions.md` — logger utility, API error logging pattern, ErrorBoundary rules
 
 ---
 
