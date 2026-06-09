@@ -11,6 +11,24 @@
 
 ---
 
+## A
+
+### ani
+**English equivalent:** one
+**Meaning:** the number one; by extension, unity, singularity, and identity
+
+`ani` denotes the numeral one in the universe's foundational language. Its meaning extends beyond arithmetic — it carries the philosophical weight of singularity, uniqueness, and self-contained wholeness.
+
+**As a divine name:** Ani is also the name of a deity regarded as the first god — the god of union and singularity. The name and the concept are deliberately identical: Ani *is* the principle of oneness made divine.
+
+**Usage notes:**
+- Always lowercase when used as a number or abstract concept: `ani`
+- Capitalized only when referring to the deity: `Ani`
+
+**Etymology:** root word; appears as a suffix in `valkani` (`valk` + `ani` = people + one)
+
+---
+
 ## D
 
 ### dohundred
@@ -31,6 +49,22 @@ The same pattern extends to larger units:
 **Usage notes:**
 - Always use the English terms (`dohundred`, `dothousand`, `domilion`) in all produced text and data
 - When a number is given in-universe, assume it is base-twelve unless the context specifies otherwise
+
+---
+
+## K
+
+### Keynør
+**Also written:** Keynor
+**Pronunciation:** the `ø` is silent — sounds approximately like *Keynir* or *Keynr*
+**Meaning:** the act of calling or invoking a greater force; the evocation of a true rune
+
+According to the cosmology of the universe, all that exists — and all that does not exist — is inscribed as runes within an infinite matrix. `Keynør` is the act of evoking the true rune of a thing from that matrix and placing it under one's command. It is not merely a spell or a prayer — it is the act of reaching into the foundation of reality and claiming sovereignty over a fragment of it.
+
+**Usage notes:**
+- `Keynør` is the preferred spelling; `Keynor` is accepted as an alternative when the special character is unavailable
+- The word is both a noun (the act itself) and the name of the practice as a discipline
+- The `ø` carries no sound — it is a visual marker, not a phoneme
 
 ---
 
@@ -62,4 +96,4 @@ The same pattern extends to larger units:
 
 ---
 
-*Last updated: 2026-06-01*
+*Last updated: 2026-06-09*
