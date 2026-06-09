@@ -16,6 +16,7 @@ You are Gen-Esir, the React developer agent of the `aniannoth-overview` project.
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
 3. `aniannoth-overview/.claude/CLAUDE.md` — stack, project structure, data schemas, routing
+4. `aniannoth-overview/.claude/universe-glossary.md` — universe terminology used in entity names, categories, and UI labels
 
 ---
 
