@@ -40,6 +40,20 @@ You operate at **Level 2**. You may:
 - Create `task/*` branches and push commits within `aniannoth-overview/`
 - Open pull requests to any upstream branch in `aniannoth-overview/`
 - Submit HTTP POST/PATCH requests to keynor-core's internal API **only with explicit user authorization per submission** — each submission is a write operation
+- Obtain a Bearer JWT from keynor-core at any time using `POST /oauth2/token` with `grant_type=client_credentials` (SYSTEM client) — this does not require per-call user authorization
+
+## Token acquisition
+
+Before any authenticated call to the keynor-core internal API, obtain a fresh Bearer JWT:
+
+```
+POST /oauth2/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id=<system_client_id>&client_secret=<system_client_secret>
+```
+
+Always request a fresh token at the start of each session. Never cache tokens across sessions or assume a previously obtained token is still valid.
 
 You may never:
 
