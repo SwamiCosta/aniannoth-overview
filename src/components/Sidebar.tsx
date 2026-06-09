@@ -1,4 +1,4 @@
-import { MapPin } from 'lucide-react'
+import { MapPin, User } from 'lucide-react'
 import { useAppContext } from '@/context/AppContext'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useEras } from '@/hooks/useEras'
@@ -74,18 +74,36 @@ export default function Sidebar() {
                     : 'bg-surface hover:bg-background border-b border-border',
                 ].join(' ')}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-primary text-[10px] tracking-widest font-medium uppercase">
-                    {entity.category}
-                  </span>
-                  {entity.status !== 'canon' && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-border text-muted shrink-0">
-                      {entity.status}
-                    </span>
-                  )}
+                <div className="flex items-start gap-3">
+                  {/* Thumbnail */}
+                  <div className="shrink-0 w-10 h-10 rounded overflow-hidden bg-border flex items-center justify-center mt-0.5">
+                    {entity.images[0] ? (
+                      <img
+                        src={entity.images[0]}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User size={16} className="text-muted" />
+                    )}
+                  </div>
+
+                  {/* Text content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-primary text-[10px] tracking-widest font-medium uppercase">
+                        {entity.category}
+                      </span>
+                      {entity.status !== 'canon' && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-border text-muted shrink-0">
+                          {entity.status}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-medium text-foreground text-sm mt-0.5">{entity.name}</p>
+                    <p className="text-muted text-sm mt-0.5 line-clamp-2">{entity.summary}</p>
+                  </div>
                 </div>
-                <p className="font-medium text-foreground text-sm mt-0.5">{entity.name}</p>
-                <p className="text-muted text-sm mt-0.5 line-clamp-2">{entity.summary}</p>
               </button>
             )
           })

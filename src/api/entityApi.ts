@@ -10,6 +10,7 @@ interface ApiEntity {
   tags: string[]
   categories: string[]
   status: string
+  images: string[] | null | undefined
   timelineFoundedEra: string | null
   timelineDestroyedEra: string | null
 }
@@ -20,7 +21,7 @@ function toEntity(api: ApiEntity, category: string): Entity {
     name: api.name,
     category,
     tags: api.tags,
-    image: '',
+    images: api.images ?? [],
     summary: api.summary,
     body: api.body,
     location: '',
