@@ -7,7 +7,7 @@
 
 ## What this project is
 
-A React + TypeScript web application for exploring the Keynor universe. Acts as an interactive atlas — no dedicated backend in Phase 1, consuming static JSON files from the `content/` directory.
+A React + TypeScript web application for exploring the Keynor universe. Acts as an interactive atlas — Phase 2 (current): consumes the keynor-core REST API as its exclusive data source.
 
 ---
 
@@ -24,7 +24,7 @@ A React + TypeScript web application for exploring the Keynor universe. Acts as 
 | Icons | Lucide React |
 | Map rendering | Leaflet.js (`react-leaflet`) |
 | Markdown rendering | `react-markdown` |
-| Data source | Static JSON files in `content/` |
+| Data source | keynor-core REST API (`/api/public/v1/`) |
 
 **shadcn/ui note:** the CLI (`npx shadcn init`) has a known bug with Tailwind v4 as of May 2026. Setup was done manually. To add components, use `npx shadcn@latest add [component]` — the `add` command works correctly.
 
@@ -42,17 +42,6 @@ A React + TypeScript web application for exploring the Keynor universe. Acts as 
 
 ```
 aniannoth-overview/
-├── content/                  ← static JSON data (source of truth in Phase 1)
-│   ├── eras.json
-│   ├── maps.json
-│   ├── characters/
-│   │   └── omnia.json
-│   ├── places/
-│   ├── factions/
-│   ├── items/
-│   ├── events/
-│   └── lore/
-│       └── omnia.json
 ├── src/
 │   ├── components/
 │   │   ├── TopBar.tsx        ← global navigation bar (Zone 1)
@@ -94,7 +83,7 @@ aniannoth-overview/
 │       ├── aniannoth.md      ← Level 3 architect for this project
 │       ├── gen-esir.md       ← Level 2 React/TypeScript developer (owns src/)
 │       ├── syde.md           ← Level 2 Playwright test engineer (owns tests/e2e/)
-│       ├── aroneus.md        ← Level 2 content steward (owns content/)
+│       ├── aroneus.md        ← Level 2 content author (structures and submits content via keynor-core API)
 │       └── lethra.md         ← Level 1 literary scribe (produces descriptive text)
 ├── components.json           ← shadcn/ui configuration
 └── package.json
@@ -170,74 +159,9 @@ App.tsx outer div: h-screen flex flex-col overflow-hidden
 
 ---
 
-## Data loading
-
-Data is loaded at bundle time using Vite's `import.meta.glob` with `{ eager: true }`. The glob executes once at module scope — hooks are thin wrappers that return the pre-built data:
-
-```typescript
-// Root-level JSON files (eras, maps)
-const modules = import.meta.glob('/content/eras.json', { eager: true })
-
-// Entity files — excludes root-level eras.json and maps.json
-const modules = import.meta.glob('/content/*/*.json', { eager: true })
-// path.split('/')[2] extracts the category (e.g. 'characters', 'lore')
-```
-
----
-
 ## Data schemas
 
-### Entity (characters, places, factions, items, events, lore)
-
-Each entity lives in its own JSON file under its category folder.
-
-```typescript
-interface Entity {
-  id: string;
-  name: string;
-  category: string;
-  tags: string[];
-  image: string;           // empty string in Phase 1 (images served by keynor-core in future)
-  summary: string;         // short text for sidebar cards
-  body: string;            // Markdown — rendered in detail panel via react-markdown
-  location: string;        // place id (empty string if not applicable)
-  timeline: {
-    era: string;           // era id
-    born?: number;         // for characters
-    died?: number;         // for characters
-    founded?: number;      // for places
-    destroyed?: number;    // for places
-  };
-  status: 'canon' | 'draft' | 'deprecated';
-}
-```
-
-### eras.json
-
-```typescript
-interface Era {
-  id: string;
-  name: string;
-  order: number;
-  period: string;        // e.g. "Anno 1 – 300"
-  summary: string;
-  mapType: 'navigable' | 'abstract';
-  defaultMap: string;    // map id
-  color: string;         // hex color — used in TimelineBar node active state
-}
-```
-
-### maps.json
-
-```typescript
-interface GameMap {
-  id: string;
-  name: string;
-  type: 'navigable' | 'abstract';
-  image: string;               // empty string in Phase 1
-  availableInEras: string[];   // era ids — many-to-many
-}
-```
+For entity field schemas, refer to `keynor-core/CLAUDE.md` — Domain entities section.
 
 ---
 
@@ -308,10 +232,10 @@ Analysis performed on stale or feature branches may produce incorrect assessment
 | `aniannoth` | 3 — Architect | Full project, all cross-cutting decisions |
 | `gen-esir` | 2 — Developer | `src/` — React components, hooks, context, pages |
 | `syde` | 2 — Test engineer | `tests/e2e/` — Playwright end-to-end tests |
-| `aroneus` | 2 — Content steward | `content/` — JSON entity files, eras, maps |
+| `aroneus` | 2 — Content author | Universe content authoring and submission to keynor-core API |
 | `lethra` | 1 — Literary scribe | Produces descriptive prose for entity `body` and `summary` fields |
 
-**Agent coordination:** Lethra produces literary text → Aroneus structures it into JSON → Gen-Esir renders it. Syde validates full flows end-to-end after Gen-Esir delivers features.
+**Agent coordination:** Lethra produces prose → Aroneus structures it into keynor-core API payloads → user authorizes submission. Syde validates full flows end-to-end after Gen-Esir delivers features.
 
 ---
 
