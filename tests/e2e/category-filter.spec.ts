@@ -126,8 +126,9 @@ test.describe('Sidebar — category filter chips', () => {
     // Wait for entities to load
     await expect(page.getByRole('button', { name: /Aelindra the Wise/ })).toBeVisible()
 
-    // Click the Characters filter chip
-    await page.getByRole('button', { name: 'Characters' }).click()
+    // Click the Characters filter chip (exact: true avoids matching entity card buttons
+    // whose accessible name also contains "characters" as a category label)
+    await page.getByRole('button', { name: 'Characters', exact: true }).click()
 
     // Only the character entity should remain visible
     await expect(page.getByRole('button', { name: /Aelindra the Wise/ })).toBeVisible()
@@ -140,8 +141,9 @@ test.describe('Sidebar — category filter chips', () => {
 
     await expect(page.getByRole('button', { name: /The First Codex/ })).toBeVisible()
 
-    // Click the Lore filter chip
-    await page.getByRole('button', { name: 'Lore' }).click()
+    // Click the Lore filter chip (exact: true avoids matching entity card buttons
+    // whose accessible name also contains "lore" as a category label)
+    await page.getByRole('button', { name: 'Lore', exact: true }).click()
 
     // Only the lore entity should remain visible
     await expect(page.getByRole('button', { name: /The First Codex/ })).toBeVisible()
@@ -154,12 +156,13 @@ test.describe('Sidebar — category filter chips', () => {
 
     await expect(page.getByRole('button', { name: /Aelindra the Wise/ })).toBeVisible()
 
-    // Apply the Characters filter
-    await page.getByRole('button', { name: 'Characters' }).click()
+    // Apply the Characters filter (exact: true avoids matching entity card buttons
+    // whose accessible name also contains "characters" as a category label)
+    await page.getByRole('button', { name: 'Characters', exact: true }).click()
     await expect(page.getByRole('button', { name: /The First Codex/ })).not.toBeVisible()
 
-    // Reset to All
-    await page.getByRole('button', { name: 'All' }).click()
+    // Reset to All (exact: true for consistency with the chip locator pattern)
+    await page.getByRole('button', { name: 'All', exact: true }).click()
 
     // Both entities should be visible again
     await expect(page.getByRole('button', { name: /Aelindra the Wise/ })).toBeVisible()

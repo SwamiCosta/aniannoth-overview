@@ -130,10 +130,12 @@ test.describe('TimelineBar — era selection (single era)', () => {
     const eraButton = page.getByRole('button', { name: ERA_PRIMORDIAL.name })
     await eraButton.click()
 
-    // Still active — no map reset toast should appear
+    // Still active — no map reset toast should appear.
+    // The toast element is always present in the DOM with opacity-0 when inactive.
+    // We assert the CSS opacity directly because Playwright may not treat opacity-0 as "not visible".
     await expect(eraButton).toHaveAttribute('aria-pressed', 'true')
     const toastText = 'Map unavailable for this era. Redirected to default.'
-    await expect(page.getByText(toastText)).not.toBeVisible()
+    await expect(page.getByText(toastText)).toHaveCSS('opacity', '0')
   })
 })
 
@@ -191,10 +193,10 @@ test.describe('TimelineBar — era change with map reset (two eras)', () => {
 
     await expect(ancientButton).toHaveAttribute('aria-pressed', 'true')
 
-    // The toast element is always present in the DOM but opacity-0 when not triggered.
-    // We assert it is NOT visible (i.e. it has opacity-0 / is not visually shown).
+    // The toast element is always present in the DOM with opacity-0 when not triggered.
+    // We assert the CSS opacity directly because Playwright may not treat opacity-0 as "not visible".
     const toastText = 'Map unavailable for this era. Redirected to default.'
     const toast = page.getByText(toastText)
-    await expect(toast).not.toBeVisible()
+    await expect(toast).toHaveCSS('opacity', '0')
   })
 })
