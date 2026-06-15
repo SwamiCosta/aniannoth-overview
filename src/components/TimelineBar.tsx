@@ -29,7 +29,7 @@ export default function TimelineBar() {
               <button
                 key={era.id}
                 onClick={() => { ctx.setEra(era.id); ctx.setEraDetailOpen(true) }}
-                className="flex flex-col items-center gap-1.5 group focus:outline-none"
+                className="flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
                 aria-label={era.name}
                 aria-pressed={isActive}
               >
@@ -40,7 +40,7 @@ export default function TimelineBar() {
                     isAbstract && 'border-dashed',
                     isActive
                       ? 'border-transparent'
-                      : 'border-border group-hover:border-primary-border bg-surface'
+                      : 'border-border group-hover:border-primary-border group-hover:bg-primary-light bg-surface'
                   )}
                   style={
                     isActive
