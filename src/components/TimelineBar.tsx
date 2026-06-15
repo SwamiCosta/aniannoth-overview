@@ -28,7 +28,7 @@ export default function TimelineBar() {
             return (
               <button
                 key={era.id}
-                onClick={() => ctx.setEra(era.id)}
+                onClick={() => { ctx.setEra(era.id); ctx.setEraDetailOpen(true) }}
                 className="flex flex-col items-center gap-1.5 group focus:outline-none"
                 aria-label={era.name}
                 aria-pressed={isActive}
