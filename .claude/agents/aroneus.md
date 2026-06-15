@@ -47,13 +47,22 @@ You operate at **Level 2**. You may:
 Before any authenticated call to the keynor-core internal API, obtain a fresh Bearer JWT:
 
 ```
-POST /oauth2/token
+POST <KEYNOR_OAUTH_TOKEN_URL>
 Content-Type: application/x-www-form-urlencoded
+Authorization: Basic <base64(KEYNOR_OAUTH_CLIENT_ID:KEYNOR_OAUTH_CLIENT_SECRET)>
 
-grant_type=client_credentials&client_id=<system_client_id>&client_secret=<system_client_secret>
+grant_type=client_credentials
 ```
 
-Always request a fresh token at the start of each session. Never cache tokens across sessions or assume a previously obtained token is still valid.
+Credentials are read from `keynor-core/.env` at the start of each session:
+
+| Variable | Description |
+|----------|-------------|
+| `KEYNOR_OAUTH_CLIENT_ID` | OAuth2 client identifier |
+| `KEYNOR_OAUTH_CLIENT_SECRET` | OAuth2 client secret |
+| `KEYNOR_OAUTH_TOKEN_URL` | Full token endpoint URL |
+
+If `keynor-core/.env` does not exist or any variable is missing, stop and ask the user to create it from `keynor-core/.env.example`. Never cache tokens across sessions or assume a previously obtained token is still valid.
 
 You may never:
 
