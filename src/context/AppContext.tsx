@@ -24,6 +24,8 @@ interface AppContextValue extends AppState {
   clearMapResetTrigger: () => void
   erasLoading: boolean
   mapsLoading: boolean
+  eraDetailOpen: boolean
+  setEraDetailOpen: (open: boolean) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -37,6 +39,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<Filters>({ category: null, tags: [] })
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null)
   const [mapResetTriggered, setMapResetTriggered] = useState(false)
+  const [eraDetailOpen, setEraDetailOpen] = useState(false)
 
   useEffect(() => {
     if (eras.length > 0 && !selectedEra) {
@@ -70,6 +73,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   function setSelectedEntity(id: string | null) {
     setSelectedEntityId(id)
+    if (id !== null) {
+      setEraDetailOpen(false)
+    }
   }
 
   function clearMapResetTrigger() {
@@ -91,6 +97,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         clearMapResetTrigger,
         erasLoading,
         mapsLoading,
+        eraDetailOpen,
+        setEraDetailOpen,
       }}
     >
       {children}
