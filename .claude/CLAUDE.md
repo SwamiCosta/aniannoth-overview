@@ -73,9 +73,6 @@ aniannoth-overview/
 │   ├── App.tsx               ← router shell, global layout
 │   ├── main.tsx
 │   └── index.css             ← Tailwind import + project CSS variables
-├── references/               ← wireframe and design guidelines
-│   ├── atlas-wireframe.html
-│   └── atlas-wireframe.md
 ├── .claude/
 │   ├── CLAUDE.md             ← this file
 │   ├── universe-glossary.md  ← shared universe terminology (read by Lethra and Aroneus)
