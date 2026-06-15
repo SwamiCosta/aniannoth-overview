@@ -75,12 +75,11 @@ aniannoth-overview/
 │   └── index.css             ← Tailwind import + project CSS variables
 ├── .claude/
 │   ├── CLAUDE.md             ← this file
-│   ├── universe-glossary.md  ← shared universe terminology (read by Lethra and Aroneus)
+│   ├── universe-glossary.md  ← shared universe terminology (read by Lethra; also read by Aroneus in keynor-core)
 │   └── agents/
 │       ├── aniannoth.md      ← Level 3 architect for this project
 │       ├── gen-esir.md       ← Level 2 React/TypeScript developer (owns src/)
 │       ├── syde.md           ← Level 2 Playwright test engineer (owns tests/e2e/)
-│       ├── aroneus.md        ← Level 2 content author (structures and submits content via keynor-core API)
 │       └── lethra.md         ← Level 1 literary scribe (produces descriptive text)
 ├── components.json           ← shadcn/ui configuration
 └── package.json
@@ -233,10 +232,9 @@ A second pull is not required within the same task session. See workspace `SKILL
 | `aniannoth` | 3 — Architect | Full project, all cross-cutting decisions |
 | `gen-esir` | 2 — Developer | `src/` — React components, hooks, context, pages |
 | `syde` | 2 — Test engineer | `tests/e2e/` — Playwright end-to-end tests |
-| `aroneus` | 2 — Content author | Universe content authoring and submission to keynor-core API |
 | `lethra` | 1 — Literary scribe | Produces descriptive prose for entity `body` and `summary` fields |
 
-**Agent coordination:** Lethra produces prose → Aroneus structures it into keynor-core API payloads → user authorizes submission. Syde validates full flows end-to-end after Gen-Esir delivers features.
+**Agent coordination:** Lethra produces prose → Aroneus (keynor-core) structures it into API payloads → user authorizes submission. Syde validates full flows end-to-end after Gen-Esir delivers features.
 
 ---
 
