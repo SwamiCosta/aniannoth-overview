@@ -112,12 +112,16 @@ interface AppContextValue extends AppState {
   setMap: (mapId: string) => void
   setFilter: (category: string | null) => void
   setSelectedEntity: (id: string | null) => void
-  mapResetTriggered: boolean       // true when an era change forced a map reset
-  clearMapResetTrigger: () => void // called by MapArea after showing the toast
+  mapResetTriggered: boolean           // true when an era change forced a map reset
+  clearMapResetTrigger: () => void     // called by MapArea after showing the toast
+  eraDetailOpen: boolean               // true when DetailPanel is showing era info
+  setEraDetailOpen: (open: boolean) => void
 }
 ```
 
 Era change logic: if the current map does not exist in the new era, `setEra` resets `selectedMap` to the era's default and sets `mapResetTriggered = true`. `MapArea` watches this flag and shows a toast for 2.5 s before clearing it.
+
+Era detail logic: clicking an era node in `TimelineBar` sets `eraDetailOpen = true`. Selecting an entity automatically resets it to `false`. The close button in `DetailPanel` sets it back to `false` directly.
 
 ---
 
@@ -147,10 +151,10 @@ App.tsx outer div: h-screen flex flex-col overflow-hidden
 |-----------|------|--------------------|-------------------|
 | `ErrorBoundary` | structural wrapper | — | — |
 | `TopBar` | 1 | — | — |
-| `TimelineBar` | 2 | `selectedEra` | `setEra` |
+| `TimelineBar` | 2 | `selectedEra` | `setEra`, `setEraDetailOpen` |
 | `MapArea` | 3 left | `selectedMap`, `selectedEra`, `mapResetTriggered` | `setMap`, `clearMapResetTrigger` |
 | `Sidebar` | 3 right | `selectedEra`, `filters`, `selectedEntityId` | `setFilter`, `setSelectedEntity` |
-| `DetailPanel` | 4 | `selectedEntityId` | `setSelectedEntity` (close) |
+| `DetailPanel` | 4 | `selectedEntityId`, `eraDetailOpen`, `selectedEra` | `setSelectedEntity` (close entity), `setEraDetailOpen` (close era) |
 
 `ErrorBoundary` is a root-level structural wrapper (`src/components/ErrorBoundary.tsx`) that catches unhandled render exceptions for the entire application tree. It reads no context — it sits outside `AppContext`. See `.claude/skills/logging-conventions.md` for usage rules.
 
