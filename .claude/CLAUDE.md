@@ -216,12 +216,12 @@ Five top-level routes:
 
 ## Agent operational rules
 
-Before analyzing or reporting on the current state of this project, every agent must:
+Before taking any action in this project — reading state, implementing features, creating branches, running commands, or opening PRs — every agent must:
 
 1. Switch to `main`: `git checkout main`
 2. Pull the latest changes: `git pull`
 
-Analysis performed on stale or feature branches may produce incorrect assessments, duplicate work already merged, or miss critical recent changes.
+A second pull is not required within the same task session. See workspace `SKILLS.md` — Skill 09.
 
 ---
 
@@ -266,4 +266,4 @@ Analysis performed on stale or feature branches may produce incorrect assessment
 
 ---
 
-*Last updated: 2026-06-09*
+*Last updated: 2026-06-15*
