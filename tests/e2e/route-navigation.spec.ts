@@ -33,7 +33,9 @@ function pagedOf<T>(items: T[]) {
 const ERA_PRIMORDIAL = {
   id: 'primordial',
   name: 'The Primordial Era',
-  eraOrder: 0,
+  order: 0,
+  type: 'ERA',
+  importance: null,
   period: 'Before Creation',
   summary: '',
   mapType: 'ABSTRACT',

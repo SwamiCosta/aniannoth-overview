@@ -43,7 +43,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (eras.length > 0 && !selectedEra) {
-      const firstEra = [...eras].sort((a, b) => a.order - b.order)[0]
+      const eraEntries = eras.filter(e => !e.type || e.type === 'ERA')
+      if (eraEntries.length === 0) return
+      const firstEra = [...eraEntries].sort((a, b) => a.order - b.order)[0]
       setSelectedEra(firstEra.id)
       setSelectedMap(firstEra.defaultMap)
     }

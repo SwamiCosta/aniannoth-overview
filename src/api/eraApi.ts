@@ -5,7 +5,9 @@ import { logger } from '@/lib/logger'
 interface ApiEra {
   id: string
   name: string
-  eraOrder: number
+  order: number
+  type: string
+  importance: string | null
   period: string
   summary: string
   mapType: string
@@ -17,12 +19,14 @@ function toEra(api: ApiEra): Era {
   return {
     id: api.id,
     name: api.name,
-    order: api.eraOrder,
+    order: api.order,
+    type: (api.type as Era['type']) ?? 'ERA',
+    importance: (api.importance ?? null) as Era['importance'],
     period: api.period,
     summary: api.summary,
-    mapType: api.mapType.toLowerCase() as Era['mapType'],
-    defaultMap: api.defaultMap,
-    color: api.color,
+    mapType: (api.mapType ?? '').toLowerCase() as Era['mapType'],
+    defaultMap: api.defaultMap ?? '',
+    color: api.color ?? '',
   }
 }
 
