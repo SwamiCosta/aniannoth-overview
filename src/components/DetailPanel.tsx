@@ -4,6 +4,8 @@ import ReactMarkdown from 'react-markdown'
 import { useAppContext } from '@/context/AppContext'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useEras } from '@/hooks/useEras'
+import { categoryForType } from '@/lib/entityCategory'
+import type { LinkedEntity } from '@/types/universe'
 
 function ImageGallery({ images, name }: { images: string[]; name: string }) {
   const [activeIndex, setActiveIndex] = useState(0)
@@ -68,6 +70,53 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function RelatedEntities({ links }: { links: LinkedEntity[] }) {
+  const ctx = useAppContext()
+
+  if (links.length === 0) return null
+
+  function handleClick(link: LinkedEntity) {
+    const category = categoryForType(link.type)
+    if (category && category !== ctx.filters.category) {
+      ctx.setFilter(category)
+    }
+    ctx.setSelectedEntity(link.id)
+  }
+
+  return (
+    <div className="border-t border-border pt-2 mt-1">
+      <h3 className="text-xs font-medium text-muted uppercase tracking-wide mb-1.5">
+        Related entities
+      </h3>
+      <div className="flex flex-wrap gap-1.5">
+        {links.map(link => {
+          const isAvailable = link.status === 'canon'
+          return isAvailable ? (
+            <button
+              key={link.id}
+              onClick={() => handleClick(link)}
+              className="bg-border hover:bg-primary-light text-foreground text-xs px-2 py-1 rounded-full transition-colors cursor-pointer flex items-center gap-1"
+            >
+              {link.name}
+              <span className="text-[10px] text-muted uppercase">{link.type}</span>
+            </button>
+          ) : (
+            <span
+              key={link.id}
+              title="Not available in the public atlas"
+              aria-disabled="true"
+              className="bg-border text-muted text-xs px-2 py-1 rounded-full opacity-50 cursor-not-allowed flex items-center gap-1"
+            >
+              {link.name}
+              <span className="text-[10px] uppercase">{link.type}</span>
+            </span>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -151,6 +200,9 @@ export default function DetailPanel() {
               {entity.body}
             </ReactMarkdown>
           </div>
+
+          {/* Related entities */}
+          <RelatedEntities links={entity.links} />
         </div>
       </div>
     )

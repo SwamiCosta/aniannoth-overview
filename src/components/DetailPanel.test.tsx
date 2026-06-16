@@ -61,6 +61,29 @@ const TEST_ENTITY = {
   location: '',
   timeline: { era: 'primordial' },
   status: 'canon' as const,
+  links: [],
+}
+
+const LINKED_CANON_PLACE = {
+  type: 'PLACE',
+  id: 'place-001',
+  name: 'The Hollow Spire',
+  status: 'canon' as const,
+}
+
+const LINKED_DRAFT_CHARACTER = {
+  type: 'CHARACTER',
+  id: 'char-draft-001',
+  name: 'An Unfinished Soul',
+  status: 'draft' as const,
+}
+
+const ENTITY_WITH_LINKS = {
+  ...TEST_ENTITY,
+  id: 'entity-with-links',
+  name: 'Lore of the Hollow Spire',
+  category: 'lore',
+  links: [LINKED_CANON_PLACE, LINKED_DRAFT_CHARACTER],
 }
 
 // ---------------------------------------------------------------------------
@@ -90,6 +113,7 @@ describe('DetailPanel', () => {
     mockFetchMaps.mockResolvedValue([MAP_OMNIVERSE])
     mockFetchEntities.mockImplementation(async (category: string) => {
       if (category === 'characters') return [TEST_ENTITY]
+      if (category === 'lore') return [ENTITY_WITH_LINKS]
       return []
     })
   })
@@ -147,5 +171,80 @@ describe('DetailPanel', () => {
       expect(screen.queryByText('Verath the Unbound')).not.toBeInTheDocument()
       expect(screen.getByText('Select an entity to view details')).toBeInTheDocument()
     })
+  })
+
+  it('renders the Related entities section only when the entity has links', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={TEST_ENTITY.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${TEST_ENTITY.id}`).click()
+    })
+
+    // TEST_ENTITY has no links, so the section must not render
+    expect(await screen.findByText('Verath the Unbound')).toBeInTheDocument()
+    expect(screen.queryByText('Related entities')).not.toBeInTheDocument()
+  })
+
+  it('shows linked entities and calls setSelectedEntity with the right id on click', async () => {
+    function Inspector() {
+      const ctx = useAppContext()
+      return (
+        <span data-testid="context-state">
+          {JSON.stringify({ selectedEntityId: ctx.selectedEntityId, category: ctx.filters.category })}
+        </span>
+      )
+    }
+
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_WITH_LINKS.id} />
+        <Inspector />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_WITH_LINKS.id}`).click()
+    })
+
+    expect(await screen.findByText('Related entities')).toBeInTheDocument()
+    expect(screen.getByText(LINKED_CANON_PLACE.name)).toBeInTheDocument()
+    expect(screen.getByText(LINKED_DRAFT_CHARACTER.name)).toBeInTheDocument()
+
+    // Click the canon (available) linked entity
+    const canonLink = screen.getByRole('button', { name: new RegExp(LINKED_CANON_PLACE.name) })
+    await act(async () => { canonLink.click() })
+
+    await waitFor(() => {
+      const state = JSON.parse(screen.getByTestId('context-state').textContent ?? '{}')
+      expect(state.selectedEntityId).toBe(LINKED_CANON_PLACE.id)
+      expect(state.category).toBe('places')
+    })
+  })
+
+  it('renders non-canon linked entities as disabled with a tooltip, not clickable', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_WITH_LINKS.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_WITH_LINKS.id}`).click()
+    })
+
+    const draftLink = await screen.findByText(LINKED_DRAFT_CHARACTER.name)
+
+    // The draft link must not be a button (not clickable) and must carry a tooltip
+    expect(draftLink.closest('button')).toBeNull()
+    const disabledElement = draftLink.closest('[aria-disabled="true"]')
+    expect(disabledElement).not.toBeNull()
+    expect(disabledElement).toHaveAttribute('title', 'Not available in the public atlas')
   })
 })

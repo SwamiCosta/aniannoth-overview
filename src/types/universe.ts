@@ -25,6 +25,13 @@ export interface EntityTimeline {
   destroyed?: number
 }
 
+export interface LinkedEntity {
+  type: string
+  id: string
+  name: string
+  status: 'canon' | 'draft' | 'deprecated'
+}
+
 export interface Entity {
   id: string
   name: string
@@ -36,4 +43,5 @@ export interface Entity {
   location: string
   timeline: EntityTimeline
   status: 'canon' | 'draft' | 'deprecated'
+  links: LinkedEntity[]
 }
