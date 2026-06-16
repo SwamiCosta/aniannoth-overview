@@ -1,7 +1,14 @@
 import { apiFetch } from './keynorCoreClient'
 import type { PagedResponse } from './keynorCoreClient'
-import type { Entity } from '@/types/universe'
+import type { Entity, LinkedEntity } from '@/types/universe'
 import { logger } from '@/lib/logger'
+
+interface ApiLinkedEntity {
+  type: string
+  id: string
+  name: string
+  status: string
+}
 
 interface ApiEntity {
   id: string
@@ -14,6 +21,16 @@ interface ApiEntity {
   images: string[] | null | undefined
   timelineFoundedEra: string | null
   timelineDestroyedEra: string | null
+  links?: ApiLinkedEntity[] | null
+}
+
+function toLinkedEntity(apiLink: ApiLinkedEntity): LinkedEntity {
+  return {
+    type: apiLink.type,
+    id: apiLink.id,
+    name: apiLink.name,
+    status: apiLink.status.toLowerCase() as LinkedEntity['status'],
+  }
 }
 
 function toEntity(api: ApiEntity, category: string): Entity {
@@ -30,6 +47,7 @@ function toEntity(api: ApiEntity, category: string): Entity {
       era: api.timelineFoundedEra ?? '',
     },
     status: api.status.toLowerCase() as Entity['status'],
+    links: (api.links ?? []).map(toLinkedEntity),
   }
 }
 

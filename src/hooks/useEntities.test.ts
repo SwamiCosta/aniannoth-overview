@@ -29,6 +29,7 @@ const MOCK_CHARACTER = {
   location: '',
   timeline: { era: 'primordial' },
   status: 'canon' as const,
+  links: [],
 }
 
 const MOCK_LORE = {
@@ -42,6 +43,7 @@ const MOCK_LORE = {
   location: '',
   timeline: { era: 'primordial' },
   status: 'canon' as const,
+  links: [],
 }
 
 // ---------------------------------------------------------------------------

@@ -61,6 +61,7 @@ const CHARACTER_ENTITY = {
   location: '',
   timeline: { era: 'primordial' },
   status: 'canon' as const,
+  links: [],
 }
 
 const LORE_ENTITY = {
@@ -74,6 +75,7 @@ const LORE_ENTITY = {
   location: '',
   timeline: { era: 'primordial' },
   status: 'canon' as const,
+  links: [],
 }
 
 // Entity in a different era — must NOT appear in the primordial sidebar
@@ -88,6 +90,7 @@ const OTHER_ERA_ENTITY = {
   location: '',
   timeline: { era: 'ancient' },
   status: 'canon' as const,
+  links: [],
 }
 
 const ALL_CATEGORIES = ['characters', 'places', 'factions', 'items', 'events', 'lore']
