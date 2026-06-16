@@ -2,6 +2,8 @@ export interface Era {
   id: string
   name: string
   order: number
+  type: 'ERA' | 'POINT'
+  importance: 'STANDARD' | 'MAJOR' | null
   period: string
   summary: string
   mapType: 'navigable' | 'abstract'

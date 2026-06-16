@@ -45,7 +45,7 @@ aniannoth-overview/
 ├── src/
 │   ├── components/
 │   │   ├── TopBar.tsx        ← global navigation bar (Zone 1)
-│   │   ├── TimelineBar.tsx   ← era selector track (Zone 2)
+│   │   ├── TimelineBar.tsx   ← era selector track + temporal point pins (Zone 2)
 │   │   ├── MapArea.tsx       ← map surface + overlays (Zone 3 left)
 │   │   ├── Sidebar.tsx       ← entity list + filters (Zone 3 right)
 │   │   ├── DetailPanel.tsx   ← entity detail view (Zone 4)
@@ -121,6 +121,8 @@ interface AppContextValue extends AppState {
 Era change logic: if the current map does not exist in the new era, `setEra` resets `selectedMap` to the era's default and sets `mapResetTriggered = true`. `MapArea` watches this flag and shows a toast for 2.5 s before clearing it.
 
 Era detail logic: clicking an era node in `TimelineBar` sets `eraDetailOpen = true`. Selecting an entity automatically resets it to `false`. The close button in `DetailPanel` sets it back to `false` directly.
+
+Temporal points: the `/api/public/v1/eras` endpoint returns both ERA entries and POINT entries (type: `'ERA' | 'POINT'`, importance: `'STANDARD' | 'MAJOR' | null`). ERA entries are selectable buttons in the timeline. POINT entries render as non-interactive display-only pins — STANDARD as a small circle, MAJOR as a larger diamond using `bg-primary`. Points do not participate in era selection or map logic.
 
 ---
 
@@ -265,4 +267,4 @@ A second pull is not required within the same task session. See workspace `SKILL
 
 ---
 
-*Last updated: 2026-06-15*
+*Last updated: 2026-06-16*

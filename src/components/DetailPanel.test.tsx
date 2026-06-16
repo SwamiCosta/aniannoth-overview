@@ -35,6 +35,8 @@ const ERA_PRIMORDIAL = {
   id: 'primordial',
   name: 'The Primordial Era',
   order: 0,
+  type: 'ERA' as const,
+  importance: null,
   period: 'Before Creation',
   summary: '',
   mapType: 'abstract' as const,

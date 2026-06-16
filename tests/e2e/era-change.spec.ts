@@ -31,7 +31,9 @@ function pagedOf<T>(items: T[]) {
 const ERA_PRIMORDIAL = {
   id: 'primordial',
   name: 'The Primordial Era',
-  eraOrder: 0,
+  order: 0,
+  type: 'ERA',
+  importance: null,
   period: 'Before Creation',
   summary: 'The age before the material world.',
   mapType: 'ABSTRACT',
@@ -42,7 +44,9 @@ const ERA_PRIMORDIAL = {
 const ERA_ANCIENT = {
   id: 'ancient',
   name: 'The Ancient Era',
-  eraOrder: 1,
+  order: 1,
+  type: 'ERA',
+  importance: null,
   period: 'Anno 1 – 500',
   summary: 'The first age of the material world.',
   mapType: 'NAVIGABLE',
