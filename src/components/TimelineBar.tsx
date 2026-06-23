@@ -15,12 +15,12 @@ export default function TimelineBar() {
       </span>
 
       {/* Track */}
-      <div className="relative flex items-start">
-        {/* Connecting line */}
-        <div className="absolute top-3 left-0 right-0 h-px bg-border" />
+      <div className="overflow-x-auto pb-1">
+        <div className="relative flex items-start gap-10 min-w-full">
+          {/* Connecting line */}
+          <div className="absolute top-3 left-0 right-0 h-px bg-border" />
 
-        {/* Era nodes */}
-        <div className="relative flex w-full justify-between">
+          {/* Era nodes */}
           {eras.map((era) => {
             const isActive = era.id === ctx.selectedEra
             const isAbstract = era.mapType === 'abstract'
@@ -29,7 +29,7 @@ export default function TimelineBar() {
               <button
                 key={era.id}
                 onClick={() => { ctx.setEra(era.id); ctx.setEraDetailOpen(true) }}
-                className="flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
+                className="relative flex flex-col items-center gap-1.5 group cursor-pointer shrink-0 focus:outline-none"
                 aria-label={era.name}
                 aria-pressed={isActive}
               >
