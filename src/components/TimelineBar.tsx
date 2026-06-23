@@ -21,14 +21,9 @@ function EraNode({ era, isActive }: { era: Era; isActive: boolean }) {
             'w-6 h-6 rounded-full border-2 transition-colors',
             isAbstract && 'border-dashed',
             isActive
-              ? 'border-transparent'
+              ? 'border-primary bg-primary'
               : 'border-border group-hover:border-primary-border group-hover:bg-primary-light bg-surface'
           )}
-          style={
-            isActive
-              ? { backgroundColor: era.color, borderColor: era.color }
-              : undefined
-          }
         />
         {/* Inner dot distinguishes the active era from a flat color fill */}
         {isActive && <span className="absolute w-2 h-2 rounded-full bg-surface" aria-hidden="true" />}
