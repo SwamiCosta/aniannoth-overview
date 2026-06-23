@@ -80,6 +80,8 @@ function Inspector() {
       <span data-testid="triggered">{String(ctx.mapResetTriggered)}</span>
       <span data-testid="filter">{ctx.filters.category ?? 'null'}</span>
       <span data-testid="entity">{ctx.selectedEntityId ?? 'null'}</span>
+      <span data-testid="detail-open">{String(ctx.eraDetailOpen)}</span>
+      <span data-testid="detail-target">{ctx.timelineDetailId ?? 'null'}</span>
       <button onClick={() => ctx.setEra('primordial')}>set-era-primordial</button>
       <button onClick={() => ctx.setEra('ancient')}>set-era-ancient</button>
       <button onClick={() => ctx.setMap('world-map')}>set-map-world</button>
@@ -87,6 +89,7 @@ function Inspector() {
       <button onClick={() => ctx.clearMapResetTrigger()}>clear-trigger</button>
       <button onClick={() => ctx.setSelectedEntity('entity-123')}>set-entity</button>
       <button onClick={() => ctx.setSelectedEntity(null)}>clear-entity</button>
+      <button onClick={() => ctx.openTimelineDetail('ancient')}>open-detail-ancient</button>
     </>
   )
 }
@@ -182,6 +185,18 @@ describe('AppContext', () => {
     render(<Wrapper><Inspector /></Wrapper>)
     act(() => { screen.getByText('clear-trigger').click() })
     expect(screen.getByTestId('triggered').textContent).toBe('false')
+  })
+
+  it('openTimelineDetail sets the detail target and opens the panel without touching selectedEra', async () => {
+    render(<Wrapper><Inspector /></Wrapper>)
+    await waitFor(() => expect(screen.getByTestId('era').textContent).toBe('primordial'))
+
+    act(() => { screen.getByText('open-detail-ancient').click() })
+
+    expect(screen.getByTestId('detail-open').textContent).toBe('true')
+    expect(screen.getByTestId('detail-target').textContent).toBe('ancient')
+    // selectedEra (and therefore the map) is unaffected by opening a detail target
+    expect(screen.getByTestId('era').textContent).toBe('primordial')
   })
 
   it('throws when useAppContext is used outside AppProvider', () => {

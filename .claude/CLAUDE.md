@@ -113,16 +113,18 @@ interface AppContextValue extends AppState {
   setSelectedEntity: (id: string | null) => void
   mapResetTriggered: boolean           // true when an era change forced a map reset
   clearMapResetTrigger: () => void     // called by MapArea after showing the toast
-  eraDetailOpen: boolean               // true when DetailPanel is showing era info
+  eraDetailOpen: boolean               // true when DetailPanel is showing a timeline entry (era or point)
   setEraDetailOpen: (open: boolean) => void
+  timelineDetailId: string | null      // id of the era/point currently shown in DetailPanel
+  openTimelineDetail: (entryId: string) => void  // sets timelineDetailId and opens the panel
 }
 ```
 
 Era change logic: if the current map does not exist in the new era, `setEra` resets `selectedMap` to the era's default and sets `mapResetTriggered = true`. `MapArea` watches this flag and shows a toast for 2.5 s before clearing it.
 
-Era detail logic: clicking an era node in `TimelineBar` sets `eraDetailOpen = true`. Selecting an entity automatically resets it to `false`. The close button in `DetailPanel` sets it back to `false` directly.
+Timeline detail logic: `timelineDetailId` is decoupled from `selectedEra` — it tracks which entry's description is shown in `DetailPanel`, independent of which era currently drives the map. Clicking an era node in `TimelineBar` calls both `setEra(era.id)` (drives the map) and `openTimelineDetail(era.id)` (drives the panel). Clicking a temporal point calls only `openTimelineDetail(point.id)` — the map and `selectedEra` are left untouched. Selecting an entity automatically sets `eraDetailOpen` back to `false`. The close button in `DetailPanel` sets it back to `false` directly.
 
-Temporal points: the `/api/public/v1/eras` endpoint returns both ERA entries and POINT entries (type: `'ERA' | 'POINT'`, importance: `'STANDARD' | 'MAJOR' | null`). ERA entries are selectable buttons in the timeline. POINT entries render as non-interactive display-only pins — STANDARD as a small circle, MAJOR as a larger diamond using `bg-primary`. Points do not participate in era selection or map logic.
+Temporal points: the `/api/public/v1/eras` endpoint returns both ERA entries and POINT entries (type: `'ERA' | 'POINT'`, importance: `'STANDARD' | 'MAJOR' | null`). Both ERA and POINT entries are selectable buttons in the timeline. ERA entries also drive the map (`setEra`); POINT entries only open their own description in `DetailPanel` via `openTimelineDetail` — they never affect `selectedEra` or the map. STANDARD points render as a small circle, MAJOR points as a larger diamond using `bg-primary`; the currently open point is highlighted with the primary color. All timeline markers (era circle, point dot, point diamond) sit inside a fixed 24px slot so they stay centered on the connecting line regardless of glyph size.
 
 ---
 
@@ -152,10 +154,10 @@ App.tsx outer div: h-screen flex flex-col overflow-hidden
 |-----------|------|--------------------|-------------------|
 | `ErrorBoundary` | structural wrapper | — | — |
 | `TopBar` | 1 | — | — |
-| `TimelineBar` | 2 | `selectedEra` | `setEra`, `setEraDetailOpen` |
+| `TimelineBar` | 2 | `selectedEra`, `eraDetailOpen`, `timelineDetailId` | `setEra`, `openTimelineDetail` |
 | `MapArea` | 3 left | `selectedMap`, `selectedEra`, `mapResetTriggered` | `setMap`, `clearMapResetTrigger` |
 | `Sidebar` | 3 right | `selectedEra`, `filters`, `selectedEntityId` | `setFilter`, `setSelectedEntity` |
-| `DetailPanel` | 4 | `selectedEntityId`, `eraDetailOpen`, `selectedEra` | `setSelectedEntity` (close entity), `setEraDetailOpen` (close era) |
+| `DetailPanel` | 4 | `selectedEntityId`, `eraDetailOpen`, `timelineDetailId` | `setSelectedEntity` (close entity), `setEraDetailOpen` (close timeline detail) |
 
 `ErrorBoundary` is a root-level structural wrapper (`src/components/ErrorBoundary.tsx`) that catches unhandled render exceptions for the entire application tree. It reads no context — it sits outside `AppContext`. See `.claude/skills/logging-conventions.md` for usage rules.
 
@@ -267,4 +269,4 @@ A second pull is not required within the same task session. See workspace `SKILL
 
 ---
 
-*Last updated: 2026-06-16*
+*Last updated: 2026-06-23*

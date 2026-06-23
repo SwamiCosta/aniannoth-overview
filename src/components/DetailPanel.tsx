@@ -208,19 +208,19 @@ export default function DetailPanel() {
     )
   }
 
-  // Priority 2: era detail
+  // Priority 2: timeline entry detail (era or temporal point)
   if (ctx.eraDetailOpen) {
-    const era = erasData.find(e => e.id === ctx.selectedEra)
+    const entry = erasData.find(e => e.id === ctx.timelineDetailId)
 
-    if (!era) {
+    if (!entry) {
       return (
         <div className="border-t border-border bg-surface h-12 flex items-center justify-center">
-          <span className="text-muted text-sm">Era not found</span>
+          <span className="text-muted text-sm">Entry not found</span>
         </div>
       )
     }
 
-    const MapTypeIcon = era.mapType === 'navigable' ? Globe : MapPin
+    const MapTypeIcon = entry.mapType === 'navigable' ? Globe : MapPin
 
     return (
       <div className="border-t border-border bg-surface min-h-48 p-4 flex flex-col gap-2 relative">
@@ -228,27 +228,27 @@ export default function DetailPanel() {
         <button
           onClick={() => ctx.setEraDetailOpen(false)}
           className="absolute top-3 right-3 text-muted hover:text-foreground transition-colors"
-          aria-label="Close era detail panel"
+          aria-label="Close timeline detail panel"
         >
           <XCircle size={16} />
         </button>
 
-        {/* Era name */}
-        <h2 className="text-xl font-medium text-foreground pr-6">{era.name}</h2>
+        {/* Entry name */}
+        <h2 className="text-xl font-medium text-foreground pr-6">{entry.name}</h2>
 
         {/* Period subtitle */}
-        <p className="text-sm text-muted">{era.period}</p>
+        <p className="text-sm text-muted">{entry.period}</p>
 
         {/* Map type badge */}
         <div className="flex items-center gap-1">
           <span className="bg-primary-light text-primary text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
             <MapTypeIcon size={10} />
-            {era.mapType}
+            {entry.mapType}
           </span>
         </div>
 
         {/* Summary */}
-        <p className="text-sm text-muted leading-relaxed">{era.summary}</p>
+        <p className="text-sm text-muted leading-relaxed">{entry.summary}</p>
       </div>
     )
   }
