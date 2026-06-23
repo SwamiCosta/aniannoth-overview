@@ -10,7 +10,7 @@ function EraNode({ era, isActive }: { era: Era; isActive: boolean }) {
   return (
     <button
       onClick={() => { ctx.setEra(era.id); ctx.setEraDetailOpen(true) }}
-      className="flex flex-col items-center gap-1.5 group cursor-pointer focus:outline-none"
+      className="relative flex flex-col items-center gap-1.5 group cursor-pointer shrink-0 focus:outline-none"
       aria-label={era.name}
       aria-pressed={isActive}
     >
@@ -47,7 +47,7 @@ function EraNode({ era, isActive }: { era: Era; isActive: boolean }) {
 function StandardPointPin({ point }: { point: Era }) {
   return (
     <div
-      className="flex flex-col items-center gap-1.5"
+      className="relative flex flex-col items-center gap-1.5 shrink-0"
       aria-label={point.name}
       data-point-type="STANDARD"
       title={point.name}
@@ -66,7 +66,7 @@ function StandardPointPin({ point }: { point: Era }) {
 function MajorPointPin({ point }: { point: Era }) {
   return (
     <div
-      className="flex flex-col items-center gap-1.5"
+      className="relative flex flex-col items-center gap-1.5 shrink-0"
       aria-label={point.name}
       data-point-type="MAJOR"
       title={point.name}
@@ -98,12 +98,12 @@ export default function TimelineBar() {
       </span>
 
       {/* Track */}
-      <div className="relative flex items-start">
-        {/* Connecting line */}
-        <div className="absolute top-3 left-0 right-0 h-px bg-border" />
+      <div className="overflow-x-auto pb-1">
+        <div className="relative flex items-start gap-10 min-w-full">
+          {/* Connecting line */}
+          <div className="absolute top-3 left-0 right-0 h-px bg-border" />
 
-        {/* Timeline entries — eras and temporal points */}
-        <div className="relative flex w-full justify-between">
+          {/* Timeline entries — eras and temporal points */}
           {entries.map((entry) => {
             if (entry.type === 'POINT') {
               if (entry.importance === 'MAJOR') {
