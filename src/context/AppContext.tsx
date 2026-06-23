@@ -26,6 +26,8 @@ interface AppContextValue extends AppState {
   mapsLoading: boolean
   eraDetailOpen: boolean
   setEraDetailOpen: (open: boolean) => void
+  timelineDetailId: string | null
+  openTimelineDetail: (entryId: string) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -40,6 +42,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null)
   const [mapResetTriggered, setMapResetTriggered] = useState(false)
   const [eraDetailOpen, setEraDetailOpen] = useState(false)
+  const [timelineDetailId, setTimelineDetailId] = useState<string | null>(null)
 
   useEffect(() => {
     if (eras.length > 0 && !selectedEra) {
@@ -84,6 +87,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMapResetTriggered(false)
   }
 
+  function openTimelineDetail(entryId: string) {
+    setTimelineDetailId(entryId)
+    setEraDetailOpen(true)
+  }
+
   return (
     <AppContext.Provider
       value={{
@@ -101,6 +109,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         mapsLoading,
         eraDetailOpen,
         setEraDetailOpen,
+        timelineDetailId,
+        openTimelineDetail,
       }}
     >
       {children}

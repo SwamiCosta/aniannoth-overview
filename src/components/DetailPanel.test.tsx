@@ -44,6 +44,19 @@ const ERA_PRIMORDIAL = {
   color: '#7c3aed',
 }
 
+const POINT_SUNDERING = {
+  id: 'point-sundering',
+  name: 'The Great Sundering',
+  order: 1,
+  type: 'POINT' as const,
+  importance: 'MAJOR' as const,
+  period: 'Anno 0',
+  summary: 'The moment the material world split from the Omniverse.',
+  mapType: 'abstract' as const,
+  defaultMap: '',
+  color: '',
+}
+
 const MAP_OMNIVERSE = {
   id: 'omniverse',
   name: 'The Omniverse',
@@ -103,6 +116,18 @@ function SelectEntityButton({ entityId }: { entityId: string | null }) {
   return (
     <button onClick={() => ctx.setSelectedEntity(entityId)}>{label}</button>
   )
+}
+
+function OpenTimelineDetailButton({ entryId }: { entryId: string }) {
+  const ctx = useAppContext()
+  return (
+    <button onClick={() => ctx.openTimelineDetail(entryId)}>{`open-detail-${entryId}`}</button>
+  )
+}
+
+function EraInspector() {
+  const ctx = useAppContext()
+  return <span data-testid="selected-era">{ctx.selectedEra}</span>
 }
 
 // ---------------------------------------------------------------------------
@@ -248,5 +273,68 @@ describe('DetailPanel', () => {
     const disabledElement = draftLink.closest('[aria-disabled="true"]')
     expect(disabledElement).not.toBeNull()
     expect(disabledElement).toHaveAttribute('title', 'Not available in the public atlas')
+  })
+
+  it('shows the era detail when openTimelineDetail is called with an era id', async () => {
+    render(
+      <ControlledWrapper>
+        <OpenTimelineDetailButton entryId={ERA_PRIMORDIAL.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`open-detail-${ERA_PRIMORDIAL.id}`).click()
+    })
+
+    expect(await screen.findByText(ERA_PRIMORDIAL.name)).toBeInTheDocument()
+    expect(screen.getByText(ERA_PRIMORDIAL.period)).toBeInTheDocument()
+  })
+
+  it('shows the point detail when openTimelineDetail is called with a point id, without changing the selected era', async () => {
+    mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, POINT_SUNDERING])
+
+    render(
+      <ControlledWrapper>
+        <EraInspector />
+        <OpenTimelineDetailButton entryId={POINT_SUNDERING.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await waitFor(() => expect(screen.getByTestId('selected-era').textContent).toBe(ERA_PRIMORDIAL.id))
+
+    await act(async () => {
+      screen.getByText(`open-detail-${POINT_SUNDERING.id}`).click()
+    })
+
+    // The point's own name and summary are shown
+    expect(await screen.findByText(POINT_SUNDERING.name)).toBeInTheDocument()
+    expect(screen.getByText(POINT_SUNDERING.summary)).toBeInTheDocument()
+
+    // The map-driving era selection is untouched
+    expect(screen.getByTestId('selected-era').textContent).toBe(ERA_PRIMORDIAL.id)
+  })
+
+  it('clicking the close button hides the timeline detail panel', async () => {
+    render(
+      <ControlledWrapper>
+        <OpenTimelineDetailButton entryId={ERA_PRIMORDIAL.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`open-detail-${ERA_PRIMORDIAL.id}`).click()
+    })
+    expect(await screen.findByText(ERA_PRIMORDIAL.name)).toBeInTheDocument()
+
+    const closeButton = screen.getByRole('button', { name: 'Close timeline detail panel' })
+    await act(async () => { closeButton.click() })
+
+    await waitFor(() => {
+      expect(screen.queryByText(ERA_PRIMORDIAL.name)).not.toBeInTheDocument()
+      expect(screen.getByText('Select an entity to view details')).toBeInTheDocument()
+    })
   })
 })

@@ -9,26 +9,30 @@ function EraNode({ era, isActive }: { era: Era; isActive: boolean }) {
 
   return (
     <button
-      onClick={() => { ctx.setEra(era.id); ctx.setEraDetailOpen(true) }}
+      onClick={() => { ctx.setEra(era.id); ctx.openTimelineDetail(era.id) }}
       className="relative flex flex-col items-center gap-1.5 group cursor-pointer shrink-0 focus:outline-none"
       aria-label={era.name}
       aria-pressed={isActive}
     >
-      {/* Circle node */}
-      <span
-        className={cn(
-          'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors',
-          isAbstract && 'border-dashed',
-          isActive
-            ? 'border-transparent'
-            : 'border-border group-hover:border-primary-border group-hover:bg-primary-light bg-surface'
-        )}
-        style={
-          isActive
-            ? { backgroundColor: era.color, borderColor: era.color }
-            : undefined
-        }
-      />
+      {/* Marker — fixed-size slot keeps every entry type centered on the connecting line */}
+      <span className="relative w-6 h-6 flex items-center justify-center">
+        <span
+          className={cn(
+            'w-6 h-6 rounded-full border-2 transition-colors',
+            isAbstract && 'border-dashed',
+            isActive
+              ? 'border-transparent'
+              : 'border-border group-hover:border-primary-border group-hover:bg-primary-light bg-surface'
+          )}
+          style={
+            isActive
+              ? { backgroundColor: era.color, borderColor: era.color }
+              : undefined
+          }
+        />
+        {/* Inner dot distinguishes the active era from a flat color fill */}
+        {isActive && <span className="absolute w-2 h-2 rounded-full bg-surface" aria-hidden="true" />}
+      </span>
 
       {/* Label */}
       <span
@@ -44,44 +48,76 @@ function EraNode({ era, isActive }: { era: Era; isActive: boolean }) {
   )
 }
 
-function StandardPointPin({ point }: { point: Era }) {
+function StandardPointPin({ point, isSelected }: { point: Era; isSelected: boolean }) {
+  const ctx = useAppContext()
+
   return (
-    <div
-      className="relative flex flex-col items-center gap-1.5 shrink-0"
+    <button
+      onClick={() => ctx.openTimelineDetail(point.id)}
+      className="relative flex flex-col items-center gap-1.5 group cursor-pointer shrink-0 focus:outline-none"
       aria-label={point.name}
+      aria-pressed={isSelected}
       data-point-type="STANDARD"
       title={point.name}
     >
-      {/* Small circle pin — sits on the connecting line */}
-      <span className="w-3 h-3 rounded-full bg-border border border-muted block" />
+      {/* Marker — fixed-size slot keeps the dot centered on the connecting line */}
+      <span className="relative w-6 h-6 flex items-center justify-center">
+        <span
+          className={cn(
+            'w-3 h-3 rounded-full border block transition-colors',
+            isSelected
+              ? 'bg-primary border-primary'
+              : 'bg-border border-muted group-hover:border-primary-border'
+          )}
+        />
+      </span>
 
       {/* Label */}
-      <span className="text-[10px] leading-tight text-center max-w-[60px] text-muted">
+      <span
+        className={cn(
+          'text-[10px] leading-tight text-center max-w-[60px] transition-colors',
+          isSelected ? 'text-primary font-medium' : 'text-muted group-hover:text-foreground'
+        )}
+      >
         {point.name}
       </span>
-    </div>
+    </button>
   )
 }
 
-function MajorPointPin({ point }: { point: Era }) {
+function MajorPointPin({ point, isSelected }: { point: Era; isSelected: boolean }) {
+  const ctx = useAppContext()
+
   return (
-    <div
-      className="relative flex flex-col items-center gap-1.5 shrink-0"
+    <button
+      onClick={() => ctx.openTimelineDetail(point.id)}
+      className="relative flex flex-col items-center gap-1.5 group cursor-pointer shrink-0 focus:outline-none"
       aria-label={point.name}
+      aria-pressed={isSelected}
       data-point-type="MAJOR"
       title={point.name}
     >
-      {/* Diamond shape — rotated square using primary accent color */}
-      <span
-        className="w-4 h-4 rotate-45 bg-primary border-2 border-primary-border block"
-        aria-hidden="true"
-      />
+      {/* Marker — fixed-size slot gives the rotated diamond headroom so its tip isn't clipped */}
+      <span className="relative w-6 h-6 flex items-center justify-center">
+        <span
+          className={cn(
+            'w-3.5 h-3.5 rotate-45 border-2 block transition-colors',
+            isSelected ? 'bg-primary border-foreground' : 'bg-primary border-primary-border group-hover:bg-primary/80'
+          )}
+          aria-hidden="true"
+        />
+      </span>
 
       {/* Label */}
-      <span className="text-[10px] leading-tight text-center max-w-[60px] text-primary font-medium">
+      <span
+        className={cn(
+          'text-[10px] leading-tight text-center max-w-[60px] text-primary transition-colors',
+          isSelected ? 'font-semibold' : 'font-medium'
+        )}
+      >
         {point.name}
       </span>
-    </div>
+    </button>
   )
 }
 
@@ -99,17 +135,18 @@ export default function TimelineBar() {
 
       {/* Track */}
       <div className="overflow-x-auto pb-1">
-        <div className="relative flex items-start gap-10 min-w-full">
-          {/* Connecting line */}
+        <div className="relative flex items-start gap-10 min-w-full w-max">
+          {/* Connecting line — sized with the row itself so it covers the full scrollable width */}
           <div className="absolute top-3 left-0 right-0 h-px bg-border" />
 
           {/* Timeline entries — eras and temporal points */}
           {entries.map((entry) => {
             if (entry.type === 'POINT') {
+              const isSelected = ctx.eraDetailOpen && ctx.timelineDetailId === entry.id
               if (entry.importance === 'MAJOR') {
-                return <MajorPointPin key={entry.id} point={entry} />
+                return <MajorPointPin key={entry.id} point={entry} isSelected={isSelected} />
               }
-              return <StandardPointPin key={entry.id} point={entry} />
+              return <StandardPointPin key={entry.id} point={entry} isSelected={isSelected} />
             }
 
             const isActive = entry.id === ctx.selectedEra

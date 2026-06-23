@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { AppProvider } from '@/context/AppContext'
+import { render, screen, act, waitFor } from '@testing-library/react'
+import { AppProvider, useAppContext } from '@/context/AppContext'
 import TimelineBar from './TimelineBar'
 
 // ---------------------------------------------------------------------------
@@ -76,6 +76,17 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   return <AppProvider>{children}</AppProvider>
 }
 
+function Inspector() {
+  const ctx = useAppContext()
+  return (
+    <>
+      <span data-testid="era">{ctx.selectedEra}</span>
+      <span data-testid="detail-open">{String(ctx.eraDetailOpen)}</span>
+      <span data-testid="detail-target">{ctx.timelineDetailId ?? 'null'}</span>
+    </>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Tests — three rendering variants
 // ---------------------------------------------------------------------------
@@ -118,7 +129,7 @@ describe('TimelineBar — temporal points', () => {
   })
 
   describe('POINT / STANDARD entry', () => {
-    it('renders a STANDARD pin marker and not a button', async () => {
+    it('renders a STANDARD pin marker as a selectable button', async () => {
       mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, POINT_STANDARD])
 
       render(
@@ -134,8 +145,8 @@ describe('TimelineBar — temporal points', () => {
       const pin = document.querySelector('[data-point-type="STANDARD"]')
       expect(pin).not.toBeNull()
 
-      // It must NOT be an interactive button — temporal points are not selectable
-      expect(pin?.tagName).not.toBe('BUTTON')
+      // Temporal points are selectable, just like eras
+      expect(pin?.tagName).toBe('BUTTON')
     })
 
     it('renders the STANDARD point name as visible text', async () => {
@@ -150,10 +161,34 @@ describe('TimelineBar — temporal points', () => {
       await screen.findByRole('button', { name: ERA_PRIMORDIAL.name })
       expect(screen.getByText(POINT_STANDARD.name)).toBeInTheDocument()
     })
+
+    it('clicking a STANDARD point opens its detail without changing the selected era', async () => {
+      mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, POINT_STANDARD])
+
+      render(
+        <Wrapper>
+          <Inspector />
+          <TimelineBar />
+        </Wrapper>,
+      )
+
+      const eraButton = await screen.findByRole('button', { name: ERA_PRIMORDIAL.name })
+      await waitFor(() => expect(eraButton).toHaveAttribute('aria-pressed', 'true'))
+
+      const pointButton = screen.getByRole('button', { name: POINT_STANDARD.name })
+      await act(async () => { pointButton.click() })
+
+      // The detail panel opens targeting the point, but the selected era is untouched
+      expect(screen.getByTestId('era').textContent).toBe(ERA_PRIMORDIAL.id)
+      expect(screen.getByTestId('detail-open').textContent).toBe('true')
+      expect(screen.getByTestId('detail-target').textContent).toBe(POINT_STANDARD.id)
+      expect(eraButton).toHaveAttribute('aria-pressed', 'true')
+      expect(pointButton).toHaveAttribute('aria-pressed', 'true')
+    })
   })
 
   describe('POINT / MAJOR entry', () => {
-    it('renders a MAJOR pin marker and not a button', async () => {
+    it('renders a MAJOR pin marker as a selectable button', async () => {
       mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, POINT_MAJOR])
 
       render(
@@ -168,8 +203,30 @@ describe('TimelineBar — temporal points', () => {
       const pin = document.querySelector('[data-point-type="MAJOR"]')
       expect(pin).not.toBeNull()
 
-      // It must NOT be an interactive button
-      expect(pin?.tagName).not.toBe('BUTTON')
+      // Temporal points are selectable, just like eras
+      expect(pin?.tagName).toBe('BUTTON')
+    })
+
+    it('clicking a MAJOR point opens its detail without changing the selected era', async () => {
+      mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, POINT_MAJOR])
+
+      render(
+        <Wrapper>
+          <Inspector />
+          <TimelineBar />
+        </Wrapper>,
+      )
+
+      const eraButton = await screen.findByRole('button', { name: ERA_PRIMORDIAL.name })
+      await waitFor(() => expect(eraButton).toHaveAttribute('aria-pressed', 'true'))
+
+      const pointButton = screen.getByRole('button', { name: POINT_MAJOR.name })
+      await act(async () => { pointButton.click() })
+
+      expect(screen.getByTestId('era').textContent).toBe(ERA_PRIMORDIAL.id)
+      expect(screen.getByTestId('detail-open').textContent).toBe('true')
+      expect(screen.getByTestId('detail-target').textContent).toBe(POINT_MAJOR.id)
+      expect(eraButton).toHaveAttribute('aria-pressed', 'true')
     })
 
     it('renders the MAJOR point name as visible text', async () => {
