@@ -31,8 +31,11 @@ const mockFetchEntities = vi.mocked(fetchEntities)
 // Test fixtures
 // ---------------------------------------------------------------------------
 
+// Era ids are UUIDs in production (since the V8 migration) — entity.timeline.era
+// holds the era's *name*, not its id. These fixtures intentionally use distinct
+// id/name values to exercise that real-world mismatch.
 const ERA_PRIMORDIAL = {
-  id: 'primordial',
+  id: 'e0a1b2c3-0000-4000-8000-000000000001',
   name: 'The Primordial Era',
   order: 0,
   type: 'ERA' as const,
@@ -49,7 +52,7 @@ const MAP_OMNIVERSE = {
   name: 'The Omniverse',
   type: 'abstract' as const,
   image: '',
-  availableInEras: ['primordial'],
+  availableInEras: [ERA_PRIMORDIAL.id],
 }
 
 const CHARACTER_ENTITY = {
@@ -61,7 +64,7 @@ const CHARACTER_ENTITY = {
   summary: 'A powerful arcane scholar.',
   body: '',
   location: '',
-  timeline: { era: 'primordial' },
+  timeline: { era: ERA_PRIMORDIAL.name },
   status: 'canon' as const,
   links: [],
 }
@@ -75,7 +78,7 @@ const LORE_ENTITY = {
   summary: 'A record from the beginning.',
   body: '',
   location: '',
-  timeline: { era: 'primordial' },
+  timeline: { era: ERA_PRIMORDIAL.name },
   status: 'canon' as const,
   links: [],
 }
@@ -90,7 +93,7 @@ const OTHER_ERA_ENTITY = {
   summary: 'From another era.',
   body: '',
   location: '',
-  timeline: { era: 'ancient' },
+  timeline: { era: 'The Ancient Era' },
   status: 'canon' as const,
   links: [],
 }
