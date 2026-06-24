@@ -17,7 +17,7 @@ export default function Sidebar() {
   const currentEra = eras.find(era => era.id === ctx.selectedEra)
 
   const visibleEntities = allEntities.filter(entity => {
-    if (entity.timeline.era !== ctx.selectedEra) return false
+    if (entity.timeline.era !== currentEra?.name) return false
     if (ctx.filters.category !== null && entity.category !== ctx.filters.category) return false
     return true
   })
