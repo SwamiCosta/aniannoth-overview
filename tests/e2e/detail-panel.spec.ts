@@ -54,7 +54,7 @@ const TEST_ENTITY = {
   categories: ['characters'],
   status: 'CANON',
   images: [],
-  timelineFoundedEra: 'primordial',
+  timelineFoundedEra: ERA_PRIMORDIAL.name,
   timelineDestroyedEra: null,
 }
 
