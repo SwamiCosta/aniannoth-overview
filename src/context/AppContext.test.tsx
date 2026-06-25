@@ -199,6 +199,18 @@ describe('AppContext', () => {
     expect(screen.getByTestId('era').textContent).toBe('primordial')
   })
 
+  it('openTimelineDetail clears a previously selected entity, so the panel can show the era', () => {
+    render(<Wrapper><Inspector /></Wrapper>)
+
+    act(() => { screen.getByText('set-entity').click() })
+    expect(screen.getByTestId('entity').textContent).toBe('entity-123')
+
+    act(() => { screen.getByText('open-detail-ancient').click() })
+
+    expect(screen.getByTestId('detail-open').textContent).toBe('true')
+    expect(screen.getByTestId('entity').textContent).toBe('null')
+  })
+
   it('throws when useAppContext is used outside AppProvider', () => {
     const original = console.error
     console.error = () => {}

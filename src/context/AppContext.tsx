@@ -90,6 +90,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   function openTimelineDetail(entryId: string) {
     setTimelineDetailId(entryId)
     setEraDetailOpen(true)
+    setSelectedEntityId(null)
   }
 
   return (

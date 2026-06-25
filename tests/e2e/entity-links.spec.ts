@@ -56,7 +56,7 @@ const LINKED_CHARACTER = {
   categories: ['characters'],
   status: 'CANON',
   images: [],
-  timelineFoundedEra: 'primordial',
+  timelineFoundedEra: ERA_PRIMORDIAL.name,
   timelineDestroyedEra: null,
 }
 
@@ -69,7 +69,7 @@ const LORE_ENTITY = {
   categories: ['lore'],
   status: 'CANON',
   images: [],
-  timelineFoundedEra: 'primordial',
+  timelineFoundedEra: ERA_PRIMORDIAL.name,
   timelineDestroyedEra: null,
   links: [
     { type: 'CHARACTER', id: LINKED_CHARACTER.id, name: LINKED_CHARACTER.name, status: 'CANON' },
@@ -175,7 +175,7 @@ test.describe('DetailPanel — cross-entity links', () => {
     // It must be visible as plain (disabled) text carrying the tooltip
     const draftLink = page.getByText('An Unfinished Soul')
     await expect(draftLink).toBeVisible()
-    await expect(draftLink.locator('xpath=ancestor::*[@aria-disabled="true"]')).toHaveAttribute(
+    await expect(draftLink.locator('xpath=ancestor-or-self::*[@aria-disabled="true"]')).toHaveAttribute(
       'title',
       'Not available in the public atlas',
     )

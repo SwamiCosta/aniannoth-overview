@@ -51,7 +51,7 @@ const CHARACTER_ENTITY = {
   categories: ['characters'],
   status: 'CANON',
   images: [],
-  timelineFoundedEra: 'primordial',
+  timelineFoundedEra: ERA_PRIMORDIAL.name,
   timelineDestroyedEra: null,
 }
 
@@ -64,7 +64,7 @@ const LORE_ENTITY = {
   categories: ['lore'],
   status: 'CANON',
   images: [],
-  timelineFoundedEra: 'primordial',
+  timelineFoundedEra: ERA_PRIMORDIAL.name,
   timelineDestroyedEra: null,
 }
 
