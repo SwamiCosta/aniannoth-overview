@@ -150,6 +150,8 @@ App.tsx outer div: h-screen flex flex-col overflow-hidden
 
 **Fullscreen overlays:** `z-[100]` is reserved for full-viewport overlays (e.g. `DetailPanel`'s expanded reading view and image lightbox) — chosen to sit above TopBar (`z-50`) and TimelineBar (`z-40`). These overlays use `fixed inset-0` and render as a sibling alongside the underlying panel, which stays mounted (not unmounted) behind them.
 
+**Key decision — per-entity local state needs a `key`:** `DetailPanel` never unmounts when the selected entity changes from one known entity to another (Sidebar click, Related Entities click) — only `ctx.selectedEntityId` changes and the same component tree re-renders with new props. Any component holding local `useState` that's only meaningful for the *current* entity (e.g. `ImageGallery`'s `activeIndex` and `isLightboxOpen`) must be given `key={entity.id}` where it's rendered, or its state silently carries over to the next entity (visible bug: an image index from a previous entity outliving the entity it belonged to, indexing past the new entity's `images` array). `isBodyExpanded`, by contrast, intentionally lives in `DetailPanel` itself (not keyed) so the expanded reading view survives navigating to a different entity via Related Entities — it resets only when the panel is closed (`selectedEntityId` becomes `null`).
+
 ---
 
 ## Component responsibilities

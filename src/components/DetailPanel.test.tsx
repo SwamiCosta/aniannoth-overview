@@ -109,6 +109,29 @@ const ENTITY_WITH_IMAGES = {
   images: ['https://example.com/spire-1.jpg', 'https://example.com/spire-2.jpg'],
 }
 
+const ENTITY_WITH_ONE_IMAGE = {
+  ...TEST_ENTITY,
+  id: 'entity-with-one-image',
+  name: 'The Lone Watcher',
+  category: 'places',
+  images: ['https://example.com/watcher-1.jpg'],
+}
+
+const LINKED_RESOLVABLE_CHARACTER = {
+  type: 'CHARACTER',
+  id: TEST_ENTITY.id,
+  name: TEST_ENTITY.name,
+  status: 'canon' as const,
+}
+
+const ENTITY_WITH_RESOLVABLE_LINK = {
+  ...TEST_ENTITY,
+  id: 'entity-with-resolvable-link',
+  name: 'Lore Pointing to Verath',
+  category: 'lore',
+  links: [LINKED_RESOLVABLE_CHARACTER],
+}
+
 // ---------------------------------------------------------------------------
 // Helper — renders the DetailPanel alongside a control button
 // that lets a test set/clear selectedEntityId in context.
@@ -148,8 +171,8 @@ describe('DetailPanel', () => {
     mockFetchMaps.mockResolvedValue([MAP_OMNIVERSE])
     mockFetchEntities.mockImplementation(async (category: string) => {
       if (category === 'characters') return [TEST_ENTITY]
-      if (category === 'lore') return [ENTITY_WITH_LINKS]
-      if (category === 'places') return [ENTITY_WITH_IMAGES]
+      if (category === 'lore') return [ENTITY_WITH_LINKS, ENTITY_WITH_RESOLVABLE_LINK]
+      if (category === 'places') return [ENTITY_WITH_IMAGES, ENTITY_WITH_ONE_IMAGE]
       return []
     })
   })
@@ -420,5 +443,80 @@ describe('DetailPanel', () => {
     await act(async () => { closeButton.click() })
 
     expect(screen.queryByRole('button', { name: 'Close image viewer' })).not.toBeInTheDocument()
+  })
+
+  it('resets the image index when switching to a different entity with fewer images', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_WITH_IMAGES.id} />
+        <SelectEntityButton entityId={ENTITY_WITH_ONE_IMAGE.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_WITH_IMAGES.id}`).click()
+    })
+
+    const nextButton = await screen.findByRole('button', { name: 'Next image' })
+    await act(async () => { nextButton.click() })
+    expect(screen.getByAltText(`${ENTITY_WITH_IMAGES.name} — image 2 of 2`)).toBeInTheDocument()
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_WITH_ONE_IMAGE.id}`).click()
+    })
+
+    const resetImage = await screen.findByAltText(`${ENTITY_WITH_ONE_IMAGE.name} — image 1 of 1`)
+    expect(resetImage).toHaveAttribute('src', ENTITY_WITH_ONE_IMAGE.images[0])
+    expect(screen.queryByAltText(/image 2 of 1/)).not.toBeInTheDocument()
+  })
+
+  it('shows Related entities inside the expanded reading view and keeps it expanded after navigating to one', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_WITH_RESOLVABLE_LINK.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_WITH_RESOLVABLE_LINK.id}`).click()
+    })
+
+    const expandButton = await screen.findByRole('button', { name: 'Expand reading view' })
+    await act(async () => { expandButton.click() })
+
+    // "Related entities" renders both in the (now-hidden-behind-overlay) collapsed view
+    // and in the expanded view itself — either instance triggers the same navigation.
+    expect(screen.getAllByText('Related entities').length).toBeGreaterThan(0)
+
+    const relatedLinks = screen.getAllByRole('button', { name: new RegExp(TEST_ENTITY.name) })
+    await act(async () => { relatedLinks[0].click() })
+
+    // Same coexistence pattern: the resolved entity's body renders in both the
+    // collapsed view (hidden behind the overlay) and the still-expanded overlay.
+    await waitFor(() => {
+      expect(screen.getAllByText('Verath existed before the first dawn.').length).toBeGreaterThan(0)
+    })
+    expect(screen.getByRole('button', { name: 'Collapse reading view' })).toBeInTheDocument()
+  })
+
+  it('shows an image gallery above the text in the expanded reading view', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_WITH_IMAGES.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_WITH_IMAGES.id}`).click()
+    })
+
+    const expandButton = await screen.findByRole('button', { name: 'Expand reading view' })
+    await act(async () => { expandButton.click() })
+
+    const expandImageButtons = screen.getAllByRole('button', { name: 'Expand image' })
+    expect(expandImageButtons).toHaveLength(2)
   })
 })

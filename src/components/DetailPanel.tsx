@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, MapPin, Globe, Maximize2, Minimize2, User, XCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
@@ -209,6 +209,13 @@ export default function DetailPanel() {
   const { data: erasData } = useEras()
   const [isBodyExpanded, setIsBodyExpanded] = useState(false)
 
+  // Closing the panel always returns to the collapsed reading view —
+  // isBodyExpanded otherwise persists across entity switches so that
+  // navigating via Related Entities keeps the reading view expanded.
+  useEffect(() => {
+    if (ctx.selectedEntityId === null) setIsBodyExpanded(false)
+  }, [ctx.selectedEntityId])
+
   // Priority 1: entity detail
   if (ctx.selectedEntityId !== null) {
     const entity = entities.find(e => e.id === ctx.selectedEntityId)
@@ -239,8 +246,9 @@ export default function DetailPanel() {
         </button>
 
         {/* Left column — image gallery */}
+        {/* key resets activeIndex/lightbox state on entity switch — DetailPanel never unmounts between entities */}
         <div className="w-32 flex-shrink-0">
-          <ImageGallery images={entity.images} name={entity.name} />
+          <ImageGallery key={entity.id} images={entity.images} name={entity.name} />
         </div>
 
         {/* Right column — details */}
@@ -297,11 +305,19 @@ export default function DetailPanel() {
             >
               <Minimize2 size={20} />
             </button>
-            <h2 className="text-2xl font-medium text-foreground mb-4 pr-10">{entity.name}</h2>
+            <div className="max-w-3xl mx-auto w-full shrink-0">
+              <h2 className="text-2xl font-medium text-foreground mb-4 text-center">{entity.name}</h2>
+            </div>
             <div className="overflow-y-auto flex-1 max-w-3xl mx-auto w-full">
+              {entity.images.length > 0 && (
+                <div className="h-64 mb-4">
+                  <ImageGallery key={entity.id} images={entity.images} name={entity.name} />
+                </div>
+              )}
               <ReactMarkdown components={markdownComponents}>
                 {entity.body}
               </ReactMarkdown>
+              <RelatedEntities links={entity.links} />
             </div>
           </div>
         )}
