@@ -146,6 +146,8 @@ App.tsx outer div: h-screen flex flex-col overflow-hidden
 
 **Key decision — sticky over fixed:** TopBar and TimelineBar use `sticky` positioning, not `fixed`. Fixed elements leave the normal document flow, requiring error-prone `padding-top` offsets that break whenever bar heights change. Sticky elements remain in the flow and push content down naturally. The `h-screen flex flex-col` shell ensures Zone 3 fills the remaining viewport without scrolling the outer container.
 
+**Fullscreen overlays:** `z-[100]` is reserved for full-viewport overlays (e.g. `DetailPanel`'s expanded reading view and image lightbox) — chosen to sit above TopBar (`z-50`) and TimelineBar (`z-40`). These overlays use `fixed inset-0` and render as a sibling alongside the underlying panel, which stays mounted (not unmounted) behind them.
+
 ---
 
 ## Component responsibilities
@@ -269,4 +271,4 @@ A second pull is not required within the same task session. See workspace `SKILL
 
 ---
 
-*Last updated: 2026-06-23*
+*Last updated: 2026-06-26*

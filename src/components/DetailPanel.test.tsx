@@ -101,6 +101,14 @@ const ENTITY_WITH_LINKS = {
   links: [LINKED_CANON_PLACE, LINKED_DRAFT_CHARACTER],
 }
 
+const ENTITY_WITH_IMAGES = {
+  ...TEST_ENTITY,
+  id: 'entity-with-images',
+  name: 'The Hollow Spire',
+  category: 'places',
+  images: ['https://example.com/spire-1.jpg', 'https://example.com/spire-2.jpg'],
+}
+
 // ---------------------------------------------------------------------------
 // Helper — renders the DetailPanel alongside a control button
 // that lets a test set/clear selectedEntityId in context.
@@ -141,6 +149,7 @@ describe('DetailPanel', () => {
     mockFetchEntities.mockImplementation(async (category: string) => {
       if (category === 'characters') return [TEST_ENTITY]
       if (category === 'lore') return [ENTITY_WITH_LINKS]
+      if (category === 'places') return [ENTITY_WITH_IMAGES]
       return []
     })
   })
@@ -336,5 +345,80 @@ describe('DetailPanel', () => {
       expect(screen.queryByText(ERA_PRIMORDIAL.name)).not.toBeInTheDocument()
       expect(screen.getByText('Select an entity to view details')).toBeInTheDocument()
     })
+  })
+
+  it('expanding the reading view shows the full body and collapses back', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={TEST_ENTITY.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${TEST_ENTITY.id}`).click()
+    })
+
+    await screen.findByText('Verath existed before the first dawn.')
+    expect(screen.getAllByText('Verath existed before the first dawn.')).toHaveLength(1)
+
+    const expandButton = screen.getByRole('button', { name: 'Expand reading view' })
+    await act(async () => { expandButton.click() })
+
+    expect(screen.getAllByText('Verath existed before the first dawn.')).toHaveLength(2)
+    const collapseButton = screen.getByRole('button', { name: 'Collapse reading view' })
+
+    await act(async () => { collapseButton.click() })
+
+    expect(screen.getAllByText('Verath existed before the first dawn.')).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: 'Collapse reading view' })).not.toBeInTheDocument()
+  })
+
+  it('clicking the main image opens a fullscreen image viewer', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_WITH_IMAGES.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_WITH_IMAGES.id}`).click()
+    })
+
+    const expandImageButton = await screen.findByRole('button', { name: 'Expand image' })
+    await act(async () => { expandImageButton.click() })
+
+    expect(screen.getByRole('button', { name: 'Close image viewer' })).toBeInTheDocument()
+    // The lightbox image renders alongside the gallery's own (now-hidden-behind-overlay) image
+    const fullscreenImages = screen.getAllByAltText(`${ENTITY_WITH_IMAGES.name} — image 1 of 2`)
+    expect(fullscreenImages.some(img => img.className.includes('object-contain'))).toBe(true)
+  })
+
+  it('navigates between images inside the fullscreen viewer and closes it', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_WITH_IMAGES.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_WITH_IMAGES.id}`).click()
+    })
+
+    const expandImageButton = await screen.findByRole('button', { name: 'Expand image' })
+    await act(async () => { expandImageButton.click() })
+
+    const nextButton = screen.getByRole('button', { name: 'Next image (fullscreen)' })
+    await act(async () => { nextButton.click() })
+
+    const fullscreenImages = screen.getAllByAltText(`${ENTITY_WITH_IMAGES.name} — image 2 of 2`)
+    expect(fullscreenImages.some(img => img.className.includes('object-contain'))).toBe(true)
+
+    const closeButton = screen.getByRole('button', { name: 'Close image viewer' })
+    await act(async () => { closeButton.click() })
+
+    expect(screen.queryByRole('button', { name: 'Close image viewer' })).not.toBeInTheDocument()
   })
 })
