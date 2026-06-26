@@ -228,7 +228,7 @@ export default function DetailPanel() {
     )
 
     return (
-      <div className="border-t border-border bg-surface min-h-48 p-4 flex flex-row gap-4 relative">
+      <div className="border-t border-border bg-surface h-72 shrink-0 p-4 flex flex-row gap-4 relative">
         {/* Close button */}
         <button
           onClick={() => ctx.setSelectedEntity(null)}
@@ -324,7 +324,7 @@ export default function DetailPanel() {
     const MapTypeIcon = entry.mapType === 'navigable' ? Globe : MapPin
 
     return (
-      <div className="border-t border-border bg-surface min-h-48 p-4 flex flex-col gap-2 relative">
+      <div className="border-t border-border bg-surface h-72 shrink-0 p-4 flex flex-col gap-2 relative overflow-y-auto">
         {/* Close button */}
         <button
           onClick={() => ctx.setEraDetailOpen(false)}
