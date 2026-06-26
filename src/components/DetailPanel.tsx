@@ -1,14 +1,25 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, MapPin, Globe, User, XCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MapPin, Globe, Maximize2, Minimize2, User, XCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import type { Components } from 'react-markdown'
 import { useAppContext } from '@/context/AppContext'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useEras } from '@/hooks/useEras'
 import { categoryForType } from '@/lib/entityCategory'
 import type { LinkedEntity } from '@/types/universe'
 
+const markdownComponents: Components = {
+  h2: ({ children }) => (
+    <h2 className="text-base font-medium text-foreground mt-3 mb-1">{children}</h2>
+  ),
+  p: ({ children }) => (
+    <p className="text-sm text-muted leading-relaxed">{children}</p>
+  ),
+}
+
 function ImageGallery({ images, name }: { images: string[]; name: string }) {
   const [activeIndex, setActiveIndex] = useState(0)
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
 
   if (images.length === 0) {
     return (
@@ -24,51 +35,122 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
   const hasManyImages = images.length > 1
 
   return (
-    <div className="flex flex-col gap-2 w-full h-full">
-      {/* Main image */}
-      <div className="relative rounded-lg overflow-hidden bg-border flex-1">
-        <img
-          src={images[activeIndex]}
-          alt={`${name} — image ${activeIndex + 1} of ${images.length}`}
-          className="w-full h-full object-cover"
-        />
+    <>
+      <div className="flex flex-col gap-2 w-full h-full">
+        {/* Main image */}
+        <div className="relative rounded-lg overflow-hidden bg-border flex-1">
+          <button
+            onClick={() => setIsLightboxOpen(true)}
+            className="w-full h-full cursor-zoom-in"
+            aria-label="Expand image"
+          >
+            <img
+              src={images[activeIndex]}
+              alt={`${name} — image ${activeIndex + 1} of ${images.length}`}
+              className="w-full h-full object-cover"
+            />
+          </button>
+          {hasManyImages && (
+            <>
+              <button
+                onClick={() => setActiveIndex(i => (i - 1 + images.length) % images.length)}
+                className="absolute left-1 top-1/2 -translate-y-1/2 bg-surface text-muted hover:text-foreground rounded-full p-0.5 transition-colors"
+                aria-label="Previous image"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <button
+                onClick={() => setActiveIndex(i => (i + 1) % images.length)}
+                className="absolute right-1 top-1/2 -translate-y-1/2 bg-surface text-muted hover:text-foreground rounded-full p-0.5 transition-colors"
+                aria-label="Next image"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Thumbnail strip — only when there are multiple images */}
         {hasManyImages && (
-          <>
-            <button
-              onClick={() => setActiveIndex(i => (i - 1 + images.length) % images.length)}
-              className="absolute left-1 top-1/2 -translate-y-1/2 bg-surface text-muted hover:text-foreground rounded-full p-0.5 transition-colors"
-              aria-label="Previous image"
-            >
-              <ChevronLeft size={14} />
-            </button>
-            <button
-              onClick={() => setActiveIndex(i => (i + 1) % images.length)}
-              className="absolute right-1 top-1/2 -translate-y-1/2 bg-surface text-muted hover:text-foreground rounded-full p-0.5 transition-colors"
-              aria-label="Next image"
-            >
-              <ChevronRight size={14} />
-            </button>
-          </>
+          <div className="flex gap-1 overflow-x-auto">
+            {images.map((src, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveIndex(index)}
+                className={[
+                  'shrink-0 w-8 h-8 rounded overflow-hidden border-2 transition-colors',
+                  index === activeIndex ? 'border-primary' : 'border-border',
+                ].join(' ')}
+                aria-label={`View image ${index + 1}`}
+              >
+                <img src={src} alt="" className="w-full h-full object-cover" />
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Thumbnail strip — only when there are multiple images */}
+      {isLightboxOpen && (
+        <ImageLightbox
+          images={images}
+          name={name}
+          activeIndex={activeIndex}
+          onIndexChange={setActiveIndex}
+          onClose={() => setIsLightboxOpen(false)}
+        />
+      )}
+    </>
+  )
+}
+
+function ImageLightbox({
+  images,
+  name,
+  activeIndex,
+  onIndexChange,
+  onClose,
+}: {
+  images: string[]
+  name: string
+  activeIndex: number
+  onIndexChange: (index: number) => void
+  onClose: () => void
+}) {
+  const hasManyImages = images.length > 1
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-foreground/90 flex items-center justify-center">
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-surface hover:text-primary-border transition-colors"
+        aria-label="Close image viewer"
+      >
+        <XCircle size={28} />
+      </button>
+
+      <img
+        src={images[activeIndex]}
+        alt={`${name} — image ${activeIndex + 1} of ${images.length}`}
+        className="max-w-[90vw] max-h-[90vh] object-contain"
+      />
+
       {hasManyImages && (
-        <div className="flex gap-1 overflow-x-auto">
-          {images.map((src, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveIndex(index)}
-              className={[
-                'shrink-0 w-8 h-8 rounded overflow-hidden border-2 transition-colors',
-                index === activeIndex ? 'border-primary' : 'border-border',
-              ].join(' ')}
-              aria-label={`View image ${index + 1}`}
-            >
-              <img src={src} alt="" className="w-full h-full object-cover" />
-            </button>
-          ))}
-        </div>
+        <>
+          <button
+            onClick={() => onIndexChange((activeIndex - 1 + images.length) % images.length)}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-surface hover:text-primary-border transition-colors"
+            aria-label="Previous image (fullscreen)"
+          >
+            <ChevronLeft size={32} />
+          </button>
+          <button
+            onClick={() => onIndexChange((activeIndex + 1) % images.length)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-surface hover:text-primary-border transition-colors"
+            aria-label="Next image (fullscreen)"
+          >
+            <ChevronRight size={32} />
+          </button>
+        </>
       )}
     </div>
   )
@@ -125,6 +207,7 @@ export default function DetailPanel() {
   const ctx = useAppContext()
   const { data: entities } = useAllEntities()
   const { data: erasData } = useEras()
+  const [isBodyExpanded, setIsBodyExpanded] = useState(false)
 
   // Priority 1: entity detail
   if (ctx.selectedEntityId !== null) {
@@ -187,16 +270,16 @@ export default function DetailPanel() {
 
           {/* Body — Markdown */}
           <div className="overflow-y-auto flex-1">
-            <ReactMarkdown
-              components={{
-                h2: ({ children }) => (
-                  <h2 className="text-base font-medium text-foreground mt-3 mb-1">{children}</h2>
-                ),
-                p: ({ children }) => (
-                  <p className="text-sm text-muted leading-relaxed">{children}</p>
-                ),
-              }}
-            >
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsBodyExpanded(true)}
+                className="text-muted hover:text-foreground transition-colors"
+                aria-label="Expand reading view"
+              >
+                <Maximize2 size={14} />
+              </button>
+            </div>
+            <ReactMarkdown components={markdownComponents}>
               {entity.body}
             </ReactMarkdown>
           </div>
@@ -204,6 +287,24 @@ export default function DetailPanel() {
           {/* Related entities */}
           <RelatedEntities links={entity.links} />
         </div>
+
+        {isBodyExpanded && (
+          <div className="fixed inset-0 z-[100] bg-surface flex flex-col p-8">
+            <button
+              onClick={() => setIsBodyExpanded(false)}
+              className="absolute top-4 right-4 text-muted hover:text-foreground transition-colors"
+              aria-label="Collapse reading view"
+            >
+              <Minimize2 size={20} />
+            </button>
+            <h2 className="text-2xl font-medium text-foreground mb-4 pr-10">{entity.name}</h2>
+            <div className="overflow-y-auto flex-1 max-w-3xl mx-auto w-full">
+              <ReactMarkdown components={markdownComponents}>
+                {entity.body}
+              </ReactMarkdown>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
