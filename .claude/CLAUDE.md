@@ -30,6 +30,16 @@ A React + TypeScript web application for exploring the Keynor universe. Acts as 
 
 ---
 
+## Local environment assumptions
+
+aniannoth-overview has no database and no persistent backend of its own. Vitest component/unit tests run standalone — no server required. Playwright e2e tests start their own dev server automatically as part of `npm run test:e2e` (managed by `playwright.config.ts`'s `webServer` option) — this is the test runner's own mechanism, not something an agent starts or stops manually.
+
+If manual or exploratory testing requires real data (the app rendering against `/api/public/v1/`), that depends on **keynor-core** already running and reachable. Never start, stop, or restart keynor-core's database or application instance from this project — that belongs to keynor-core's own agents. If it is not reachable, stop and report instead of working around it.
+
+See workspace `SKILLS.md` — Skill 13 for the general rule this follows.
+
+---
+
 ## Environment variables
 
 | Variable | Default | Description |
