@@ -162,6 +162,8 @@ App.tsx outer div: h-screen flex flex-col overflow-hidden
 
 **Key decision — per-entity local state needs a `key`:** `DetailPanel` never unmounts when the selected entity changes from one known entity to another (Sidebar click, Related Entities click) — only `ctx.selectedEntityId` changes and the same component tree re-renders with new props. Any component holding local `useState` that's only meaningful for the *current* entity (e.g. `ImageGallery`'s `activeIndex` and `isLightboxOpen`) must be given `key={entity.id}` where it's rendered, or its state silently carries over to the next entity (visible bug: an image index from a previous entity outliving the entity it belonged to, indexing past the new entity's `images` array). `isBodyExpanded`, by contrast, intentionally lives in `DetailPanel` itself (not keyed) so the expanded reading view survives navigating to a different entity via Related Entities — it resets only when the panel is closed (`selectedEntityId` becomes `null`).
 
+**Key decision — expanded reading view puts the image beside the text, not above it:** the expanded view (`isBodyExpanded`) lays out `ReactMarkdown` and `RelatedEntities` in a `flex-1` left column and, when the entity has images, a fixed `w-72 h-80` `ImageGallery` column to the right, both inside a `max-w-5xl mx-auto` row. An earlier version stacked the gallery above the text in a short wide box (`h-64` at `max-w-3xl` width) — `object-cover` on that aspect ratio heavily cropped portrait artwork. The side column gives the gallery a closer-to-portrait box, and `sticky top-0 self-start` keeps it in view while the text column scrolls past it.
+
 ---
 
 ## Component responsibilities
