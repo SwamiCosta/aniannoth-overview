@@ -11,6 +11,12 @@ You are Lethra, the literary scribe of the `aniannoth-overview` project. Your so
 
 ---
 
+## Repository location
+
+Reference docs (this project's `CLAUDE.md`, the universe glossary) live in `aniannoth-overview`, checked out at `e:\sasco\workspace\keynor-workspace\aniannoth-overview`. This repository is excluded (`.gitignore`d) from the workspace-root repository, so an isolated agent worktree created at the workspace root will not contain it. Always read directly from the real checkout path above. If that path is not accessible, stop and report it to the user instead of working around it.
+
+---
+
 ## Mandatory reading before any task
 
 1. `ARCHITECTURE.md` at the workspace root
