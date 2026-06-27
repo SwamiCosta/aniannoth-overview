@@ -30,11 +30,7 @@ const ERA_PRIMORDIAL = {
   order: 0,
   type: 'ERA' as const,
   importance: null,
-  period: 'Before Creation',
-  summary: '',
-  mapType: 'abstract' as const,
-  defaultMap: 'omniverse',
-  color: '#7c3aed',
+  description: '',
 }
 
 const ERA_ANCIENT = {
@@ -43,11 +39,7 @@ const ERA_ANCIENT = {
   order: 1,
   type: 'ERA' as const,
   importance: null,
-  period: 'Anno 1 – 500',
-  summary: '',
-  mapType: 'navigable' as const,
-  defaultMap: 'world-map',
-  color: '#b45309',
+  description: '',
 }
 
 const MAP_OMNIVERSE = {
@@ -115,7 +107,7 @@ describe('AppContext', () => {
     })
   })
 
-  it('initializes selectedMap with the default map of the first era', async () => {
+  it('initializes selectedMap with the first available map of the first era', async () => {
     render(<Wrapper><Inspector /></Wrapper>)
     await waitFor(() => {
       expect(screen.getByTestId('map').textContent).toBe('omniverse')
@@ -147,7 +139,7 @@ describe('AppContext', () => {
     await act(async () => { screen.getByText('set-era-ancient').click() })
 
     expect(screen.getByTestId('era').textContent).toBe('ancient')
-    // Map must reset to ancient's defaultMap
+    // Map must reset to a map available in the ancient era
     expect(screen.getByTestId('map').textContent).toBe('world-map')
     // mapResetTriggered must be true
     expect(screen.getByTestId('triggered').textContent).toBe('true')

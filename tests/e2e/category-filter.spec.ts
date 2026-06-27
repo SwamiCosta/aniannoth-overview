@@ -27,11 +27,7 @@ const ERA_PRIMORDIAL = {
   order: 0,
   type: 'ERA',
   importance: null,
-  period: 'Before Creation',
-  summary: '',
-  mapType: 'ABSTRACT',
-  defaultMap: 'omniverse',
-  color: '#7c3aed',
+  description: '',
 }
 
 const MAP_OMNIVERSE = {

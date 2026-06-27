@@ -31,11 +31,7 @@ const ERA_PRIMORDIAL = {
   order: 1,
   type: 'ERA' as const,
   importance: null,
-  period: 'Before Creation',
-  summary: '',
-  mapType: 'abstract' as const,
-  defaultMap: 'omniverse',
-  color: '#7c3aed',
+  description: '',
 }
 
 const POINT_STANDARD = {
@@ -44,11 +40,7 @@ const POINT_STANDARD = {
   order: 2,
   type: 'POINT' as const,
   importance: 'STANDARD' as const,
-  period: '',
-  summary: '',
-  mapType: 'abstract' as const,
-  defaultMap: '',
-  color: '',
+  description: '',
 }
 
 const POINT_MAJOR = {
@@ -57,11 +49,7 @@ const POINT_MAJOR = {
   order: 3,
   type: 'POINT' as const,
   importance: 'MAJOR' as const,
-  period: '',
-  summary: '',
-  mapType: 'abstract' as const,
-  defaultMap: '',
-  color: '',
+  description: '',
 }
 
 const MAP_OMNIVERSE = {

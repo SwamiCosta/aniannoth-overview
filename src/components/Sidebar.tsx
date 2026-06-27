@@ -32,7 +32,6 @@ export default function Sidebar() {
             {currentEra?.name ?? '—'}
           </span>
         </div>
-        <p className="text-muted text-xs pl-[22px]">{currentEra?.period ?? ''}</p>
       </div>
 
       {/* Filter chips */}

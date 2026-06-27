@@ -25,11 +25,7 @@ const MOCK_ERAS = [
     order: 0,
     type: 'ERA' as const,
     importance: null,
-    period: 'Before Creation',
-    summary: 'The age before the material world.',
-    mapType: 'abstract' as const,
-    defaultMap: 'omniverse',
-    color: '#7c3aed',
+    description: 'The age before the material world.',
   },
   {
     id: 'ancient',
@@ -37,11 +33,7 @@ const MOCK_ERAS = [
     order: 1,
     type: 'ERA' as const,
     importance: null,
-    period: 'Anno 1 – 500',
-    summary: 'The first age of the material world.',
-    mapType: 'navigable' as const,
-    defaultMap: 'world-map',
-    color: '#b45309',
+    description: 'The first age of the material world.',
   },
 ]
 
@@ -67,17 +59,7 @@ describe('useEras', () => {
       expect(typeof era.id).toBe('string')
       expect(typeof era.name).toBe('string')
       expect(typeof era.order).toBe('number')
-      expect(typeof era.period).toBe('string')
-      expect(typeof era.defaultMap).toBe('string')
-      expect(['navigable', 'abstract']).toContain(era.mapType)
-    }
-  })
-
-  it('eras are returned with valid hex colors', async () => {
-    const { result } = renderHook(() => useEras())
-    await waitFor(() => expect(result.current.loading).toBe(false))
-    for (const era of result.current.data) {
-      expect(era.color).toMatch(/^#[0-9a-fA-F]{6}$/)
+      expect(typeof era.description).toBe('string')
     }
   })
 

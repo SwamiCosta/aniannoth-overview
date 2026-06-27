@@ -31,11 +31,7 @@ const ERA_PRIMORDIAL = {
   order: 0,
   type: 'ERA' as const,
   importance: null,
-  period: 'Before Creation',
-  summary: '',
-  mapType: 'abstract' as const,
-  defaultMap: 'omniverse',
-  color: '#7c3aed',
+  description: '',
 }
 
 const ERA_ANCIENT = {
@@ -44,11 +40,7 @@ const ERA_ANCIENT = {
   order: 1,
   type: 'ERA' as const,
   importance: null,
-  period: 'Anno 1 – 500',
-  summary: '',
-  mapType: 'navigable' as const,
-  defaultMap: 'world-map',
-  color: '#b45309',
+  description: '',
 }
 
 const MAP_OMNIVERSE = {

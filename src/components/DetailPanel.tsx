@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, MapPin, Globe, Maximize2, Minimize2, User, XCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, User, XCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import { useAppContext } from '@/context/AppContext'
@@ -344,8 +344,6 @@ export default function DetailPanel() {
       )
     }
 
-    const MapTypeIcon = entry.mapType === 'navigable' ? Globe : MapPin
-
     return (
       <div className="border-t border-border bg-surface h-72 shrink-0 p-4 flex flex-col gap-2 relative overflow-y-auto">
         {/* Close button */}
@@ -360,19 +358,8 @@ export default function DetailPanel() {
         {/* Entry name */}
         <h2 className="text-xl font-medium text-foreground pr-6">{entry.name}</h2>
 
-        {/* Period subtitle */}
-        <p className="text-sm text-muted">{entry.period}</p>
-
-        {/* Map type badge */}
-        <div className="flex items-center gap-1">
-          <span className="bg-primary-light text-primary text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-            <MapTypeIcon size={10} />
-            {entry.mapType}
-          </span>
-        </div>
-
-        {/* Summary */}
-        <p className="text-sm text-muted leading-relaxed">{entry.summary}</p>
+        {/* Description */}
+        <p className="text-sm text-muted leading-relaxed">{entry.description}</p>
       </div>
     )
   }

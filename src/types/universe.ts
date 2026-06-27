@@ -4,11 +4,7 @@ export interface Era {
   order: number
   type: 'ERA' | 'POINT'
   importance: 'STANDARD' | 'MAJOR' | null
-  period: string
-  summary: string
-  mapType: 'navigable' | 'abstract'
-  defaultMap: string
-  color: string
+  description: string
 }
 
 export interface GameMap {

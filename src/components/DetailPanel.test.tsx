@@ -37,11 +37,7 @@ const ERA_PRIMORDIAL = {
   order: 0,
   type: 'ERA' as const,
   importance: null,
-  period: 'Before Creation',
-  summary: '',
-  mapType: 'abstract' as const,
-  defaultMap: 'omniverse',
-  color: '#7c3aed',
+  description: '',
 }
 
 const POINT_SUNDERING = {
@@ -50,11 +46,7 @@ const POINT_SUNDERING = {
   order: 1,
   type: 'POINT' as const,
   importance: 'MAJOR' as const,
-  period: 'Anno 0',
-  summary: 'The moment the material world split from the Omniverse.',
-  mapType: 'abstract' as const,
-  defaultMap: '',
-  color: '',
+  description: 'The moment the material world split from the Omniverse.',
 }
 
 const MAP_OMNIVERSE = {
@@ -320,7 +312,6 @@ describe('DetailPanel', () => {
     })
 
     expect(await screen.findByText(ERA_PRIMORDIAL.name)).toBeInTheDocument()
-    expect(screen.getByText(ERA_PRIMORDIAL.period)).toBeInTheDocument()
   })
 
   it('shows the point detail when openTimelineDetail is called with a point id, without changing the selected era', async () => {
@@ -340,9 +331,9 @@ describe('DetailPanel', () => {
       screen.getByText(`open-detail-${POINT_SUNDERING.id}`).click()
     })
 
-    // The point's own name and summary are shown
+    // The point's own name and description are shown
     expect(await screen.findByText(POINT_SUNDERING.name)).toBeInTheDocument()
-    expect(screen.getByText(POINT_SUNDERING.summary)).toBeInTheDocument()
+    expect(screen.getByText(POINT_SUNDERING.description)).toBeInTheDocument()
 
     // The map-driving era selection is untouched
     expect(screen.getByTestId('selected-era').textContent).toBe(ERA_PRIMORDIAL.id)

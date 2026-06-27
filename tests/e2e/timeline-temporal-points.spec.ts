@@ -29,11 +29,7 @@ const ERA_PRIMORDIAL = {
   order: 1,
   type: 'ERA',
   importance: null,
-  period: 'Before Creation',
-  summary: 'The age before the material world.',
-  mapType: 'ABSTRACT',
-  defaultMap: 'omniverse',
-  color: '#7c3aed',
+  description: 'The age before the material world.',
 }
 
 const ERA_ANCIENT = {
@@ -42,11 +38,7 @@ const ERA_ANCIENT = {
   order: 3,
   type: 'ERA',
   importance: null,
-  period: 'Anno 1 – 500',
-  summary: 'The first age of the material world.',
-  mapType: 'NAVIGABLE',
-  defaultMap: 'world-map',
-  color: '#b45309',
+  description: 'The first age of the material world.',
 }
 
 const POINT_STANDARD = {
@@ -55,11 +47,7 @@ const POINT_STANDARD = {
   order: 2,
   type: 'POINT',
   importance: 'STANDARD',
-  period: null,
-  summary: null,
-  mapType: 'ABSTRACT',
-  defaultMap: null,
-  color: null,
+  description: null,
 }
 
 const POINT_MAJOR = {
@@ -68,11 +56,7 @@ const POINT_MAJOR = {
   order: 4,
   type: 'POINT',
   importance: 'MAJOR',
-  period: null,
-  summary: null,
-  mapType: 'ABSTRACT',
-  defaultMap: null,
-  color: null,
+  description: null,
 }
 
 const MAP_OMNIVERSE = {

@@ -8,11 +8,7 @@ interface ApiEra {
   order: number
   type: string
   importance: string | null
-  period: string
-  summary: string
-  mapType: string
-  defaultMap: string
-  color: string
+  description: string
 }
 
 function toEra(api: ApiEra): Era {
@@ -22,11 +18,7 @@ function toEra(api: ApiEra): Era {
     order: api.order,
     type: (api.type as Era['type']) ?? 'ERA',
     importance: (api.importance ?? null) as Era['importance'],
-    period: api.period,
-    summary: api.summary,
-    mapType: (api.mapType ?? '').toLowerCase() as Era['mapType'],
-    defaultMap: api.defaultMap ?? '',
-    color: api.color ?? '',
+    description: api.description,
   }
 }
 
