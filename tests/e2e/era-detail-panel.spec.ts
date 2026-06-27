@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
  *
  * Covers:
  *   1. Happy path — clicking an era node in the TimelineBar opens the
- *      DetailPanel in era-detail mode, showing the era name, period, and summary.
+ *      DetailPanel in era-detail mode, showing the era name and description.
  *   2. Era detail closes on entity selection — opening era detail then clicking
  *      an entity card switches the DetailPanel to entity view.
  *   3. Close button — clicking the close button on the era detail panel returns
@@ -34,11 +34,7 @@ const ERA_PRIMORDIAL = {
   order: 0,
   type: 'ERA',
   importance: null,
-  period: 'Before Creation',
-  summary: 'The age before the material world took shape.',
-  mapType: 'ABSTRACT',
-  defaultMap: 'omniverse',
-  color: '#7c3aed',
+  description: 'The age before the material world took shape.',
 }
 
 const ERA_ANCIENT = {
@@ -47,11 +43,7 @@ const ERA_ANCIENT = {
   order: 1,
   type: 'ERA',
   importance: null,
-  period: 'Anno 1 – 500',
-  summary: 'The first age of the material world.',
-  mapType: 'NAVIGABLE',
-  defaultMap: 'world-map',
-  color: '#b45309',
+  description: 'The first age of the material world.',
 }
 
 const MAP_OMNIVERSE = {
@@ -136,10 +128,10 @@ async function mockApiRoutes(
 // Locator helper
 // ---------------------------------------------------------------------------
 
-// Sidebar also renders the current era's name and period in its header, so a
-// bare getByText(period) is ambiguous whenever the same era is both selected
-// and open in the detail panel. Scope to the panel via its unique close
-// button to disambiguate.
+// Sidebar also renders the current era's name in its header, so a bare
+// getByText(name) is ambiguous whenever the same era is both selected and
+// open in the detail panel. Scope to the panel via its unique close button
+// to disambiguate.
 function timelineDetailPanel(page: import('@playwright/test').Page) {
   return page.getByRole('button', { name: 'Close timeline detail panel' }).locator('..')
 }
@@ -149,7 +141,7 @@ function timelineDetailPanel(page: import('@playwright/test').Page) {
 // ---------------------------------------------------------------------------
 
 test.describe('Era detail panel', () => {
-  test('clicking an era node opens the detail panel with era name, period, and summary', async ({ page }) => {
+  test('clicking an era node opens the detail panel with era name and description', async ({ page }) => {
     await mockApiRoutes(page, [ERA_PRIMORDIAL], [MAP_OMNIVERSE])
     await page.goto('/explore')
 
@@ -161,8 +153,7 @@ test.describe('Era detail panel', () => {
 
     // The era detail panel must be visible with the correct content
     await expect(page.getByRole('heading', { name: ERA_PRIMORDIAL.name })).toBeVisible()
-    await expect(timelineDetailPanel(page).getByText(ERA_PRIMORDIAL.period)).toBeVisible()
-    await expect(page.getByText(ERA_PRIMORDIAL.summary)).toBeVisible()
+    await expect(timelineDetailPanel(page).getByText(ERA_PRIMORDIAL.description)).toBeVisible()
 
     // The placeholder must no longer be visible
     await expect(page.getByText('Select an entity to view details')).not.toBeVisible()
@@ -205,7 +196,7 @@ test.describe('Era detail panel', () => {
     await page.getByRole('button', { name: ERA_PRIMORDIAL.name }).click()
 
     await expect(page.getByRole('heading', { name: ERA_PRIMORDIAL.name })).toBeVisible()
-    await expect(page.getByText(ERA_PRIMORDIAL.summary)).toBeVisible()
+    await expect(page.getByText(ERA_PRIMORDIAL.description)).toBeVisible()
 
     // The entity detail content must no longer be visible
     await expect(page.getByRole('heading', { name: 'Verath the Unbound' })).not.toBeVisible()
@@ -247,8 +238,7 @@ test.describe('Era detail panel', () => {
 
     // The Ancient Era's content must now be visible
     await expect(page.getByRole('heading', { name: ERA_ANCIENT.name })).toBeVisible()
-    await expect(timelineDetailPanel(page).getByText(ERA_ANCIENT.period)).toBeVisible()
-    await expect(page.getByText(ERA_ANCIENT.summary)).toBeVisible()
+    await expect(timelineDetailPanel(page).getByText(ERA_ANCIENT.description)).toBeVisible()
 
     // The Primordial Era's content must no longer be visible
     await expect(page.getByRole('heading', { name: ERA_PRIMORDIAL.name })).not.toBeVisible()

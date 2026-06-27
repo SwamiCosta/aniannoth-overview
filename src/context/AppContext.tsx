@@ -44,13 +44,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [eraDetailOpen, setEraDetailOpen] = useState(false)
   const [timelineDetailId, setTimelineDetailId] = useState<string | null>(null)
 
+  function defaultMapForEra(eraId: string): string {
+    return maps.find(m => m.availableInEras.includes(eraId))?.id ?? ''
+  }
+
   useEffect(() => {
     if (eras.length > 0 && !selectedEra) {
       const eraEntries = eras.filter(e => !e.type || e.type === 'ERA')
       if (eraEntries.length === 0) return
       const firstEra = [...eraEntries].sort((a, b) => a.order - b.order)[0]
       setSelectedEra(firstEra.id)
-      setSelectedMap(firstEra.defaultMap)
+      setSelectedMap(defaultMapForEra(firstEra.id))
     }
   }, [eras, selectedEra])
 
@@ -63,7 +67,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setSelectedEra(eraId)
     if (!mapAvailable) {
-      setSelectedMap(era.defaultMap)
+      setSelectedMap(defaultMapForEra(eraId))
       setMapResetTriggered(true)
     }
   }

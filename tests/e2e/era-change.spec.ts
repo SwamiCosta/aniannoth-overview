@@ -34,11 +34,7 @@ const ERA_PRIMORDIAL = {
   order: 0,
   type: 'ERA',
   importance: null,
-  period: 'Before Creation',
-  summary: 'The age before the material world.',
-  mapType: 'ABSTRACT',
-  defaultMap: 'omniverse',
-  color: '#7c3aed',
+  description: 'The age before the material world.',
 }
 
 const ERA_ANCIENT = {
@@ -47,11 +43,7 @@ const ERA_ANCIENT = {
   order: 1,
   type: 'ERA',
   importance: null,
-  period: 'Anno 1 – 500',
-  summary: 'The first age of the material world.',
-  mapType: 'NAVIGABLE',
-  defaultMap: 'world-map',
-  color: '#b45309',
+  description: 'The first age of the material world.',
 }
 
 const MAP_OMNIVERSE = {

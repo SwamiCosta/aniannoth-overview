@@ -130,7 +130,7 @@ interface AppContextValue extends AppState {
 }
 ```
 
-Era change logic: if the current map does not exist in the new era, `setEra` resets `selectedMap` to the era's default and sets `mapResetTriggered = true`. `MapArea` watches this flag and shows a toast for 2.5 s before clearing it.
+Era change logic: if the current map does not exist in the new era, `setEra` resets `selectedMap` to the first map available in that era (`maps.find(m => m.availableInEras.includes(eraId))`) and sets `mapResetTriggered = true`. `MapArea` watches this flag and shows a toast for 2.5 s before clearing it. `Era` has no map-related field of its own — `GameMap.availableInEras` is the only source of the era↔map association.
 
 Timeline detail logic: `timelineDetailId` is decoupled from `selectedEra` — it tracks which entry's description is shown in `DetailPanel`, independent of which era currently drives the map. Clicking an era node in `TimelineBar` calls both `setEra(era.id)` (drives the map) and `openTimelineDetail(era.id)` (drives the panel). Clicking a temporal point calls only `openTimelineDetail(point.id)` — the map and `selectedEra` are left untouched. Selecting an entity automatically sets `eraDetailOpen` back to `false`. The close button in `DetailPanel` sets it back to `false` directly.
 
@@ -287,4 +287,4 @@ A second pull is not required within the same task session. See workspace `SKILL
 
 ---
 
-*Last updated: 2026-06-26*
+*Last updated: 2026-06-27*

@@ -5,7 +5,6 @@ import type { Era } from '@/types/universe'
 
 function EraNode({ era, isActive }: { era: Era; isActive: boolean }) {
   const ctx = useAppContext()
-  const isAbstract = era.mapType === 'abstract'
 
   return (
     <button
@@ -19,7 +18,6 @@ function EraNode({ era, isActive }: { era: Era; isActive: boolean }) {
         <span
           className={cn(
             'w-6 h-6 rounded-full border-2 transition-colors',
-            isAbstract && 'border-dashed',
             isActive
               ? 'border-primary bg-primary'
               : 'border-border group-hover:border-primary-border group-hover:bg-primary-light bg-surface'
@@ -33,9 +31,8 @@ function EraNode({ era, isActive }: { era: Era; isActive: boolean }) {
       <span
         className={cn(
           'text-[11px] leading-tight text-center max-w-[80px] transition-colors',
-          isActive ? 'font-medium' : 'text-muted group-hover:text-foreground'
+          isActive ? 'text-primary font-medium' : 'text-muted group-hover:text-foreground'
         )}
-        style={isActive ? { color: era.color } : undefined}
       >
         {era.name}
       </span>
