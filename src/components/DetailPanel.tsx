@@ -305,19 +305,26 @@ export default function DetailPanel() {
             >
               <Minimize2 size={20} />
             </button>
-            <div className="max-w-3xl mx-auto w-full shrink-0">
+            <div className="max-w-5xl mx-auto w-full shrink-0">
               <h2 className="text-2xl font-medium text-foreground mb-4 text-center">{entity.name}</h2>
             </div>
-            <div className="overflow-y-auto flex-1 max-w-3xl mx-auto w-full">
-              {entity.images.length > 0 && (
-                <div className="h-64 mb-4">
-                  <ImageGallery key={entity.id} images={entity.images} name={entity.name} />
+            <div className="overflow-y-auto flex-1">
+              <div className="max-w-5xl mx-auto flex flex-row gap-8">
+                <div className="flex-1 min-w-0">
+                  <ReactMarkdown components={markdownComponents}>
+                    {entity.body}
+                  </ReactMarkdown>
+                  <RelatedEntities links={entity.links} />
                 </div>
-              )}
-              <ReactMarkdown components={markdownComponents}>
-                {entity.body}
-              </ReactMarkdown>
-              <RelatedEntities links={entity.links} />
+                {/* Image column sits beside the text instead of above it — avoids
+                    cropping a wide-short box would force on portrait artwork, and
+                    sticky keeps it in view while the text column scrolls. */}
+                {entity.images.length > 0 && (
+                  <div className="w-72 h-80 shrink-0 sticky top-0 self-start">
+                    <ImageGallery key={entity.id} images={entity.images} name={entity.name} />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -501,7 +501,7 @@ describe('DetailPanel', () => {
     expect(screen.getByRole('button', { name: 'Collapse reading view' })).toBeInTheDocument()
   })
 
-  it('shows an image gallery above the text in the expanded reading view', async () => {
+  it('shows an image gallery beside the text in the expanded reading view', async () => {
     render(
       <ControlledWrapper>
         <SelectEntityButton entityId={ENTITY_WITH_IMAGES.id} />
