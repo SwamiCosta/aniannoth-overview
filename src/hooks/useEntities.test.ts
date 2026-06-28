@@ -22,7 +22,6 @@ const MOCK_CHARACTER = {
   id: 'omnia',
   name: 'Omnia',
   category: 'characters',
-  tags: ['primordial', 'deity'],
   images: [],
   summary: 'The first being.',
   body: '# Omnia\n\nThe origin of all things.',
@@ -36,7 +35,6 @@ const MOCK_LORE = {
   id: 'creation-myth',
   name: 'The Creation Myth',
   category: 'lore',
-  tags: ['cosmology'],
   images: [],
   summary: 'How the world began.',
   body: '# Creation\n\nIn the beginning...',
@@ -77,7 +75,6 @@ describe('useEntities', () => {
       expect(typeof entity.id).toBe('string')
       expect(typeof entity.name).toBe('string')
       expect(typeof entity.category).toBe('string')
-      expect(Array.isArray(entity.tags)).toBe(true)
       expect(typeof entity.summary).toBe('string')
       expect(typeof entity.body).toBe('string')
       expect(['canon', 'draft', 'deprecated']).toContain(entity.status)

@@ -114,7 +114,6 @@ interface AppState {
   selectedEntityId: string | null;  // entity selected in Sidebar, displayed in DetailPanel
   filters: {
     category: string | null;  // 'characters' | 'places' | 'items' | 'events' | null
-    tags: string[];
   };
 }
 ```

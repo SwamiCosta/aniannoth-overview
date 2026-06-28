@@ -261,19 +261,11 @@ export default function DetailPanel() {
             <p className="text-sm text-muted">{metadataParts.join(' · ')}</p>
           )}
 
-          {/* Tag pills */}
+          {/* Status pill */}
           <div className="flex flex-wrap gap-1">
             <span className="bg-primary-light text-primary text-[10px] px-2 py-0.5 rounded-full font-medium">
               {entity.status}
             </span>
-            {entity.tags.map(tag => (
-              <span
-                key={tag}
-                className="bg-border text-muted text-[10px] px-2 py-0.5 rounded-full"
-              >
-                {tag}
-              </span>
-            ))}
           </div>
 
           {/* Body — Markdown */}
