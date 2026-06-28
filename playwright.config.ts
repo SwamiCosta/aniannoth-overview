@@ -17,7 +17,7 @@ export default defineConfig({
   reporter: 'html',
 
   use: {
-    baseURL: 'http://localhost:5174',
+    baseURL: 'http://localhost:4173',
     trace: 'on-first-retry',
   },
 
@@ -29,8 +29,10 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev -- --port 5174 --strictPort',
-    url: 'http://localhost:5174',
+    // Port is fixed in vite.config.ts (strictPort) — same canonical 4173 used for
+    // manual dev, so this never silently attaches to a different project's server.
+    command: 'npm run dev',
+    url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
   },
 })
