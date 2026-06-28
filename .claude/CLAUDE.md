@@ -34,6 +34,12 @@ A React + TypeScript web application for exploring the Keynor universe. Acts as 
 
 aniannoth-overview has no database and no persistent backend of its own. Vitest component/unit tests run standalone — no server required. Playwright e2e tests start their own dev server automatically as part of `npm run test:e2e` (managed by `playwright.config.ts`'s `webServer` option) — this is the test runner's own mechanism, not something an agent starts or stops manually.
 
+**Dev server port is fixed at 4173 — never 5173.** `vite.config.ts` sets `server.port`/`preview.port` to `4173` with `strictPort: true`, so `npm run dev`, `npm run preview`, and Playwright's `webServer` all bind to the same port with no CLI flags needed. `strictPort` makes Vite fail loudly if 4173 is taken instead of silently falling back to a different port. Two reasons this exists:
+- **keynor-rpg-client** is a separate Vite project that also defaults to port 5173 — whichever project starts first claims it, silently pushing the other to an unpredictable port.
+- **keynor-core**'s CORS allowlist (`ResourceServerConfig.java`) only trusts `http://localhost:5173` and `http://localhost:4173` for this origin. Any other port gets browser-blocked on every `/api/public/v1/*` fetch — `curl` won't show this (CORS is enforced by the browser, not the server), so a real browser check is required to catch it.
+
+If `npm run dev` ever fails with "Port 4173 is already in use," something else is squatting the canonical port (commonly a leftover dev server from a previous session) — find and close it rather than letting Vite fall back to another port.
+
 If manual or exploratory testing requires real data (the app rendering against `/api/public/v1/`), that depends on **keynor-core** already running and reachable. Never start, stop, or restart keynor-core's database or application instance from this project — that belongs to keynor-core's own agents. If it is not reachable, stop and report instead of working around it.
 
 See workspace `SKILLS.md` — Skill 13 for the general rule this follows.
@@ -287,4 +293,4 @@ A second pull is not required within the same task session. See workspace `SKILL
 
 ---
 
-*Last updated: 2026-06-27*
+*Last updated: 2026-06-28*
