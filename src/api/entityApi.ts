@@ -15,7 +15,6 @@ interface ApiEntity {
   name: string
   summary: string
   body: string
-  tags: string[]
   categories: string[]
   status: string
   images: string[] | null | undefined
@@ -38,7 +37,6 @@ function toEntity(api: ApiEntity, category: string): Entity {
     id: api.id,
     name: api.name,
     category,
-    tags: api.tags,
     images: api.images ?? [],
     summary: api.summary,
     body: api.body,

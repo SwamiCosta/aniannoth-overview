@@ -34,7 +34,6 @@ export interface Entity {
   id: string
   name: string
   category: string
-  tags: string[]
   images: string[]
   summary: string
   body: string

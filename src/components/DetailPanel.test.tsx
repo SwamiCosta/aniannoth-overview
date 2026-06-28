@@ -61,7 +61,6 @@ const TEST_ENTITY = {
   id: 'entity-999',
   name: 'Verath the Unbound',
   category: 'characters',
-  tags: ['ancient', 'divine'],
   images: [],
   summary: 'A being from before time.',
   body: '## Origins\n\nVerath existed before the first dawn.',

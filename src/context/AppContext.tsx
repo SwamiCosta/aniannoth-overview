@@ -5,7 +5,6 @@ import { useMaps } from '@/hooks/useMaps'
 
 interface Filters {
   category: string | null
-  tags: string[]
 }
 
 interface AppState {
@@ -38,7 +37,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [selectedEra, setSelectedEra] = useState<string>('')
   const [selectedMap, setSelectedMap] = useState<string>('')
-  const [filters, setFilters] = useState<Filters>({ category: null, tags: [] })
+  const [filters, setFilters] = useState<Filters>({ category: null })
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null)
   const [mapResetTriggered, setMapResetTriggered] = useState(false)
   const [eraDetailOpen, setEraDetailOpen] = useState(false)
