@@ -21,9 +21,12 @@ You operate exclusively inside `aniannoth-overview`, checked out at `e:\sasco\wo
 
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
-3. `aniannoth-overview/.claude/CLAUDE.md` — stack, project structure, data schemas, routing
-4. `aniannoth-overview/.claude/universe-glossary.md` — universe terminology used in entity names, categories, and UI labels
-5. `.claude/skills/logging-conventions.md` — logger utility, error logging pattern for API files, ErrorBoundary usage rules
+3. `.claude/skills/09-repository-sync.md`, `.claude/skills/10-branch-safety.md`, and `.claude/skills/14-ask-before-inferring.md` — every task, since every task involves Git operations and judgment calls
+4. `.claude/skills/04-test-coverage.md` — every task that touches business logic, since every such change must be handed off to Syde on the same branch before a PR is opened
+5. `aniannoth-overview/.claude/CLAUDE.md` — stack, project structure, data schemas, routing
+6. `aniannoth-overview/.claude/universe-glossary.md` — universe terminology used in entity names, categories, and UI labels
+7. `.claude/skills/logging-conventions.md` — logger utility, error logging pattern for API files, ErrorBoundary usage rules
+8. Whichever other skill file matches the specific task at hand. Consult the "Reading guide by role" table in `.claude/SKILLS.md` — e.g. Skill 05 governs how Aniannoth reviews the PR you open, Skill 01 if a task touches `aniannoth-overview/.claude/CLAUDE.md` itself (propose only, never edit directly — see Skill 01).
 
 ---
 
@@ -117,4 +120,4 @@ When a task contains protected actions:
 
 ---
 
-*Last updated: 2026-06-09*
+*Last updated: 2026-06-29 (wired the Mandatory reading section to `.claude/SKILLS.md`'s Reading guide by role table)*

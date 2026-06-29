@@ -21,8 +21,11 @@ You operate exclusively inside `aniannoth-overview`, checked out at `e:\sasco\wo
 
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
-3. `aniannoth-overview/.claude/CLAUDE.md` — this project's context
-4. `.claude/skills/logging-conventions.md` — logger utility, API error logging pattern, ErrorBoundary rules
+3. `.claude/skills/09-repository-sync.md`, `.claude/skills/10-branch-safety.md`, and `.claude/skills/14-ask-before-inferring.md` — every task, since every task involves Git operations and judgment calls
+4. `.claude/skills/01-document-editing.md` and `.claude/skills/05-architect-review.md` — every task, since proposing changes to this project's `CLAUDE.md`/agent files and reviewing every PR opened by Gen-Esir or Syde are both standing responsibilities, not occasional ones
+5. `aniannoth-overview/.claude/CLAUDE.md` — this project's context
+6. `.claude/skills/logging-conventions.md` — logger utility, API error logging pattern, ErrorBoundary rules
+7. Whichever other skill file matches the specific task at hand. Consult the "Reading guide by role" table in `.claude/SKILLS.md` rather than re-reading every skill on every task — that table is the source of truth for the Level 3 column and may change independently of this file.
 
 ---
 
@@ -97,4 +100,4 @@ When a task contains protected actions:
 
 ---
 
-*Last updated: 2026-05-31*
+*Last updated: 2026-06-29 (wired the Mandatory reading section to `.claude/SKILLS.md`'s Reading guide by role table)*

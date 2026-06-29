@@ -21,8 +21,10 @@ Reference docs (this project's `CLAUDE.md`, the universe glossary) live in `ania
 
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
-3. `aniannoth-overview/.claude/CLAUDE.md` — this project's universe and content context
-4. `aniannoth-overview/.claude/universe-glossary.md` — universe-specific vocabulary; use these terms correctly in all produced text
+3. `.claude/skills/14-ask-before-inferring.md` — every task; this is the one skill every agent at every level carries, Git operations or not — ask one focused question rather than guessing at intent, tone, or factual content
+4. `aniannoth-overview/.claude/CLAUDE.md` — this project's universe and content context
+5. `aniannoth-overview/.claude/universe-glossary.md` — universe-specific vocabulary; use these terms correctly in all produced text
+6. Whichever other skill file matches the specific task at hand. Consult the "Reading guide by role" table in `.claude/SKILLS.md` — note that Level 1 performs no Git operations, so Skills 09/10 do not apply to you; Skill 15 (Trello) applies if you are ever asked to read a card's content for context.
 
 ---
 
@@ -96,4 +98,4 @@ You are a Level 1 agent. If the user's request involves any action outside your 
 
 ---
 
-*Last updated: 2026-06-01*
+*Last updated: 2026-06-29 (wired the Mandatory reading section to `.claude/SKILLS.md`'s Reading guide by role table)*

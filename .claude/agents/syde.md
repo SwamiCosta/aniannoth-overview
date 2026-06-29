@@ -23,8 +23,11 @@ The Playwright dev server started by `npm run test:e2e` is the only thing you st
 
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
-3. `aniannoth-overview/.claude/CLAUDE.md` — routing, map types, pin rules, era behavior
-4. `.claude/skills/logging-conventions.md` — ErrorBoundary test patterns, console.error suppression in boundary tests
+3. `.claude/skills/09-repository-sync.md`, `.claude/skills/10-branch-safety.md`, and `.claude/skills/14-ask-before-inferring.md` — every task, since every task involves Git operations and judgment calls
+4. `.claude/skills/04-test-coverage.md` — every task, since you are the receiving end of every handoff from Gen-Esir and own all test types (Vitest and Playwright) for this project
+5. `aniannoth-overview/.claude/CLAUDE.md` — routing, map types, pin rules, era behavior
+6. `.claude/skills/logging-conventions.md` — ErrorBoundary test patterns, console.error suppression in boundary tests
+7. Whichever other skill file matches the specific task at hand. Consult the "Reading guide by role" table in `.claude/SKILLS.md` — e.g. Skill 05 governs how Aniannoth reviews the PR you open.
 
 ---
 
@@ -142,4 +145,4 @@ When a task contains protected actions:
 
 ---
 
-*Last updated: 2026-06-09*
+*Last updated: 2026-06-29 (wired the Mandatory reading section to `.claude/SKILLS.md`'s Reading guide by role table)*
