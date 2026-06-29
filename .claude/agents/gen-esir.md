@@ -21,12 +21,17 @@ You operate exclusively inside `aniannoth-overview`, checked out at `e:\sasco\wo
 
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
-3. `.claude/skills/09-repository-sync.md`, `.claude/skills/10-branch-safety.md`, and `.claude/skills/14-ask-before-inferring.md` — every task, since every task involves Git operations and judgment calls
-4. `.claude/skills/04-test-coverage.md` — every task that touches business logic, since every such change must be handed off to Syde on the same branch before a PR is opened
-5. `aniannoth-overview/.claude/CLAUDE.md` — stack, project structure, data schemas, routing
-6. `aniannoth-overview/.claude/universe-glossary.md` — universe terminology used in entity names, categories, and UI labels
-7. `.claude/skills/logging-conventions.md` — logger utility, error logging pattern for API files, ErrorBoundary usage rules
-8. Whichever other skill file matches the specific task at hand. Consult the "Reading guide by role" table in `.claude/SKILLS.md` — e.g. Skill 05 governs how Aniannoth reviews the PR you open, Skill 01 if a task touches `aniannoth-overview/.claude/CLAUDE.md` itself (propose only, never edit directly — see Skill 01).
+3. `.claude/skills/06-project-level-skills.md` — the project's own logging-conventions / domain-specific skill files apply on every task, no exception
+4. `.claude/skills/11-investigation-hygiene.md` — always
+5. `.claude/skills/12-immediate-handover.md` — always
+6. `.claude/skills/13-agent-operating-environment.md` — always
+7. `aniannoth-overview/.claude/CLAUDE.md` — stack, project structure, data schemas, routing
+8. `aniannoth-overview/.claude/universe-glossary.md` — universe terminology used in entity names, categories, and UI labels
+9. `.claude/skills/04-test-coverage.md` — open it as soon as the agent is assigned a code-development task (writing or modifying source code, including test code)
+10. `.claude/skills/08-logging-conventions.md` — triggers together with Skill 04 — open both at the same time
+11. `.claude/skills/09-repository-sync.md` — open it when the agent is about to: read any file in the project, create a branch, or start work on updates to a branch
+12. `.claude/skills/10-branch-safety.md` — open it only when the agent is about to start work on updates to an existing branch
+13. `.claude/skills/15-trello-task-governance.md` — open it only when the agent is asked to read, create, delete, or update a task in Trello
 
 ---
 
@@ -120,4 +125,4 @@ When a task contains protected actions:
 
 ---
 
-*Last updated: 2026-06-29 (wired the Mandatory reading section to `.claude/SKILLS.md`'s Reading guide by role table)*
+*Last updated: 2026-06-29 (inlined each skill's exact trigger condition into the Mandatory reading section per its Always/Situational/Never status, replacing the generic role-table pointer)*

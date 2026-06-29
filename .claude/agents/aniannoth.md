@@ -21,11 +21,21 @@ You operate exclusively inside `aniannoth-overview`, checked out at `e:\sasco\wo
 
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
-3. `.claude/skills/09-repository-sync.md`, `.claude/skills/10-branch-safety.md`, and `.claude/skills/14-ask-before-inferring.md` — every task, since every task involves Git operations and judgment calls
-4. `.claude/skills/01-document-editing.md` and `.claude/skills/05-architect-review.md` — every task, since proposing changes to this project's `CLAUDE.md`/agent files and reviewing every PR opened by Gen-Esir or Syde are both standing responsibilities, not occasional ones
-5. `aniannoth-overview/.claude/CLAUDE.md` — this project's context
-6. `.claude/skills/logging-conventions.md` — logger utility, API error logging pattern, ErrorBoundary rules
-7. Whichever other skill file matches the specific task at hand. Consult the "Reading guide by role" table in `.claude/SKILLS.md` rather than re-reading every skill on every task — that table is the source of truth for the Level 3 column and may change independently of this file.
+3. `.claude/skills/06-project-level-skills.md` — the project's own logging-conventions / domain-specific skill files apply on every task, no exception
+4. `.claude/skills/11-investigation-hygiene.md` — always, audits and reviews
+5. `.claude/skills/12-immediate-handover.md` — always
+6. `.claude/skills/13-agent-operating-environment.md` — always
+7. `aniannoth-overview/.claude/CLAUDE.md` — this project's context
+8. `.claude/skills/01-document-editing.md` — open it only when the user explicitly asks the agent to edit a document — a CLAUDE.md, an agent `.md` file, or SKILLS.md
+9. `.claude/skills/04-test-coverage.md` — open it as soon as the agent is assigned a code-development task (writing or modifying source code, including test code)
+10. `.claude/skills/05-architect-review.md` — open it when an architect agent is asked to perform a code review
+11. `.claude/skills/07-documentation-sync.md` — triggers together with Skill 05 — open both at the same time
+12. `.claude/skills/08-logging-conventions.md` — triggers together with Skill 04 — open both at the same time
+13. `.claude/skills/09-repository-sync.md` — open it when the agent is about to: read any file in the project, create a branch, or start work on updates to a branch
+14. `.claude/skills/10-branch-safety.md` — open it only when the agent is about to start work on updates to an existing branch
+15. `.claude/skills/15-trello-task-governance.md` — open it only when the agent is asked to read, create, delete, or update a task in Trello
+
+Skill 02 (Database Migration) does not apply to this agent: `aniannoth-overview` is a pure frontend with no database of any kind (confirmed structurally by the root `CLAUDE.md` FAQ — "Can I create a database in aniannoth-overview? No."), so the migration trigger can never fire here. This is a deliberate deviation from the other Level 3 agents in the workspace.
 
 ---
 
@@ -100,4 +110,4 @@ When a task contains protected actions:
 
 ---
 
-*Last updated: 2026-06-29 (wired the Mandatory reading section to `.claude/SKILLS.md`'s Reading guide by role table)*
+*Last updated: 2026-06-29 (inlined each skill's exact trigger condition into the Mandatory reading section per its Always/Situational/Never status, replacing the generic role-table pointer; Skill 02 stays Never for this agent specifically)*

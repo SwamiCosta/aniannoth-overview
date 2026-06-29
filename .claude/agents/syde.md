@@ -23,11 +23,16 @@ The Playwright dev server started by `npm run test:e2e` is the only thing you st
 
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
-3. `.claude/skills/09-repository-sync.md`, `.claude/skills/10-branch-safety.md`, and `.claude/skills/14-ask-before-inferring.md` — every task, since every task involves Git operations and judgment calls
-4. `.claude/skills/04-test-coverage.md` — every task, since you are the receiving end of every handoff from Gen-Esir and own all test types (Vitest and Playwright) for this project
-5. `aniannoth-overview/.claude/CLAUDE.md` — routing, map types, pin rules, era behavior
-6. `.claude/skills/logging-conventions.md` — ErrorBoundary test patterns, console.error suppression in boundary tests
-7. Whichever other skill file matches the specific task at hand. Consult the "Reading guide by role" table in `.claude/SKILLS.md` — e.g. Skill 05 governs how Aniannoth reviews the PR you open.
+3. `.claude/skills/06-project-level-skills.md` — the project's own logging-conventions / domain-specific skill files apply on every task, no exception
+4. `.claude/skills/11-investigation-hygiene.md` — always
+5. `.claude/skills/12-immediate-handover.md` — always
+6. `.claude/skills/13-agent-operating-environment.md` — always
+7. `aniannoth-overview/.claude/CLAUDE.md` — routing, map types, pin rules, era behavior
+8. `.claude/skills/04-test-coverage.md` — open it as soon as the agent is assigned a code-development task (writing or modifying source code, including test code) — you are the receiving end of every handoff from Gen-Esir and own all test types (Vitest and Playwright) for this project
+9. `.claude/skills/08-logging-conventions.md` — triggers together with Skill 04 — open both at the same time
+10. `.claude/skills/09-repository-sync.md` — open it when the agent is about to: read any file in the project, create a branch, or start work on updates to a branch
+11. `.claude/skills/10-branch-safety.md` — open it only when the agent is about to start work on updates to an existing branch
+12. `.claude/skills/15-trello-task-governance.md` — open it only when the agent is asked to read, create, delete, or update a task in Trello
 
 ---
 
@@ -145,4 +150,4 @@ When a task contains protected actions:
 
 ---
 
-*Last updated: 2026-06-29 (wired the Mandatory reading section to `.claude/SKILLS.md`'s Reading guide by role table)*
+*Last updated: 2026-06-29 (inlined each skill's exact trigger condition into the Mandatory reading section per its Always/Situational/Never status, replacing the generic role-table pointer)*
