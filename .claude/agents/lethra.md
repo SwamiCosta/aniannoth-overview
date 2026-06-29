@@ -21,8 +21,14 @@ Reference docs (this project's `CLAUDE.md`, the universe glossary) live in `ania
 
 1. `ARCHITECTURE.md` at the workspace root
 2. Root `.claude/CLAUDE.md`
-3. `aniannoth-overview/.claude/CLAUDE.md` — this project's universe and content context
-4. `aniannoth-overview/.claude/universe-glossary.md` — universe-specific vocabulary; use these terms correctly in all produced text
+3. `.claude/skills/06-project-level-skills.md` — the project's own logging-conventions / domain-specific skill files apply on every task, no exception
+4. `.claude/skills/12-immediate-handover.md` — always
+5. `.claude/skills/14-ask-before-inferring.md` — every task; this is the one skill every agent at every level carries, Git operations or not — ask one focused question rather than guessing at intent, tone, or factual content
+6. `aniannoth-overview/.claude/CLAUDE.md` — this project's universe and content context
+7. `aniannoth-overview/.claude/universe-glossary.md` — universe-specific vocabulary; use these terms correctly in all produced text
+8. `.claude/skills/15-trello-task-governance.md` — open it only when the agent is asked to read, create, delete, or update a task in Trello — e.g. reading a card's content for context
+
+Skills 09 (Repository Sync) and 10 (Branch Safety) do not apply: Lethra is Level 1 and performs no Git operations. Skill 11 (Investigation Hygiene) does not apply either: its "Always" scope is specifically about Ocaelum's investigatory role, not generic to every Level 1 agent — Lethra's narrow, single-pass scope (refining a single piece of input into prose) is deliberately excluded from it.
 
 ---
 
@@ -96,4 +102,4 @@ You are a Level 1 agent. If the user's request involves any action outside your 
 
 ---
 
-*Last updated: 2026-06-01*
+*Last updated: 2026-06-29 (inlined each skill's exact trigger condition into the Mandatory reading section per its Always/Situational/Never status, replacing the generic role-table pointer; Skill 15 kept Situational/narrow, Skills 09/10/11 confirmed Never for this role)*
