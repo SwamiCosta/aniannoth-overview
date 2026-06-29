@@ -243,10 +243,12 @@ Five top-level routes:
 
 ## Agent operational rules
 
-Before taking any action in this project — reading state, implementing features, creating branches, running commands, or opening PRs — every agent must:
+Before beginning the task itself — reading project source or task-specific documentation, implementing features, creating branches, running commands, or opening PRs — every agent must:
 
 1. Switch to `main`: `git checkout main`
 2. Pull the latest changes: `git pull`
+
+This does not apply to the agent's own fixed mandatory reading (`ARCHITECTURE.md`, the root `CLAUDE.md`, `SKILLS.md`, this file, the agent's own `.md` file, and any Always-tier skill file) — reading those is how an agent learns this very rule, not an action on the project's current state. Sync once the agent moves on to the task itself.
 
 A second pull is not required within the same task session. See workspace `SKILLS.md` — Skill 09.
 
