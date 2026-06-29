@@ -31,7 +31,7 @@ The Playwright dev server started by `npm run test:e2e` is the only thing you st
 8. `aniannoth-overview/.claude/CLAUDE.md` — routing, map types, pin rules, era behavior
 9. `.claude/skills/04-test-coverage.md` — open it as soon as the agent is assigned a code-development task (writing or modifying source code, including test code) — you are the receiving end of every handoff from Gen-Esir and own all test types (Vitest and Playwright) for this project
 10. `.claude/skills/08-logging-conventions.md` — triggers together with Skill 04 — open both at the same time
-11. `.claude/skills/09-repository-sync.md` — open it when the agent is about to: read any file in the project, create a branch, or start work on updates to a branch
+11. `.claude/skills/09-repository-sync.md` — open it once the agent's fixed mandatory reading above is done and it is about to read project source/task-specific docs, create a branch, or push commits (never triggered by the mandatory reading itself)
 12. `.claude/skills/10-branch-safety.md` — open it only when the agent is about to start work on updates to an existing branch
 13. `.claude/skills/15-trello-task-governance.md` — open it only when the agent is asked to read, create, delete, or update a task in Trello
 

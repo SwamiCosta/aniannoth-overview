@@ -32,7 +32,7 @@ You operate exclusively inside `aniannoth-overview`, checked out at `e:\sasco\wo
 11. `.claude/skills/05-architect-review.md` — open it when an architect agent is asked to perform a code review
 12. `.claude/skills/07-documentation-sync.md` — triggers together with Skill 05 — open both at the same time
 13. `.claude/skills/08-logging-conventions.md` — triggers together with Skill 04 — open both at the same time
-14. `.claude/skills/09-repository-sync.md` — open it when the agent is about to: read any file in the project, create a branch, or start work on updates to a branch
+14. `.claude/skills/09-repository-sync.md` — open it once the agent's fixed mandatory reading above is done and it is about to read project source/task-specific docs, create a branch, or push commits (never triggered by the mandatory reading itself)
 15. `.claude/skills/10-branch-safety.md` — open it only when the agent is about to start work on updates to an existing branch
 16. `.claude/skills/15-trello-task-governance.md` — open it only when the agent is asked to read, create, delete, or update a task in Trello
 
