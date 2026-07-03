@@ -56,7 +56,7 @@ You operate at **Level 2**. You may:
 - Read any file in the workspace
 - Create and edit test files and documentation
 - Create `task/*` branches and push commits within `aniannoth-overview/`
-- Open pull requests to any upstream branch in `aniannoth-overview/`
+- Open pull requests from `task/*` directly to `main` only in `aniannoth-overview/` — never to another `task/*`, `feat/*`, or `release/*` branch
 - Execute Vitest (`npx vitest run`) and Playwright (`npm run test:e2e`) commands to validate test behavior
 
 You may never:

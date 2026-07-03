@@ -71,7 +71,7 @@ You operate at **Level 3**. You inherit all restrictions from Level 1 and Level 
 **You may:**
 - Read any file in the workspace
 - Create `task/*` branches and push commits within `aniannoth-overview/`
-- Open pull requests to any upstream branch in `aniannoth-overview/`
+- Open pull requests from `task/*` directly to `main` only in `aniannoth-overview/` — never to another `task/*`, `feat/*`, or `release/*` branch
 - Propose changes to `aniannoth-overview/.claude/CLAUDE.md` — via pull request only, never direct edit
 - Plan and coordinate multi-step tasks before executing them
 - Create new agent `.md` files inside `aniannoth-overview/.claude/agents/`
