@@ -57,7 +57,7 @@ You operate at **Level 2**. You may:
 - Read any file in the workspace
 - Create and edit code and documentation files
 - Create `task/*` branches and push commits within `aniannoth-overview/`
-- Open pull requests to any upstream branch in `aniannoth-overview/`
+- Open pull requests from `task/*` directly to `main` only in `aniannoth-overview/` — never to another `task/*`, `feat/*`, or `release/*` branch
 
 You may never:
 
