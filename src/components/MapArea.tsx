@@ -5,11 +5,13 @@ import { MapContainer, ImageOverlay } from 'react-leaflet'
 import L from 'leaflet'
 import { useAppContext } from '@/context/AppContext'
 import { useMaps } from '@/hooks/useMaps'
+import { useTranslation } from '@/hooks/useTranslation'
 import { cn } from '@/lib/utils'
 import type { GameMap } from '@/types/universe'
 
 export default function MapArea() {
   const ctx = useAppContext()
+  const t = useTranslation()
   const { data: maps } = useMaps()
 
   const selectedMap = maps.find(m => m.id === ctx.selectedMap)
@@ -93,7 +95,7 @@ export default function MapArea() {
                 </button>
               ))
             ) : (
-              <div className="px-3 py-2 text-sm text-muted">No maps available</div>
+              <div className="px-3 py-2 text-sm text-muted">{t('map_no_maps_available')}</div>
             )}
           </div>
         )}
@@ -109,7 +111,7 @@ export default function MapArea() {
           showToast ? 'opacity-100' : 'opacity-0'
         )}
       >
-        Map unavailable for this era. Redirected to default.
+        {t('map_reset_toast')}
       </div>
     </div>
   )
@@ -120,10 +122,12 @@ interface MapSurfaceProps {
 }
 
 function MapSurface({ map }: MapSurfaceProps) {
+  const t = useTranslation()
+
   if (!map) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-map-land">
-        <span className="text-muted text-sm">No map selected</span>
+        <span className="text-muted text-sm">{t('map_no_map_selected')}</span>
       </div>
     )
   }
@@ -132,7 +136,7 @@ function MapSurface({ map }: MapSurfaceProps) {
     if (!map.image) {
       return (
         <div className="w-full h-full flex items-center justify-center bg-map-land">
-          <span className="text-muted text-sm">No map image available</span>
+          <span className="text-muted text-sm">{t('map_no_image_available')}</span>
         </div>
       )
     }

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act, waitFor } from '@testing-library/react'
 import { AppProvider, useAppContext } from './AppContext'
+import { LanguageProvider } from './LanguageContext'
 
 // ---------------------------------------------------------------------------
 // Mock the API modules so tests run without a real backend.
@@ -87,7 +88,7 @@ function Inspector() {
 }
 
 function Wrapper({ children }: { children: React.ReactNode }) {
-  return <AppProvider>{children}</AppProvider>
+  return <LanguageProvider><AppProvider>{children}</AppProvider></LanguageProvider>
 }
 
 // ---------------------------------------------------------------------------

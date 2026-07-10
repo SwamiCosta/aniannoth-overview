@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppProvider } from '@/context/AppContext'
+import { LanguageProvider } from '@/context/LanguageContext'
 import TopBar from '@/components/TopBar'
 import TimelineBar from '@/components/TimelineBar'
 import ExplorePage from '@/pages/ExplorePage'
@@ -11,20 +12,22 @@ import LorePage from '@/pages/LorePage'
 export default function App() {
   return (
     <BrowserRouter>
-      <AppProvider>
-        <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
-          <TopBar />
-          <TimelineBar />
-          <Routes>
-            <Route path="/" element={<Navigate to="/explore" replace />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/characters" element={<CharactersPage />} />
-            <Route path="/places" element={<PlacesPage />} />
-            <Route path="/items" element={<ItemsPage />} />
-            <Route path="/lore" element={<LorePage />} />
-          </Routes>
-        </div>
-      </AppProvider>
+      <LanguageProvider>
+        <AppProvider>
+          <div className="h-screen flex flex-col bg-background text-foreground overflow-hidden">
+            <TopBar />
+            <TimelineBar />
+            <Routes>
+              <Route path="/" element={<Navigate to="/explore" replace />} />
+              <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/characters" element={<CharactersPage />} />
+              <Route path="/places" element={<PlacesPage />} />
+              <Route path="/items" element={<ItemsPage />} />
+              <Route path="/lore" element={<LorePage />} />
+            </Routes>
+          </div>
+        </AppProvider>
+      </LanguageProvider>
     </BrowserRouter>
   )
 }

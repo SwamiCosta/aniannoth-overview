@@ -1,5 +1,6 @@
 import { useEras } from '@/hooks/useEras'
 import { useAppContext } from '@/context/AppContext'
+import { useTranslation } from '@/hooks/useTranslation'
 import { cn } from '@/lib/utils'
 import type { Era } from '@/types/universe'
 
@@ -117,12 +118,13 @@ export default function TimelineBar() {
   const { data: erasData } = useEras()
   const entries = [...erasData].sort((a, b) => a.order - b.order)
   const ctx = useAppContext()
+  const t = useTranslation()
 
   return (
     <div className="sticky top-12 z-40 bg-surface border-b border-border px-6 py-3">
       {/* Label */}
       <span className="block text-[10px] uppercase tracking-widest text-muted font-medium mb-2">
-        timeline
+        {t('timeline_label')}
       </span>
 
       {/* Track */}

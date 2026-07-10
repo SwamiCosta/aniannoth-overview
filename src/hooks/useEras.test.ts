@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
+import { LanguageProvider } from '@/context/LanguageContext'
 import { useEras } from './useEras'
 
 // ---------------------------------------------------------------------------
@@ -47,13 +48,13 @@ describe('useEras', () => {
   })
 
   it('returns a non-empty array once loading is complete', async () => {
-    const { result } = renderHook(() => useEras())
+    const { result } = renderHook(() => useEras(), { wrapper: LanguageProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.data.length).toBeGreaterThan(0)
   })
 
   it('each era has all required fields', async () => {
-    const { result } = renderHook(() => useEras())
+    const { result } = renderHook(() => useEras(), { wrapper: LanguageProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     for (const era of result.current.data) {
       expect(typeof era.id).toBe('string')
@@ -64,7 +65,7 @@ describe('useEras', () => {
   })
 
   it('starts in loading state and resolves with no error on success', async () => {
-    const { result } = renderHook(() => useEras())
+    const { result } = renderHook(() => useEras(), { wrapper: LanguageProvider })
     expect(result.current.loading).toBe(true)
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBeNull()
@@ -72,7 +73,7 @@ describe('useEras', () => {
 
   it('sets error and clears data when the API call fails', async () => {
     mockFetchEras.mockRejectedValue(new Error('Network failure'))
-    const { result } = renderHook(() => useEras())
+    const { result } = renderHook(() => useEras(), { wrapper: LanguageProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBeInstanceOf(Error)
     expect(result.current.data).toEqual([])

@@ -2,15 +2,18 @@ import { MapPin, User } from 'lucide-react'
 import { useAppContext } from '@/context/AppContext'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useEras } from '@/hooks/useEras'
+import { useTranslation } from '@/hooks/useTranslation'
+import type { TranslationKey } from '@/lib/translations'
 
-const FILTER_CHIPS: { label: string; value: string | null }[] = [
-  { label: 'All', value: null },
-  { label: 'Characters', value: 'characters' },
-  { label: 'Lore', value: 'lore' },
+const FILTER_CHIPS: { key: TranslationKey; value: string | null }[] = [
+  { key: 'filter_all', value: null },
+  { key: 'filter_characters', value: 'characters' },
+  { key: 'filter_lore', value: 'lore' },
 ]
 
 export default function Sidebar() {
   const ctx = useAppContext()
+  const t = useTranslation()
   const { data: eras } = useEras()
   const { data: allEntities } = useAllEntities()
 
@@ -40,7 +43,7 @@ export default function Sidebar() {
           const isActive = ctx.filters.category === chip.value
           return (
             <button
-              key={chip.label}
+              key={chip.key}
               onClick={() => ctx.setFilter(chip.value)}
               className={[
                 'px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer',
@@ -49,7 +52,7 @@ export default function Sidebar() {
                   : 'bg-surface border border-border text-muted hover:border-primary-border',
               ].join(' ')}
             >
-              {chip.label}
+              {t(chip.key)}
             </button>
           )
         })}
@@ -58,7 +61,7 @@ export default function Sidebar() {
       {/* Content list */}
       <div className="flex-1 overflow-y-auto">
         {visibleEntities.length === 0 ? (
-          <p className="text-muted text-sm text-center mt-8 px-4">No entities found.</p>
+          <p className="text-muted text-sm text-center mt-8 px-4">{t('sidebar_no_entities')}</p>
         ) : (
           visibleEntities.map(entity => {
             const isActive = ctx.selectedEntityId === entity.id
