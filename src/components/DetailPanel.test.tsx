@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act, waitFor } from '@testing-library/react'
 import { AppProvider, useAppContext } from '@/context/AppContext'
+import { LanguageProvider } from '@/context/LanguageContext'
 import DetailPanel from './DetailPanel'
 
 // ---------------------------------------------------------------------------
@@ -129,7 +130,7 @@ const ENTITY_WITH_RESOLVABLE_LINK = {
 // ---------------------------------------------------------------------------
 
 function ControlledWrapper({ children }: { children: React.ReactNode }) {
-  return <AppProvider>{children}</AppProvider>
+  return <LanguageProvider><AppProvider>{children}</AppProvider></LanguageProvider>
 }
 
 function SelectEntityButton({ entityId }: { entityId: string | null }) {

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
+import { LanguageProvider } from '@/context/LanguageContext'
 import { useEntities, useAllEntities } from './useEntities'
 
 // ---------------------------------------------------------------------------
@@ -57,19 +58,19 @@ describe('useEntities', () => {
   })
 
   it('returns entities for a known category once loading is complete', async () => {
-    const { result } = renderHook(() => useEntities('characters'))
+    const { result } = renderHook(() => useEntities('characters'), { wrapper: LanguageProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.data.length).toBeGreaterThan(0)
   })
 
   it('returns an empty array for an unknown category', async () => {
-    const { result } = renderHook(() => useEntities('nonexistent'))
+    const { result } = renderHook(() => useEntities('nonexistent'), { wrapper: LanguageProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.data).toEqual([])
   })
 
   it('each entity has all required fields', async () => {
-    const { result } = renderHook(() => useEntities('characters'))
+    const { result } = renderHook(() => useEntities('characters'), { wrapper: LanguageProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     for (const entity of result.current.data) {
       expect(typeof entity.id).toBe('string')
@@ -83,7 +84,7 @@ describe('useEntities', () => {
   })
 
   it('starts in loading state and resolves with no error on success', async () => {
-    const { result } = renderHook(() => useEntities('characters'))
+    const { result } = renderHook(() => useEntities('characters'), { wrapper: LanguageProvider })
     expect(result.current.loading).toBe(true)
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBeNull()
@@ -91,7 +92,7 @@ describe('useEntities', () => {
 
   it('sets error and clears data when the API call fails', async () => {
     mockFetchEntities.mockRejectedValue(new Error('Network failure'))
-    const { result } = renderHook(() => useEntities('characters'))
+    const { result } = renderHook(() => useEntities('characters'), { wrapper: LanguageProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBeInstanceOf(Error)
     expect(result.current.data).toEqual([])
@@ -108,20 +109,20 @@ describe('useAllEntities', () => {
   })
 
   it('returns entities from all categories once loading is complete', async () => {
-    const { result } = renderHook(() => useAllEntities())
+    const { result } = renderHook(() => useAllEntities(), { wrapper: LanguageProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.data.length).toBeGreaterThan(0)
   })
 
   it('includes entities from multiple categories', async () => {
-    const { result } = renderHook(() => useAllEntities())
+    const { result } = renderHook(() => useAllEntities(), { wrapper: LanguageProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     const categories = new Set(result.current.data.map(e => e.category))
     expect(categories.size).toBeGreaterThan(1)
   })
 
   it('starts in loading state and resolves with no error on success', async () => {
-    const { result } = renderHook(() => useAllEntities())
+    const { result } = renderHook(() => useAllEntities(), { wrapper: LanguageProvider })
     expect(result.current.loading).toBe(true)
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBeNull()
@@ -129,7 +130,7 @@ describe('useAllEntities', () => {
 
   it('sets error and clears data when any category fetch fails', async () => {
     mockFetchEntities.mockRejectedValue(new Error('Network failure'))
-    const { result } = renderHook(() => useAllEntities())
+    const { result } = renderHook(() => useAllEntities(), { wrapper: LanguageProvider })
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBeInstanceOf(Error)
     expect(result.current.data).toEqual([])

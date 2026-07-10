@@ -1,6 +1,7 @@
 import { apiFetch } from './keynorCoreClient'
 import type { PagedResponse } from './keynorCoreClient'
 import type { Entity, LinkedEntity } from '@/types/universe'
+import type { Language } from '@/context/LanguageContext'
 import { logger } from '@/lib/logger'
 
 interface ApiLinkedEntity {
@@ -49,10 +50,10 @@ function toEntity(api: ApiEntity, category: string): Entity {
   }
 }
 
-export async function fetchEntities(category: string): Promise<Entity[]> {
+export async function fetchEntities(category: string, language: Language): Promise<Entity[]> {
   try {
     const data = await apiFetch<PagedResponse<ApiEntity>>(
-      `/api/public/v1/${encodeURIComponent(category)}?size=100`,
+      `/api/public/v1/${encodeURIComponent(category)}?size=100&language=${language}`,
     )
     return data.content.map(item => toEntity(item, category))
   } catch (error) {

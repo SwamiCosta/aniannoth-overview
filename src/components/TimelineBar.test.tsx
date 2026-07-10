@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import { AppProvider } from '@/context/AppContext'
+import { LanguageProvider } from '@/context/LanguageContext'
 import TimelineBar from './TimelineBar'
 
 // ---------------------------------------------------------------------------
@@ -60,7 +61,7 @@ const MAP_WORLD = {
 }
 
 function Wrapper({ children }: { children: React.ReactNode }) {
-  return <AppProvider>{children}</AppProvider>
+  return <LanguageProvider><AppProvider>{children}</AppProvider></LanguageProvider>
 }
 
 // ---------------------------------------------------------------------------
