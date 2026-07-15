@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act, waitFor } from '@testing-library/react'
 import { AppProvider, useAppContext } from './AppContext'
-import { LanguageProvider } from './LanguageContext'
+import { LanguageProvider, useLanguage } from './LanguageContext'
 
 // ---------------------------------------------------------------------------
 // Mock the API modules so tests run without a real backend.
@@ -15,11 +15,17 @@ vi.mock('@/api/mapApi', () => ({
   fetchMaps: vi.fn(),
 }))
 
+vi.mock('@/api/entityApi', () => ({
+  fetchEntities: vi.fn(),
+}))
+
 import { fetchEras } from '@/api/eraApi'
 import { fetchMaps } from '@/api/mapApi'
+import { fetchEntities } from '@/api/entityApi'
 
 const mockFetchEras = vi.mocked(fetchEras)
 const mockFetchMaps = vi.mocked(fetchMaps)
+const mockFetchEntities = vi.mocked(fetchEntities)
 
 // ---------------------------------------------------------------------------
 // Shared test fixtures
@@ -32,6 +38,7 @@ const ERA_PRIMORDIAL = {
   type: 'ERA' as const,
   importance: null,
   description: '',
+  translationGroupId: 'primordial-group',
 }
 
 const ERA_ANCIENT = {
@@ -41,6 +48,7 @@ const ERA_ANCIENT = {
   type: 'ERA' as const,
   importance: null,
   description: '',
+  translationGroupId: 'ancient-group',
 }
 
 const MAP_OMNIVERSE = {
@@ -99,6 +107,7 @@ describe('AppContext', () => {
   beforeEach(() => {
     mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, ERA_ANCIENT])
     mockFetchMaps.mockResolvedValue([MAP_OMNIVERSE, MAP_WORLD])
+    mockFetchEntities.mockResolvedValue([])
   })
 
   it('initializes selectedEra with the first era by order', async () => {
@@ -209,5 +218,187 @@ describe('AppContext', () => {
     console.error = () => {}
     expect(() => render(<Inspector />)).toThrow('useAppContext must be used inside AppProvider')
     console.error = original
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Language switch remapping — era/entity ids are per-language rows (one row
+// per translation, linked by translationGroupId — see keynor-core
+// EraResponse/CharacterResponse etc). Switching language replaces the
+// underlying eras/entities dataset with a new set of ids, so a selection made
+// before the switch must be re-resolved by translationGroupId instead of
+// being left pointing at an id that only existed in the previous language.
+// ---------------------------------------------------------------------------
+
+function LanguageSwitcher() {
+  const { setLanguage } = useLanguage()
+  return (
+    <>
+      <button onClick={() => setLanguage('en')}>lang-en</button>
+      <button onClick={() => setLanguage('pt')}>lang-pt</button>
+    </>
+  )
+}
+
+function SetEraButton({ eraId }: { eraId: string }) {
+  const ctx = useAppContext()
+  return <button onClick={() => ctx.setEra(eraId)}>{`set-era-${eraId}`}</button>
+}
+
+function SetEntityButton({ entityId }: { entityId: string }) {
+  const ctx = useAppContext()
+  return <button onClick={() => ctx.setSelectedEntity(entityId)}>{`set-entity-${entityId}`}</button>
+}
+
+describe('AppContext — language switch remapping', () => {
+  const ERA_PRIMORDIAL_EN = {
+    id: 'primordial-en',
+    name: 'The Primordial Era',
+    order: 0,
+    type: 'ERA' as const,
+    importance: null,
+    description: '',
+    translationGroupId: 'primordial-group',
+  }
+
+  const ERA_ANCIENT_EN = {
+    id: 'ancient-en',
+    name: 'The Ancient Era',
+    order: 1,
+    type: 'ERA' as const,
+    importance: null,
+    description: '',
+    translationGroupId: 'ancient-group',
+  }
+
+  const ERA_PRIMORDIAL_PT = {
+    id: 'primordial-pt',
+    name: 'A Era Primordial',
+    order: 0,
+    type: 'ERA' as const,
+    importance: null,
+    description: '',
+    translationGroupId: 'primordial-group',
+  }
+
+  const ENTITY_EN = {
+    id: 'entity-en',
+    name: 'Omnia',
+    category: 'characters',
+    images: [],
+    summary: '',
+    body: '',
+    location: '',
+    timeline: { era: 'The Primordial Era' },
+    status: 'canon' as const,
+    links: [],
+    translationGroupId: 'omnia-group',
+  }
+
+  const ENTITY_PT = {
+    ...ENTITY_EN,
+    id: 'entity-pt',
+    name: 'Omnia (PT)',
+  }
+
+  beforeEach(() => {
+    // LanguageProvider reads its initial language from localStorage, which
+    // otherwise leaks the 'pt' selection from one test into the next.
+    localStorage.clear()
+    mockFetchMaps.mockResolvedValue([])
+  })
+
+  it('remaps selectedEra to the new-language id once the language switch resolves', async () => {
+    mockFetchEras.mockImplementation(async (language: string) =>
+      language === 'pt' ? [ERA_PRIMORDIAL_PT] : [ERA_PRIMORDIAL_EN, ERA_ANCIENT_EN],
+    )
+    mockFetchEntities.mockResolvedValue([])
+
+    render(
+      <Wrapper>
+        <LanguageSwitcher />
+        <Inspector />
+      </Wrapper>,
+    )
+
+    await waitFor(() => expect(screen.getByTestId('era').textContent).toBe(ERA_PRIMORDIAL_EN.id))
+
+    await act(async () => { screen.getByText('lang-pt').click() })
+
+    await waitFor(() => expect(screen.getByTestId('era').textContent).toBe(ERA_PRIMORDIAL_PT.id))
+  })
+
+  it('falls back to the default era when the selected era has no translation in the new language', async () => {
+    mockFetchEras.mockImplementation(async (language: string) =>
+      language === 'pt' ? [ERA_PRIMORDIAL_PT] : [ERA_PRIMORDIAL_EN, ERA_ANCIENT_EN],
+    )
+    mockFetchEntities.mockResolvedValue([])
+
+    render(
+      <Wrapper>
+        <LanguageSwitcher />
+        <SetEraButton eraId={ERA_ANCIENT_EN.id} />
+        <Inspector />
+      </Wrapper>,
+    )
+
+    await waitFor(() => expect(screen.getByTestId('era').textContent).toBe(ERA_PRIMORDIAL_EN.id))
+    act(() => { screen.getByText(`set-era-${ERA_ANCIENT_EN.id}`).click() })
+    expect(screen.getByTestId('era').textContent).toBe(ERA_ANCIENT_EN.id)
+
+    // 'ancient' has no PT translation in this dataset — the switch must fall
+    // back to the default era instead of leaving selectedEra pointing at an
+    // id ('ancient-en') that no longer exists in the PT dataset.
+    await act(async () => { screen.getByText('lang-pt').click() })
+
+    await waitFor(() => expect(screen.getByTestId('era').textContent).toBe(ERA_PRIMORDIAL_PT.id))
+  })
+
+  it('remaps selectedEntityId to the new-language id once the language switch resolves', async () => {
+    mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL_EN])
+    mockFetchEntities.mockImplementation(async (_category: string, language: string) =>
+      language === 'pt' ? [ENTITY_PT] : [ENTITY_EN],
+    )
+
+    render(
+      <Wrapper>
+        <LanguageSwitcher />
+        <SetEntityButton entityId={ENTITY_EN.id} />
+        <Inspector />
+      </Wrapper>,
+    )
+
+    await waitFor(() => expect(screen.getByTestId('entity').textContent).toBe('null'))
+    act(() => { screen.getByText(`set-entity-${ENTITY_EN.id}`).click() })
+    expect(screen.getByTestId('entity').textContent).toBe(ENTITY_EN.id)
+
+    await act(async () => { screen.getByText('lang-pt').click() })
+
+    await waitFor(() => expect(screen.getByTestId('entity').textContent).toBe(ENTITY_PT.id))
+  })
+
+  it('clears selectedEntityId when the selected entity has no translation in the new language', async () => {
+    mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL_EN])
+    mockFetchEntities.mockImplementation(async (_category: string, language: string) =>
+      language === 'pt' ? [] : [ENTITY_EN],
+    )
+
+    render(
+      <Wrapper>
+        <LanguageSwitcher />
+        <SetEntityButton entityId={ENTITY_EN.id} />
+        <Inspector />
+      </Wrapper>,
+    )
+
+    await waitFor(() => expect(screen.getByTestId('entity').textContent).toBe('null'))
+    act(() => { screen.getByText(`set-entity-${ENTITY_EN.id}`).click() })
+    expect(screen.getByTestId('entity').textContent).toBe(ENTITY_EN.id)
+
+    // No PT translation exists for this entity — the switch must clear the
+    // selection instead of leaving it pointing at an id that no longer exists.
+    await act(async () => { screen.getByText('lang-pt').click() })
+
+    await waitFor(() => expect(screen.getByTestId('entity').textContent).toBe('null'))
   })
 })

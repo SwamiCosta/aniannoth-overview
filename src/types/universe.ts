@@ -5,6 +5,7 @@ export interface Era {
   type: 'ERA' | 'POINT'
   importance: 'STANDARD' | 'MAJOR' | null
   description: string
+  translationGroupId: string
 }
 
 export interface GameMap {
@@ -41,4 +42,5 @@ export interface Entity {
   timeline: EntityTimeline
   status: 'canon' | 'draft' | 'deprecated'
   links: LinkedEntity[]
+  translationGroupId: string
 }

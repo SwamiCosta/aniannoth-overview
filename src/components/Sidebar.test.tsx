@@ -42,6 +42,7 @@ const ERA_PRIMORDIAL = {
   type: 'ERA' as const,
   importance: null,
   description: '',
+  translationGroupId: 'primordial-group',
 }
 
 const MAP_OMNIVERSE = {
@@ -63,6 +64,7 @@ const CHARACTER_ENTITY = {
   timeline: { era: ERA_PRIMORDIAL.name },
   status: 'canon' as const,
   links: [],
+  translationGroupId: 'aelindra-group',
 }
 
 const LORE_ENTITY = {
@@ -76,6 +78,7 @@ const LORE_ENTITY = {
   timeline: { era: ERA_PRIMORDIAL.name },
   status: 'canon' as const,
   links: [],
+  translationGroupId: 'first-codex-group',
 }
 
 // Entity in a different era — must NOT appear in the primordial sidebar
@@ -90,6 +93,7 @@ const OTHER_ERA_ENTITY = {
   timeline: { era: 'The Ancient Era' },
   status: 'canon' as const,
   links: [],
+  translationGroupId: 'later-character-group',
 }
 
 const ALL_CATEGORIES = ['characters', 'places', 'factions', 'items', 'events', 'lore']

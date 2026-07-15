@@ -27,6 +27,7 @@ const MOCK_ERAS = [
     type: 'ERA' as const,
     importance: null,
     description: 'The age before the material world.',
+    translationGroupId: 'primordial-group',
   },
   {
     id: 'ancient',
@@ -35,6 +36,7 @@ const MOCK_ERAS = [
     type: 'ERA' as const,
     importance: null,
     description: 'The first age of the material world.',
+    translationGroupId: 'ancient-group',
   },
 ]
 

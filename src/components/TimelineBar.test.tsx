@@ -16,11 +16,17 @@ vi.mock('@/api/mapApi', () => ({
   fetchMaps: vi.fn(),
 }))
 
+vi.mock('@/api/entityApi', () => ({
+  fetchEntities: vi.fn(),
+}))
+
 import { fetchEras } from '@/api/eraApi'
 import { fetchMaps } from '@/api/mapApi'
+import { fetchEntities } from '@/api/entityApi'
 
 const mockFetchEras = vi.mocked(fetchEras)
 const mockFetchMaps = vi.mocked(fetchMaps)
+const mockFetchEntities = vi.mocked(fetchEntities)
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -33,6 +39,7 @@ const ERA_PRIMORDIAL = {
   type: 'ERA' as const,
   importance: null,
   description: '',
+  translationGroupId: 'primordial-group',
 }
 
 const ERA_ANCIENT = {
@@ -42,6 +49,7 @@ const ERA_ANCIENT = {
   type: 'ERA' as const,
   importance: null,
   description: '',
+  translationGroupId: 'ancient-group',
 }
 
 const MAP_OMNIVERSE = {
@@ -72,6 +80,7 @@ describe('TimelineBar', () => {
   beforeEach(() => {
     mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, ERA_ANCIENT])
     mockFetchMaps.mockResolvedValue([MAP_OMNIVERSE, MAP_WORLD])
+    mockFetchEntities.mockResolvedValue([])
   })
 
   it('renders all era names', async () => {

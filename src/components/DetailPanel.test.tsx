@@ -39,6 +39,7 @@ const ERA_PRIMORDIAL = {
   type: 'ERA' as const,
   importance: null,
   description: '',
+  translationGroupId: 'primordial-group',
 }
 
 const POINT_SUNDERING = {
@@ -48,6 +49,7 @@ const POINT_SUNDERING = {
   type: 'POINT' as const,
   importance: 'MAJOR' as const,
   description: 'The moment the material world split from the Omniverse.',
+  translationGroupId: 'sundering-group',
 }
 
 const MAP_OMNIVERSE = {
@@ -69,6 +71,7 @@ const TEST_ENTITY = {
   timeline: { era: 'primordial' },
   status: 'canon' as const,
   links: [],
+  translationGroupId: 'verath-group',
 }
 
 const LINKED_CANON_PLACE = {
