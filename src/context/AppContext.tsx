@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useEras } from '@/hooks/useEras'
 import { useMaps } from '@/hooks/useMaps'
 import { useAllEntities } from '@/hooks/useEntities'
+import type { Era } from '@/types/universe'
 
 interface Filters {
   category: string | null
@@ -35,7 +36,7 @@ const AppContext = createContext<AppContextValue | null>(null)
 export function AppProvider({ children }: { children: ReactNode }) {
   const { data: eras, loading: erasLoading } = useEras()
   const { data: maps, loading: mapsLoading } = useMaps()
-  const { data: entities } = useAllEntities()
+  const { data: entities, loading: entitiesLoading } = useAllEntities()
 
   const [selectedEra, setSelectedEra] = useState<string>('')
   const [selectedMap, setSelectedMap] = useState<string>('')
@@ -59,11 +60,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return maps.find(m => m.availableInEras.includes(eraId))?.id ?? ''
   }
 
+  function firstEraByOrder(eraList: Era[]): Era | undefined {
+    const eraEntries = eraList.filter(e => !e.type || e.type === 'ERA')
+    if (eraEntries.length === 0) return undefined
+    return [...eraEntries].sort((a, b) => a.order - b.order)[0]
+  }
+
   useEffect(() => {
     if (eras.length > 0 && !selectedEra) {
-      const eraEntries = eras.filter(e => !e.type || e.type === 'ERA')
-      if (eraEntries.length === 0) return
-      const firstEra = [...eraEntries].sort((a, b) => a.order - b.order)[0]
+      const firstEra = firstEraByOrder(eras)
+      if (!firstEra) return
       setSelectedEra(firstEra.id)
       selectedEraGroupIdRef.current = firstEra.translationGroupId
       setSelectedMap(defaultMapForEra(firstEra.id))
@@ -73,7 +79,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Re-resolve the current era and timeline selection after a language switch
   // brings in a new eras array with different (per-language) ids.
   useEffect(() => {
-    if (eras.length === 0) return
+    // erasLoading (not eras.length) distinguishes "still loading" from "loaded
+    // but genuinely empty" — the latter must still fall through and clear a
+    // now-stale selection instead of being silently skipped.
+    if (erasLoading) return
 
     if (selectedEra && !eras.some(e => e.id === selectedEra)) {
       const groupId = selectedEraGroupIdRef.current
@@ -81,6 +90,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (remapped) {
         setSelectedEra(remapped.id)
         selectedEraGroupIdRef.current = remapped.translationGroupId
+      } else {
+        // No translation found for the previously selected era — fall back to
+        // the same default the bootstrap effect uses, rather than leaving
+        // selectedEra pointing at an id that no longer exists anywhere.
+        const fallback = firstEraByOrder(eras)
+        if (fallback) {
+          setSelectedEra(fallback.id)
+          selectedEraGroupIdRef.current = fallback.translationGroupId
+          setSelectedMap(defaultMapForEra(fallback.id))
+        }
       }
     }
 
@@ -95,13 +114,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setTimelineDetailId(null)
       }
     }
-  }, [eras])
+    // erasLoading is read as a guard above and must be in the dependency array:
+    // setData and setLoading(false) in useEras can land in separate renders, so
+    // relying on `eras` alone would let this effect fire once while still
+    // loading (a no-op) and never get a second chance once loading clears,
+    // since `eras`'s reference does not change again on its own.
+  }, [eras, erasLoading])
 
   // Re-resolve the selected entity after a language switch brings in a new
   // entities array with different (per-language) ids.
   useEffect(() => {
     if (selectedEntityId === null) return
-    if (entities.length === 0) return
+    if (entitiesLoading) return
     if (entities.some(e => e.id === selectedEntityId)) return
 
     const groupId = selectedEntityGroupIdRef.current
@@ -112,7 +136,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } else {
       setSelectedEntityId(null)
     }
-  }, [entities])
+    // entitiesLoading must be in the dependency array for the same reason as
+    // erasLoading above — see the era/timeline remap effect.
+  }, [entities, entitiesLoading])
 
   function setEra(eraId: string) {
     const era = eras.find(e => e.id === eraId)

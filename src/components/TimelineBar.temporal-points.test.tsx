@@ -16,11 +16,17 @@ vi.mock('@/api/mapApi', () => ({
   fetchMaps: vi.fn(),
 }))
 
+vi.mock('@/api/entityApi', () => ({
+  fetchEntities: vi.fn(),
+}))
+
 import { fetchEras } from '@/api/eraApi'
 import { fetchMaps } from '@/api/mapApi'
+import { fetchEntities } from '@/api/entityApi'
 
 const mockFetchEras = vi.mocked(fetchEras)
 const mockFetchMaps = vi.mocked(fetchMaps)
+const mockFetchEntities = vi.mocked(fetchEntities)
 
 // ---------------------------------------------------------------------------
 // Test fixtures — one ERA, one STANDARD point, one MAJOR point
@@ -33,6 +39,7 @@ const ERA_PRIMORDIAL = {
   type: 'ERA' as const,
   importance: null,
   description: '',
+  translationGroupId: 'primordial-group',
 }
 
 const POINT_STANDARD = {
@@ -42,6 +49,7 @@ const POINT_STANDARD = {
   type: 'POINT' as const,
   importance: 'STANDARD' as const,
   description: '',
+  translationGroupId: 'first-silence-group',
 }
 
 const POINT_MAJOR = {
@@ -51,6 +59,7 @@ const POINT_MAJOR = {
   type: 'POINT' as const,
   importance: 'MAJOR' as const,
   description: '',
+  translationGroupId: 'sundering-group',
 }
 
 const MAP_OMNIVERSE = {
@@ -83,6 +92,7 @@ function Inspector() {
 describe('TimelineBar — temporal points', () => {
   beforeEach(() => {
     mockFetchMaps.mockResolvedValue([MAP_OMNIVERSE])
+    mockFetchEntities.mockResolvedValue([])
   })
 
   describe('ERA entry', () => {
