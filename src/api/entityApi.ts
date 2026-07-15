@@ -30,6 +30,7 @@ interface ApiEntity {
 }
 
 interface ApiBatchEntity {
+  type: string
   id: string
   name: string
   status: string
@@ -85,12 +86,13 @@ export async function fetchEntityById(category: string, id: string): Promise<Ent
   }
 }
 
-// Endpoint contract is a proposal pending confirmation from Imaws (keynor-core) —
-// batch-resolves entity ids to display-only summaries, regardless of category.
-export async function fetchEntitiesBatch(ids: string[], language: Language): Promise<FactionMember[]> {
+// Confirmed contract (keynor-core PR #71, Imaws): batch-resolves Character ids
+// only — Faction.members is the only field this currently backs. No language
+// param — each id already pins a specific language row, unlike fetchEntities.
+export async function fetchEntitiesBatch(ids: string[]): Promise<FactionMember[]> {
   try {
     const query = ids.map(id => encodeURIComponent(id)).join(',')
-    const data = await apiFetch<ApiBatchEntity[]>(`/api/public/v1/entities/batch?ids=${query}&language=${language}`)
+    const data = await apiFetch<ApiBatchEntity[]>(`/api/public/v1/characters/batch?ids=${query}`)
     return data.map(item => ({
       id: item.id,
       name: item.name,
