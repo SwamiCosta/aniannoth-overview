@@ -10,6 +10,7 @@ interface ApiEra {
   type: string
   importance: string | null
   description: string
+  translationGroupId: string
 }
 
 function toEra(api: ApiEra): Era {
@@ -20,6 +21,7 @@ function toEra(api: ApiEra): Era {
     type: (api.type as Era['type']) ?? 'ERA',
     importance: (api.importance ?? null) as Era['importance'],
     description: api.description,
+    translationGroupId: api.translationGroupId,
   }
 }
 

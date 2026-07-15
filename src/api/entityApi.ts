@@ -22,6 +22,7 @@ interface ApiEntity {
   timelineFoundedEra: string | null
   timelineDestroyedEra: string | null
   links?: ApiLinkedEntity[] | null
+  translationGroupId: string
 }
 
 function toLinkedEntity(apiLink: ApiLinkedEntity): LinkedEntity {
@@ -47,6 +48,7 @@ function toEntity(api: ApiEntity, category: string): Entity {
     },
     status: api.status.toLowerCase() as Entity['status'],
     links: (api.links ?? []).map(toLinkedEntity),
+    translationGroupId: api.translationGroupId,
   }
 }
 
