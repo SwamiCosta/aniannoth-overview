@@ -31,6 +31,12 @@ export interface LinkedEntity {
   status: 'canon' | 'draft' | 'deprecated'
 }
 
+export interface FactionMember {
+  id: string
+  name: string
+  status: 'canon' | 'draft' | 'deprecated'
+}
+
 export interface Entity {
   id: string
   name: string
@@ -42,5 +48,6 @@ export interface Entity {
   timeline: EntityTimeline
   status: 'canon' | 'draft' | 'deprecated'
   links: LinkedEntity[]
+  members: string[]
   translationGroupId: string
 }

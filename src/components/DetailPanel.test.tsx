@@ -18,15 +18,17 @@ vi.mock('@/api/mapApi', () => ({
 
 vi.mock('@/api/entityApi', () => ({
   fetchEntities: vi.fn(),
+  fetchEntitiesBatch: vi.fn(),
 }))
 
 import { fetchEras } from '@/api/eraApi'
 import { fetchMaps } from '@/api/mapApi'
-import { fetchEntities } from '@/api/entityApi'
+import { fetchEntities, fetchEntitiesBatch } from '@/api/entityApi'
 
 const mockFetchEras = vi.mocked(fetchEras)
 const mockFetchMaps = vi.mocked(fetchMaps)
 const mockFetchEntities = vi.mocked(fetchEntities)
+const mockFetchEntitiesBatch = vi.mocked(fetchEntitiesBatch)
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -71,6 +73,7 @@ const TEST_ENTITY = {
   timeline: { era: 'primordial' },
   status: 'canon' as const,
   links: [],
+  members: [],
   translationGroupId: 'verath-group',
 }
 
@@ -127,6 +130,25 @@ const ENTITY_WITH_RESOLVABLE_LINK = {
   links: [LINKED_RESOLVABLE_CHARACTER],
 }
 
+const FACTION_MEMBER_CANON = { id: 'member-canon', name: 'Kessa Ironvow', status: 'canon' as const }
+const FACTION_MEMBER_DRAFT = { id: 'member-draft', name: 'An Unnamed Recruit', status: 'draft' as const }
+
+const ENTITY_FACTION_WITH_MEMBERS = {
+  ...TEST_ENTITY,
+  id: 'entity-faction-with-members',
+  name: 'The Hollow Concord',
+  category: 'factions',
+  members: [FACTION_MEMBER_CANON.id, FACTION_MEMBER_DRAFT.id],
+}
+
+const ENTITY_FACTION_NO_MEMBERS = {
+  ...TEST_ENTITY,
+  id: 'entity-faction-no-members',
+  name: 'The Silent Order',
+  category: 'factions',
+  members: [],
+}
+
 // ---------------------------------------------------------------------------
 // Helper — renders the DetailPanel alongside a control button
 // that lets a test set/clear selectedEntityId in context.
@@ -168,8 +190,10 @@ describe('DetailPanel', () => {
       if (category === 'characters') return [TEST_ENTITY]
       if (category === 'lore') return [ENTITY_WITH_LINKS, ENTITY_WITH_RESOLVABLE_LINK]
       if (category === 'places') return [ENTITY_WITH_IMAGES, ENTITY_WITH_ONE_IMAGE]
+      if (category === 'factions') return [ENTITY_FACTION_WITH_MEMBERS, ENTITY_FACTION_NO_MEMBERS]
       return []
     })
+    mockFetchEntitiesBatch.mockResolvedValue([FACTION_MEMBER_CANON, FACTION_MEMBER_DRAFT])
   })
 
   it('shows the collapsed placeholder when selectedEntityId is null', async () => {
@@ -300,6 +324,70 @@ describe('DetailPanel', () => {
     const disabledElement = draftLink.closest('[aria-disabled="true"]')
     expect(disabledElement).not.toBeNull()
     expect(disabledElement).toHaveAttribute('title', 'Not available in the public atlas')
+  })
+
+  it('renders faction members as clickable pills and calls setSelectedEntity on click', async () => {
+    function Inspector() {
+      const ctx = useAppContext()
+      return <span data-testid="context-state">{JSON.stringify({ selectedEntityId: ctx.selectedEntityId })}</span>
+    }
+
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_FACTION_WITH_MEMBERS.id} />
+        <Inspector />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_FACTION_WITH_MEMBERS.id}`).click()
+    })
+
+    expect(await screen.findByText('Members')).toBeInTheDocument()
+    const canonMemberPill = await screen.findByRole('button', { name: FACTION_MEMBER_CANON.name })
+
+    await act(async () => { canonMemberPill.click() })
+
+    await waitFor(() => {
+      const state = JSON.parse(screen.getByTestId('context-state').textContent ?? '{}')
+      expect(state.selectedEntityId).toBe(FACTION_MEMBER_CANON.id)
+    })
+  })
+
+  it('renders non-canon faction members as disabled with a tooltip, not clickable', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_FACTION_WITH_MEMBERS.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_FACTION_WITH_MEMBERS.id}`).click()
+    })
+
+    const draftMemberPill = await screen.findByText(FACTION_MEMBER_DRAFT.name)
+    expect(draftMemberPill.closest('button')).toBeNull()
+    const disabledElement = draftMemberPill.closest('[aria-disabled="true"]')
+    expect(disabledElement).not.toBeNull()
+    expect(disabledElement).toHaveAttribute('title', 'Not available in the public atlas')
+  })
+
+  it('does not render the Members section when the faction has no members', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_FACTION_NO_MEMBERS.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_FACTION_NO_MEMBERS.id}`).click()
+    })
+
+    expect(await screen.findByText('The Silent Order')).toBeInTheDocument()
+    expect(screen.queryByText('Members')).not.toBeInTheDocument()
   })
 
   it('shows the era detail when openTimelineDetail is called with an era id', async () => {

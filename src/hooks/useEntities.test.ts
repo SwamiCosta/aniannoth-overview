@@ -30,6 +30,7 @@ const MOCK_CHARACTER = {
   timeline: { era: 'primordial' },
   status: 'canon' as const,
   links: [],
+  members: [],
   translationGroupId: 'omnia-group',
 }
 
@@ -44,6 +45,7 @@ const MOCK_LORE = {
   timeline: { era: 'primordial' },
   status: 'canon' as const,
   links: [],
+  members: [],
   translationGroupId: 'creation-myth-group',
 }
 

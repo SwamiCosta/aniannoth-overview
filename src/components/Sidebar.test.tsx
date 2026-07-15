@@ -64,6 +64,7 @@ const CHARACTER_ENTITY = {
   timeline: { era: ERA_PRIMORDIAL.name },
   status: 'canon' as const,
   links: [],
+  members: [],
   translationGroupId: 'aelindra-group',
 }
 
@@ -78,6 +79,7 @@ const LORE_ENTITY = {
   timeline: { era: ERA_PRIMORDIAL.name },
   status: 'canon' as const,
   links: [],
+  members: [],
   translationGroupId: 'first-codex-group',
 }
 
@@ -93,6 +95,7 @@ const OTHER_ERA_ENTITY = {
   timeline: { era: 'The Ancient Era' },
   status: 'canon' as const,
   links: [],
+  members: [],
   translationGroupId: 'later-character-group',
 }
 
