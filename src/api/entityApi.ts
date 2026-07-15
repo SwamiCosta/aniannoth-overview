@@ -1,6 +1,6 @@
 import { apiFetch } from './keynorCoreClient'
 import type { PagedResponse } from './keynorCoreClient'
-import type { Entity, LinkedEntity } from '@/types/universe'
+import type { Entity, FactionMember, LinkedEntity } from '@/types/universe'
 import type { Language } from '@/context/LanguageContext'
 import { logger } from '@/lib/logger'
 
@@ -22,7 +22,17 @@ interface ApiEntity {
   timelineFoundedEra: string | null
   timelineDestroyedEra: string | null
   links?: ApiLinkedEntity[] | null
+  // Only present on faction entities — list of member entity UUIDs, resolved
+  // separately via fetchEntitiesBatch. See PR description for the pending
+  // keynor-core PR #70 (Imperium) that introduces this field.
+  members?: string[] | null
   translationGroupId: string
+}
+
+interface ApiBatchEntity {
+  id: string
+  name: string
+  status: string
 }
 
 function toLinkedEntity(apiLink: ApiLinkedEntity): LinkedEntity {
@@ -48,6 +58,7 @@ function toEntity(api: ApiEntity, category: string): Entity {
     },
     status: api.status.toLowerCase() as Entity['status'],
     links: (api.links ?? []).map(toLinkedEntity),
+    members: api.members ?? [],
     translationGroupId: api.translationGroupId,
   }
 }
@@ -70,6 +81,23 @@ export async function fetchEntityById(category: string, id: string): Promise<Ent
     return toEntity(data, category)
   } catch (error) {
     logger.error(`Failed to fetch entity by id — category: ${category}, id: ${id}`, error)
+    throw error
+  }
+}
+
+// Endpoint contract is a proposal pending confirmation from Imaws (keynor-core) —
+// batch-resolves entity ids to display-only summaries, regardless of category.
+export async function fetchEntitiesBatch(ids: string[], language: Language): Promise<FactionMember[]> {
+  try {
+    const query = ids.map(id => encodeURIComponent(id)).join(',')
+    const data = await apiFetch<ApiBatchEntity[]>(`/api/public/v1/entities/batch?ids=${query}&language=${language}`)
+    return data.map(item => ({
+      id: item.id,
+      name: item.name,
+      status: item.status.toLowerCase() as FactionMember['status'],
+    }))
+  } catch (error) {
+    logger.error(`Failed to fetch entity batch — ids: ${ids.join(',')}`, error)
     throw error
   }
 }

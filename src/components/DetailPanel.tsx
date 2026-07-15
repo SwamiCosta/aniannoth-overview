@@ -5,6 +5,7 @@ import type { Components } from 'react-markdown'
 import { useAppContext } from '@/context/AppContext'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useEras } from '@/hooks/useEras'
+import { useFactionMembers } from '@/hooks/useFactionMembers'
 import { categoryForType } from '@/lib/entityCategory'
 import type { LinkedEntity } from '@/types/universe'
 
@@ -203,6 +204,48 @@ function RelatedEntities({ links }: { links: LinkedEntity[] }) {
   )
 }
 
+function FactionMembers({ memberIds }: { memberIds: string[] }) {
+  const ctx = useAppContext()
+  const { data: members, loading } = useFactionMembers(memberIds)
+
+  if (memberIds.length === 0) return null
+
+  return (
+    <div className="border-t border-border pt-2 mt-1">
+      <h3 className="text-xs font-medium text-muted uppercase tracking-wide mb-1.5">
+        Members
+      </h3>
+      {loading ? (
+        <p className="text-xs text-muted">Loading members…</p>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {members.map(member => {
+            const isAvailable = member.status === 'canon'
+            return isAvailable ? (
+              <button
+                key={member.id}
+                onClick={() => ctx.setSelectedEntity(member.id)}
+                className="bg-border hover:bg-primary-light text-foreground text-xs px-2 py-1 rounded-full transition-colors cursor-pointer"
+              >
+                {member.name}
+              </button>
+            ) : (
+              <span
+                key={member.id}
+                title="Not available in the public atlas"
+                aria-disabled="true"
+                className="bg-border text-muted text-xs px-2 py-1 rounded-full opacity-50 cursor-not-allowed"
+              >
+                {member.name}
+              </span>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function DetailPanel() {
   const ctx = useAppContext()
   const { data: entities } = useAllEntities()
@@ -284,6 +327,9 @@ export default function DetailPanel() {
             </ReactMarkdown>
           </div>
 
+          {/* Faction members */}
+          {entity.category === 'factions' && <FactionMembers memberIds={entity.members} />}
+
           {/* Related entities */}
           <RelatedEntities links={entity.links} />
         </div>
@@ -306,6 +352,7 @@ export default function DetailPanel() {
                   <ReactMarkdown components={markdownComponents}>
                     {entity.body}
                   </ReactMarkdown>
+                  {entity.category === 'factions' && <FactionMembers memberIds={entity.members} />}
                   <RelatedEntities links={entity.links} />
                 </div>
                 {/* Image column sits beside the text instead of above it — avoids
