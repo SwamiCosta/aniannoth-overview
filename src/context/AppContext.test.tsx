@@ -292,6 +292,7 @@ describe('AppContext — language switch remapping', () => {
     timeline: { era: 'The Primordial Era' },
     status: 'canon' as const,
     links: [],
+    members: [],
     translationGroupId: 'omnia-group',
   }
 
