@@ -1,8 +1,11 @@
-import { MapPin, User } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronLeft, ChevronRight, MapPin, User } from 'lucide-react'
 import { useAppContext } from '@/context/AppContext'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useEras } from '@/hooks/useEras'
 import { useTranslation } from '@/hooks/useTranslation'
+import { cn } from '@/lib/utils'
+import type { Entity } from '@/types/universe'
 import type { TranslationKey } from '@/lib/translations'
 
 const FILTER_CHIPS: { key: TranslationKey; value: string | null }[] = [
@@ -16,6 +19,7 @@ export default function Sidebar() {
   const t = useTranslation()
   const { data: eras } = useEras()
   const { data: allEntities } = useAllEntities()
+  const [isExpanded, setIsExpanded] = useState(false)
 
   const currentEra = eras.find(era => era.id === ctx.selectedEra)
 
@@ -26,15 +30,26 @@ export default function Sidebar() {
   })
 
   return (
-    <div className="h-full flex flex-col">
+    <div
+      className={cn(
+        'h-full flex flex-col bg-surface',
+        isExpanded ? 'absolute inset-y-0 right-0 left-0 z-30 shadow-2xl' : 'relative'
+      )}
+    >
       {/* Header */}
-      <div className="px-4 pt-4 pb-3 border-b border-border shrink-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <MapPin size={14} className="text-primary shrink-0" />
-          <span className="font-semibold text-foreground text-sm leading-tight">
-            {currentEra?.name ?? '—'}
-          </span>
-        </div>
+      <div className="px-4 pt-4 pb-3 border-b border-border shrink-0 flex items-center gap-2">
+        <MapPin size={14} className="text-primary shrink-0" />
+        <span className="font-semibold text-foreground text-sm leading-tight flex-1 min-w-0 truncate">
+          {currentEra?.name ?? '—'}
+        </span>
+        <button
+          onClick={() => setIsExpanded(prev => !prev)}
+          aria-label={t(isExpanded ? 'sidebar_collapse' : 'sidebar_expand')}
+          title={t(isExpanded ? 'sidebar_collapse' : 'sidebar_expand')}
+          className="shrink-0 p-1 rounded hover:bg-background text-muted hover:text-foreground transition-colors cursor-pointer"
+        >
+          {isExpanded ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
       </div>
 
       {/* Filter chips */}
@@ -62,6 +77,35 @@ export default function Sidebar() {
       <div className="flex-1 overflow-y-auto">
         {visibleEntities.length === 0 ? (
           <p className="text-muted text-sm text-center mt-8 px-4">{t('sidebar_no_entities')}</p>
+        ) : isExpanded ? (
+          <div className="flex flex-wrap gap-4 p-4">
+            {visibleEntities.map(entity => {
+              const isActive = ctx.selectedEntityId === entity.id
+              return (
+                <button
+                  key={entity.id}
+                  onClick={() => ctx.setSelectedEntity(entity.id)}
+                  className={cn(
+                    'w-48 text-left rounded-lg overflow-hidden border transition-colors cursor-pointer',
+                    isActive
+                      ? 'border-primary bg-primary-light'
+                      : 'border-border bg-surface hover:border-primary-border'
+                  )}
+                >
+                  <div className="w-full h-28 bg-border flex items-center justify-center overflow-hidden">
+                    {entity.images[0] ? (
+                      <img src={entity.images[0]} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <User size={20} className="text-muted" />
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <EntityMeta entity={entity} />
+                  </div>
+                </button>
+              )
+            })}
+          </div>
         ) : (
           visibleEntities.map(entity => {
             const isActive = ctx.selectedEntityId === entity.id
@@ -92,18 +136,7 @@ export default function Sidebar() {
 
                   {/* Text content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-primary text-[10px] tracking-widest font-medium uppercase">
-                        {entity.category}
-                      </span>
-                      {entity.status !== 'canon' && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-border text-muted shrink-0">
-                          {entity.status}
-                        </span>
-                      )}
-                    </div>
-                    <p className="font-medium text-foreground text-sm mt-0.5">{entity.name}</p>
-                    <p className="text-muted text-sm mt-0.5 line-clamp-2">{entity.summary}</p>
+                    <EntityMeta entity={entity} />
                   </div>
                 </div>
               </button>
@@ -112,5 +145,24 @@ export default function Sidebar() {
         )}
       </div>
     </div>
+  )
+}
+
+function EntityMeta({ entity }: { entity: Entity }) {
+  return (
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-primary text-[10px] tracking-widest font-medium uppercase">
+          {entity.category}
+        </span>
+        {entity.status !== 'canon' && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-border text-muted shrink-0">
+            {entity.status}
+          </span>
+        )}
+      </div>
+      <p className="font-medium text-foreground text-sm mt-0.5">{entity.name}</p>
+      <p className="text-muted text-sm mt-0.5 line-clamp-2">{entity.summary}</p>
+    </>
   )
 }
