@@ -5,6 +5,7 @@ import { useAllEntities } from '@/hooks/useEntities'
 import { useEras } from '@/hooks/useEras'
 import { useTranslation } from '@/hooks/useTranslation'
 import { cn } from '@/lib/utils'
+import { imageAlignmentClass } from '@/lib/entityCategory'
 import type { Entity } from '@/types/universe'
 import type { TranslationKey } from '@/lib/translations'
 
@@ -36,20 +37,23 @@ export default function Sidebar() {
         isExpanded ? 'absolute inset-y-0 right-0 left-0 z-30 shadow-2xl' : 'relative'
       )}
     >
+      {/* Expand/collapse handle — straddles the left edge so it stays
+          reachable and visible whether the panel is narrow or full-width */}
+      <button
+        onClick={() => setIsExpanded(prev => !prev)}
+        aria-label={t(isExpanded ? 'sidebar_collapse' : 'sidebar_expand')}
+        title={t(isExpanded ? 'sidebar_collapse' : 'sidebar_expand')}
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 w-6 h-14 rounded-full bg-surface border border-border shadow-md flex items-center justify-center text-muted transition-all cursor-pointer hover:bg-primary hover:text-primary-foreground hover:border-primary hover:scale-110"
+      >
+        {isExpanded ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
+
       {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-border shrink-0 flex items-center gap-2">
         <MapPin size={14} className="text-primary shrink-0" />
         <span className="font-semibold text-foreground text-sm leading-tight flex-1 min-w-0 truncate">
           {currentEra?.name ?? '—'}
         </span>
-        <button
-          onClick={() => setIsExpanded(prev => !prev)}
-          aria-label={t(isExpanded ? 'sidebar_collapse' : 'sidebar_expand')}
-          title={t(isExpanded ? 'sidebar_collapse' : 'sidebar_expand')}
-          className="shrink-0 p-1 rounded hover:bg-background text-muted hover:text-foreground transition-colors cursor-pointer"
-        >
-          {isExpanded ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
       </div>
 
       {/* Filter chips */}
@@ -94,7 +98,11 @@ export default function Sidebar() {
                 >
                   <div className="w-full h-28 bg-border flex items-center justify-center overflow-hidden">
                     {entity.images[0] ? (
-                      <img src={entity.images[0]} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={entity.images[0]}
+                        alt=""
+                        className={cn('w-full h-full object-cover', imageAlignmentClass(entity.category))}
+                      />
                     ) : (
                       <User size={20} className="text-muted" />
                     )}
@@ -127,7 +135,7 @@ export default function Sidebar() {
                       <img
                         src={entity.images[0]}
                         alt=""
-                        className="w-full h-full object-cover"
+                        className={cn('w-full h-full object-cover', imageAlignmentClass(entity.category))}
                       />
                     ) : (
                       <User size={16} className="text-muted" />
