@@ -18,3 +18,12 @@ const ENTITY_TYPE_TO_CATEGORY: Record<string, string> = {
 export function categoryForType(type: string): string | undefined {
   return ENTITY_TYPE_TO_CATEGORY[type.toUpperCase()]
 }
+
+/**
+ * Character portraits are commonly framed from the waist up, so a centered
+ * crop tends to cut off the head. Every other category (places, factions,
+ * items, events, lore) reads fine center-cropped.
+ */
+export function imageAlignmentClass(category: string): 'object-top' | 'object-center' {
+  return category === 'characters' ? 'object-top' : 'object-center'
+}

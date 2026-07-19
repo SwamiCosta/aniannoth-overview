@@ -6,7 +6,8 @@ import { useAppContext } from '@/context/AppContext'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useEras } from '@/hooks/useEras'
 import { useFactionMembers } from '@/hooks/useFactionMembers'
-import { categoryForType } from '@/lib/entityCategory'
+import { categoryForType, imageAlignmentClass } from '@/lib/entityCategory'
+import { cn } from '@/lib/utils'
 import type { LinkedEntity } from '@/types/universe'
 
 const markdownComponents: Components = {
@@ -18,7 +19,7 @@ const markdownComponents: Components = {
   ),
 }
 
-function ImageGallery({ images, name }: { images: string[]; name: string }) {
+function ImageGallery({ images, name, category }: { images: string[]; name: string; category: string }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
 
@@ -34,6 +35,7 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
   }
 
   const hasManyImages = images.length > 1
+  const alignClass = imageAlignmentClass(category)
 
   return (
     <>
@@ -48,7 +50,7 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
             <img
               src={images[activeIndex]}
               alt={`${name} — image ${activeIndex + 1} of ${images.length}`}
-              className="w-full h-full object-cover"
+              className={cn('w-full h-full object-cover', alignClass)}
             />
           </button>
           {hasManyImages && (
@@ -84,7 +86,7 @@ function ImageGallery({ images, name }: { images: string[]; name: string }) {
                 ].join(' ')}
                 aria-label={`View image ${index + 1}`}
               >
-                <img src={src} alt="" className="w-full h-full object-cover" />
+                <img src={src} alt="" className={cn('w-full h-full object-cover', alignClass)} />
               </button>
             ))}
           </div>
@@ -291,7 +293,7 @@ export default function DetailPanel() {
         {/* Left column — image gallery */}
         {/* key resets activeIndex/lightbox state on entity switch — DetailPanel never unmounts between entities */}
         <div className="w-32 flex-shrink-0">
-          <ImageGallery key={entity.id} images={entity.images} name={entity.name} />
+          <ImageGallery key={entity.id} images={entity.images} name={entity.name} category={entity.category} />
         </div>
 
         {/* Right column — details */}
@@ -360,7 +362,7 @@ export default function DetailPanel() {
                     sticky keeps it in view while the text column scrolls. */}
                 {entity.images.length > 0 && (
                   <div className="w-72 h-80 shrink-0 sticky top-0 self-start">
-                    <ImageGallery key={entity.id} images={entity.images} name={entity.name} />
+                    <ImageGallery key={entity.id} images={entity.images} name={entity.name} category={entity.category} />
                   </div>
                 )}
               </div>
