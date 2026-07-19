@@ -11,6 +11,8 @@ const TRANSLATIONS = {
   filter_characters: { en: 'Characters', pt: 'Personagens' },
   filter_lore: { en: 'Lore', pt: 'Lore' },
   sidebar_no_entities: { en: 'No entities found.', pt: 'Nenhuma entidade encontrada.' },
+  sidebar_expand: { en: 'Expand sidebar', pt: 'Expandir menu lateral' },
+  sidebar_collapse: { en: 'Collapse sidebar', pt: 'Colapsar menu lateral' },
 
   map_no_maps_available: { en: 'No maps available', pt: 'Nenhum mapa disponível' },
   map_no_map_selected: { en: 'No map selected', pt: 'Nenhum mapa selecionado' },

@@ -6,7 +6,7 @@ export default function ExplorePage() {
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Zone 3: map + sidebar */}
-      <div className="flex flex-row flex-1 min-h-0">
+      <div className="flex flex-row flex-1 min-h-0 relative">
         <MapArea />
         <div className="w-80 border-l border-border min-h-0">
           <Sidebar />
