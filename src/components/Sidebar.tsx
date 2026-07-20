@@ -108,7 +108,7 @@ export default function Sidebar() {
                     )}
                   </div>
                   <div className="p-3">
-                    <EntityMeta entity={entity} />
+                    <EntityMeta entity={entity} truncateName />
                   </div>
                 </button>
               )
@@ -156,7 +156,7 @@ export default function Sidebar() {
   )
 }
 
-function EntityMeta({ entity }: { entity: Entity }) {
+function EntityMeta({ entity, truncateName = false }: { entity: Entity; truncateName?: boolean }) {
   return (
     <>
       <div className="flex items-start justify-between gap-2">
@@ -169,7 +169,12 @@ function EntityMeta({ entity }: { entity: Entity }) {
           </span>
         )}
       </div>
-      <p className="font-medium text-foreground text-sm mt-0.5">{entity.name}</p>
+      <p
+        title={truncateName ? entity.name : undefined}
+        className={cn('font-medium text-foreground text-sm mt-0.5', truncateName && 'truncate')}
+      >
+        {entity.name}
+      </p>
       <p className="text-muted text-sm mt-0.5 line-clamp-2">{entity.summary}</p>
     </>
   )
