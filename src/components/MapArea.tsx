@@ -277,7 +277,7 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
   const auth = useAuth()
   const t = useTranslation()
   const dimensions = useImageDimensions(map.image)
-  const { data: pins, addPin, removePin } = useMapPins(map.id)
+  const { data: pins, addPin, movePin, removePin } = useMapPins(map.id)
   const [pendingLatLng, setPendingLatLng] = useState<[number, number] | null>(null)
 
   // Map changed out from under an in-progress pin placement — discard it
@@ -305,6 +305,16 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
       await addPin({ entityType, entityId: entity.id, normalizedX, normalizedY }, auth.accessToken)
     } catch (error) {
       logger.error('Failed to create map pin from picker', error)
+      handleAuthErrorIfExpired(error)
+    }
+  }
+
+  async function handleMovePin(pinId: string, normalizedX: number, normalizedY: number) {
+    if (!auth.accessToken) return
+    try {
+      await movePin(pinId, { normalizedX, normalizedY }, auth.accessToken)
+    } catch (error) {
+      logger.error('Failed to move map pin', error)
       handleAuthErrorIfExpired(error)
     }
   }
@@ -362,6 +372,7 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
             pin={pin}
             dimensions={dimensions}
             editMode={editMode}
+            onMove={(normalizedX, normalizedY) => { void handleMovePin(pin.id, normalizedX, normalizedY) }}
             onDelete={() => { void handleDeletePin(pin.id) }}
           />
         ))}
@@ -397,10 +408,11 @@ interface PinMarkerProps {
   pin: MapPinData
   dimensions: { width: number; height: number }
   editMode: boolean
+  onMove: (normalizedX: number, normalizedY: number) => void
   onDelete: () => void
 }
 
-function PinMarker({ pin, dimensions, editMode, onDelete }: PinMarkerProps) {
+function PinMarker({ pin, dimensions, editMode, onMove, onDelete }: PinMarkerProps) {
   const ctx = useAppContext()
   const position = toLatLng(pin.normalizedX, pin.normalizedY, dimensions.width, dimensions.height)
   const icon = useMemo(() => createPinIcon(pin.entity.name), [pin.entity.name])
@@ -409,6 +421,7 @@ function PinMarker({ pin, dimensions, editMode, onDelete }: PinMarkerProps) {
     <Marker
       position={position}
       icon={icon}
+      draggable={editMode}
       eventHandlers={{
         click: () => {
           if (editMode) {
@@ -416,6 +429,15 @@ function PinMarker({ pin, dimensions, editMode, onDelete }: PinMarkerProps) {
             return
           }
           ctx.setSelectedEntity(pin.entity.id)
+        },
+        // Leaflet suppresses the click event that would otherwise follow a
+        // real drag (L.Draggable tracks whether the pointer moved past a
+        // threshold), so this doesn't also trigger the click-to-delete
+        // handler above.
+        dragend: (e: L.DragEndEvent) => {
+          const { lat, lng } = e.target.getLatLng()
+          const { normalizedX, normalizedY } = fromLatLng(lat, lng, dimensions.width, dimensions.height)
+          onMove(normalizedX, normalizedY)
         },
       }}
     />

@@ -67,6 +67,25 @@ export async function createMapPin(mapId: string, input: CreateMapPinInput, acce
   }
 }
 
+export interface UpdateMapPinInput {
+  normalizedX: number
+  normalizedY: number
+}
+
+export async function updateMapPin(mapId: string, pinId: string, input: UpdateMapPinInput, accessToken: string): Promise<MapPin> {
+  try {
+    const data = await apiFetchAuthenticated<ApiMapPin>(`/api/v1/maps/${encodeURIComponent(mapId)}/pins/${pinId}`, {
+      method: 'PATCH',
+      accessToken,
+      body: input,
+    })
+    return toMapPin(data!)
+  } catch (error) {
+    logger.error(`Failed to update map pin — mapId: ${mapId}, pinId: ${pinId}`, error)
+    throw error
+  }
+}
+
 export async function deleteMapPin(mapId: string, pinId: string, accessToken: string): Promise<void> {
   try {
     await apiFetchAuthenticated<void>(`/api/v1/maps/${encodeURIComponent(mapId)}/pins/${pinId}`, {
