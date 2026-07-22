@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { toLatLng, fromLatLng } from '@/lib/mapCoordinates'
 import { typeForCategory } from '@/lib/entityCategory'
 import { logger } from '@/lib/logger'
+import { ApiError } from '@/api/keynorCoreClient'
 import type { GameMap, MapPin as MapPinData, Entity } from '@/types/universe'
 
 export default function MapArea() {
@@ -304,6 +305,7 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
       await addPin({ entityType, entityId: entity.id, normalizedX, normalizedY }, auth.accessToken)
     } catch (error) {
       logger.error('Failed to create map pin from picker', error)
+      handleAuthErrorIfExpired(error)
     }
   }
 
@@ -314,6 +316,19 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
       await removePin(pinId, auth.accessToken)
     } catch (error) {
       logger.error('Failed to delete map pin', error)
+      handleAuthErrorIfExpired(error)
+    }
+  }
+
+  // The signing key is ephemeral in dev (see keynor-core's security-model
+  // skill) — every backend restart invalidates every previously-issued
+  // token. Without this, a stale token in sessionStorage just fails
+  // silently (console-only) on every attempt until the user notices the
+  // inputter badge is a lie and manually logs out.
+  function handleAuthErrorIfExpired(error: unknown) {
+    if (error instanceof ApiError && error.status === 401) {
+      auth.logout()
+      window.alert(t('auth_session_expired'))
     }
   }
 

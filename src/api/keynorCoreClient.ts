@@ -1,5 +1,14 @@
 const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8080'
 
+export class ApiError extends Error {
+  status: number
+
+  constructor(status: number, path: string) {
+    super(`API error ${status}: ${path}`)
+    this.status = status
+  }
+}
+
 export async function apiFetch<T>(path: string): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`)
   if (!response.ok) {
@@ -29,7 +38,7 @@ export async function apiFetchAuthenticated<T>(path: string, options: Authentica
     body: options.body ? JSON.stringify(options.body) : undefined,
   })
   if (!response.ok) {
-    throw new Error(`API error ${response.status}: ${path}`)
+    throw new ApiError(response.status, path)
   }
   if (response.status === 204) return undefined
   return response.json() as Promise<T>
