@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { MapPin, ChevronDown, Pencil, LogIn, LogOut } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
-import { MapContainer, ImageOverlay, Marker, useMapEvents } from 'react-leaflet'
+import { MapContainer, ImageOverlay, Marker, Tooltip, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { useAppContext } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
@@ -297,41 +297,54 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
   }
 
   return (
-    <MapContainer
-      crs={L.CRS.Simple}
-      center={[dimensions.height / 2, dimensions.width / 2]}
-      zoom={0}
-      minZoom={-3}
-      // Finer-grained zoom steps than Leaflet's default (zoomSnap/zoomDelta=1,
-      // wheelPxPerZoomLevel=60) — the default felt like each wheel tick jumped
-      // a full zoom level, too aggressive for a CRS.Simple image overlay.
-      zoomSnap={0.25}
-      zoomDelta={0.25}
-      wheelPxPerZoomLevel={180}
-      className="w-full h-full"
-      style={{ background: 'var(--color-map-water)' }}
-    >
-      {map.image && <ImageOverlay url={map.image} bounds={bounds} />}
+    <div className="relative w-full h-full">
+      <MapContainer
+        crs={L.CRS.Simple}
+        center={[dimensions.height / 2, dimensions.width / 2]}
+        zoom={0}
+        minZoom={-3}
+        // Finer-grained zoom steps than Leaflet's default (zoomSnap/zoomDelta=1,
+        // wheelPxPerZoomLevel=60) — the default felt like each wheel tick jumped
+        // a full zoom level, too aggressive for a CRS.Simple image overlay.
+        zoomSnap={0.25}
+        zoomDelta={0.25}
+        wheelPxPerZoomLevel={180}
+        className="w-full h-full"
+        style={{ background: 'var(--color-map-water)' }}
+      >
+        {map.image && <ImageOverlay url={map.image} bounds={bounds} />}
 
-      {editMode && <MapClickCapture onMapClick={setPendingLatLng} />}
+        {/* Stop listening once a pin is pending — otherwise a click on the
+            picker overlay below (rendered outside MapContainer, but Leaflet
+            still owns pointer events inside its own container bounds) could
+            leak through and silently move pendingLatLng before onPick runs. */}
+        {editMode && !pendingLatLng && <MapClickCapture onMapClick={setPendingLatLng} />}
 
-      {pins.map(pin => (
-        <PinMarker
-          key={pin.id}
-          pin={pin}
-          dimensions={dimensions}
-          editMode={editMode}
-          onDelete={() => { void handleDeletePin(pin.id) }}
-        />
-      ))}
+        {pins.map(pin => (
+          <PinMarker
+            key={pin.id}
+            pin={pin}
+            dimensions={dimensions}
+            editMode={editMode}
+            onDelete={() => { void handleDeletePin(pin.id) }}
+          />
+        ))}
+      </MapContainer>
 
+      {/* Rendered as a sibling of MapContainer, not a child — a picker
+          nested inside MapContainer sits in the same DOM subtree Leaflet
+          attaches its own native click handling to, and this is exactly what
+          caused the reported bug: selecting an entity from the list could
+          register as a second map click, silently overwriting pendingLatLng
+          with wherever the list happened to render on screen before onPick
+          ever ran, so the pin landed at that spot instead of the original click. */}
       {editMode && pendingLatLng && (
         <EntityPickerOverlay
           onCancel={() => setPendingLatLng(null)}
           onPick={entity => { void handlePickEntity(entity) }}
         />
       )}
-    </MapContainer>
+    </div>
   )
 }
 
@@ -368,7 +381,11 @@ function PinMarker({ pin, dimensions, editMode, onDelete }: PinMarkerProps) {
           ctx.setSelectedEntity(pin.entity.id)
         },
       }}
-    />
+    >
+      <Tooltip permanent direction="top" offset={[0, -10]} className="!bg-surface !border-border !text-foreground !text-xs !px-1.5 !py-0.5">
+        {pin.entity.name}
+      </Tooltip>
+    </Marker>
   )
 }
 

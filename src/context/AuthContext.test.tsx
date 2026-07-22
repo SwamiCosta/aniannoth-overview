@@ -37,10 +37,10 @@ describe('AuthContext', () => {
 })
 
 describe('AuthContext PKCE callback', () => {
-  const originalFetch = global.fetch
+  const originalFetch = globalThis.fetch
 
   afterEach(() => {
-    global.fetch = originalFetch
+    globalThis.fetch = originalFetch
     window.history.pushState({}, '', '/')
   })
 
@@ -56,7 +56,7 @@ describe('AuthContext PKCE callback', () => {
     sessionStorage.setItem('aniannoth_pkce_state', 'test-state')
     window.history.pushState({}, '', '/auth/callback?code=test-code&state=test-state')
 
-    global.fetch = vi.fn().mockResolvedValue({
+    globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ access_token: 'issued-token' }),
     }) as unknown as typeof fetch
@@ -74,6 +74,6 @@ describe('AuthContext PKCE callback', () => {
     await waitFor(() => {
       expect(screen.getByTestId('role')).toHaveTextContent('inputter')
     })
-    expect(global.fetch).toHaveBeenCalledTimes(1)
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1)
   })
 })
