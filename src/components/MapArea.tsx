@@ -302,6 +302,12 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
       center={[dimensions.height / 2, dimensions.width / 2]}
       zoom={0}
       minZoom={-3}
+      // Finer-grained zoom steps than Leaflet's default (zoomSnap/zoomDelta=1,
+      // wheelPxPerZoomLevel=60) — the default felt like each wheel tick jumped
+      // a full zoom level, too aggressive for a CRS.Simple image overlay.
+      zoomSnap={0.25}
+      zoomDelta={0.25}
+      wheelPxPerZoomLevel={180}
       className="w-full h-full"
       style={{ background: 'var(--color-map-water)' }}
     >
