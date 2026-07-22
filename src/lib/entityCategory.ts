@@ -19,6 +19,11 @@ export function categoryForType(type: string): string | undefined {
   return ENTITY_TYPE_TO_CATEGORY[type.toUpperCase()]
 }
 
+/** Inverse of `categoryForType` — the API's uppercase EntityType for a category slug. */
+export function typeForCategory(category: string): string | undefined {
+  return Object.entries(ENTITY_TYPE_TO_CATEGORY).find(([, value]) => value === category)?.[0]
+}
+
 /**
  * Character portraits are commonly framed from the waist up, so a centered
  * crop tends to cut off the head. Every other category (places, factions,

@@ -51,6 +51,7 @@ See workspace `SKILLS.md` — Skill 13 for the general rule this follows.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VITE_LOG_LEVEL` | `error` | Controls the minimum log level emitted by `src/lib/logger.ts`. Valid values: `debug`, `info`, `warn`, `error`. Set to `debug` or `info` in `.env.local` for local development. Never committed. See `.claude/skills/logging-conventions.md`. |
+| `VITE_ADMIN_CLIENT_ID` | `aniannoth-admin` | The OAuth2 `client_id` used for the map-pins inputter login flow (`AuthContext.tsx`, `authorization_code` + PKCE against keynor-core). **Not usable until this client is actually registered** in keynor-core's `oauth2_registered_client` table as a public (no-secret) PKCE client with this `client_id`, `redirect_uri` matching `<origin>/auth/callback`, and `authorization_grant_types` including `authorization_code` — keynor-core's bootstrap procedure (`.claude/skills/security-model.md`) only documents registering the `system-client` (client_credentials); this ADMIN client still needs to be registered the same way, by the user. |
 
 ---
 

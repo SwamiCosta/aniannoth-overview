@@ -37,6 +37,14 @@ export interface FactionMember {
   status: 'canon' | 'draft' | 'deprecated'
 }
 
+export interface MapPin {
+  id: string
+  mapId: string
+  entity: LinkedEntity
+  normalizedX: number
+  normalizedY: number
+}
+
 export interface Entity {
   id: string
   name: string
