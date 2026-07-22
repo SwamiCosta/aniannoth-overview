@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { MapPin, ChevronDown, Pencil, LogIn, LogOut } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
-import { MapContainer, ImageOverlay, Marker, Tooltip, useMapEvents } from 'react-leaflet'
+import { MapContainer, ImageOverlay, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { useAppContext } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
@@ -244,12 +244,33 @@ function useImageDimensions(url: string | undefined): { width: number; height: n
   return dimensions
 }
 
-const pinIcon = L.divIcon({
-  className: '',
-  html: '<div style="width:16px;height:16px;border-radius:50%;background:var(--color-primary);border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4);"></div>',
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
-})
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// Label lives inside the same divIcon as the dot (rather than a separate
+// Leaflet Tooltip) so it shares the dot's already-working click target
+// instead of introducing a second Leaflet primitive with its own pane and
+// interaction behavior. pointer-events: none on the label keeps it purely
+// visual — the dot itself remains the only clickable area.
+function createPinIcon(name: string): L.DivIcon {
+  return L.divIcon({
+    className: '',
+    html: `
+      <div style="position:relative;width:12px;height:12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:var(--color-primary);border:2px solid white;box-shadow:0 1px 2px rgba(0,0,0,0.35);"></div>
+        <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:10px;line-height:1;color:var(--color-foreground);opacity:0.8;white-space:nowrap;pointer-events:none;user-select:none;text-shadow:0 1px 2px rgba(255,255,255,0.85),0 -1px 2px rgba(255,255,255,0.85),1px 0 2px rgba(255,255,255,0.85),-1px 0 2px rgba(255,255,255,0.85);">${escapeHtml(name)}</span>
+      </div>
+    `,
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+  })
+}
 
 function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
   const auth = useAuth()
@@ -367,11 +388,12 @@ interface PinMarkerProps {
 function PinMarker({ pin, dimensions, editMode, onDelete }: PinMarkerProps) {
   const ctx = useAppContext()
   const position = toLatLng(pin.normalizedX, pin.normalizedY, dimensions.width, dimensions.height)
+  const icon = useMemo(() => createPinIcon(pin.entity.name), [pin.entity.name])
 
   return (
     <Marker
       position={position}
-      icon={pinIcon}
+      icon={icon}
       eventHandlers={{
         click: () => {
           if (editMode) {
@@ -381,11 +403,7 @@ function PinMarker({ pin, dimensions, editMode, onDelete }: PinMarkerProps) {
           ctx.setSelectedEntity(pin.entity.id)
         },
       }}
-    >
-      <Tooltip permanent direction="top" offset={[0, -10]} className="!bg-surface !border-border !text-foreground !text-xs !px-1.5 !py-0.5">
-        {pin.entity.name}
-      </Tooltip>
-    </Marker>
+    />
   )
 }
 
