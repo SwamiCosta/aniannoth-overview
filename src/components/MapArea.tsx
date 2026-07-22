@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { toLatLng, fromLatLng } from '@/lib/mapCoordinates'
 import { typeForCategory } from '@/lib/entityCategory'
 import { logger } from '@/lib/logger'
+import { ApiError } from '@/api/keynorCoreClient'
 import type { GameMap, MapPin as MapPinData, Entity } from '@/types/universe'
 
 export default function MapArea() {
@@ -244,18 +245,39 @@ function useImageDimensions(url: string | undefined): { width: number; height: n
   return dimensions
 }
 
-const pinIcon = L.divIcon({
-  className: '',
-  html: '<div style="width:16px;height:16px;border-radius:50%;background:var(--color-primary);border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4);"></div>',
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
-})
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// Label lives inside the same divIcon as the dot (rather than a separate
+// Leaflet Tooltip) so it shares the dot's already-working click target
+// instead of introducing a second Leaflet primitive with its own pane and
+// interaction behavior. pointer-events: none on the label keeps it purely
+// visual — the dot itself remains the only clickable area.
+function createPinIcon(name: string): L.DivIcon {
+  return L.divIcon({
+    className: '',
+    html: `
+      <div style="position:relative;width:12px;height:12px;">
+        <div style="width:12px;height:12px;border-radius:50%;background:var(--color-primary);border:2px solid white;box-shadow:0 1px 2px rgba(0,0,0,0.35);"></div>
+        <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:10px;line-height:1;color:var(--color-foreground);opacity:0.8;white-space:nowrap;pointer-events:none;user-select:none;text-shadow:0 1px 2px rgba(255,255,255,0.85),0 -1px 2px rgba(255,255,255,0.85),1px 0 2px rgba(255,255,255,0.85),-1px 0 2px rgba(255,255,255,0.85);">${escapeHtml(name)}</span>
+      </div>
+    `,
+    iconSize: [12, 12],
+    iconAnchor: [6, 6],
+  })
+}
 
 function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
   const auth = useAuth()
   const t = useTranslation()
   const dimensions = useImageDimensions(map.image)
-  const { data: pins, addPin, removePin } = useMapPins(map.id)
+  const { data: pins, addPin, movePin, removePin } = useMapPins(map.id)
   const [pendingLatLng, setPendingLatLng] = useState<[number, number] | null>(null)
 
   // Map changed out from under an in-progress pin placement — discard it
@@ -283,6 +305,17 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
       await addPin({ entityType, entityId: entity.id, normalizedX, normalizedY }, auth.accessToken)
     } catch (error) {
       logger.error('Failed to create map pin from picker', error)
+      handleAuthErrorIfExpired(error)
+    }
+  }
+
+  async function handleMovePin(pinId: string, normalizedX: number, normalizedY: number) {
+    if (!auth.accessToken) return
+    try {
+      await movePin(pinId, { normalizedX, normalizedY }, auth.accessToken)
+    } catch (error) {
+      logger.error('Failed to move map pin', error)
+      handleAuthErrorIfExpired(error)
     }
   }
 
@@ -293,39 +326,72 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
       await removePin(pinId, auth.accessToken)
     } catch (error) {
       logger.error('Failed to delete map pin', error)
+      handleAuthErrorIfExpired(error)
+    }
+  }
+
+  // The signing key is ephemeral in dev (see keynor-core's security-model
+  // skill) — every backend restart invalidates every previously-issued
+  // token. Without this, a stale token in sessionStorage just fails
+  // silently (console-only) on every attempt until the user notices the
+  // inputter badge is a lie and manually logs out.
+  function handleAuthErrorIfExpired(error: unknown) {
+    if (error instanceof ApiError && error.status === 401) {
+      auth.logout()
+      window.alert(t('auth_session_expired'))
     }
   }
 
   return (
-    <MapContainer
-      crs={L.CRS.Simple}
-      center={[dimensions.height / 2, dimensions.width / 2]}
-      zoom={0}
-      minZoom={-3}
-      className="w-full h-full"
-      style={{ background: 'var(--color-map-water)' }}
-    >
-      {map.image && <ImageOverlay url={map.image} bounds={bounds} />}
+    <div className="relative w-full h-full">
+      <MapContainer
+        crs={L.CRS.Simple}
+        center={[dimensions.height / 2, dimensions.width / 2]}
+        zoom={0}
+        minZoom={-3}
+        // Finer-grained zoom steps than Leaflet's default (zoomSnap/zoomDelta=1,
+        // wheelPxPerZoomLevel=60) — the default felt like each wheel tick jumped
+        // a full zoom level, too aggressive for a CRS.Simple image overlay.
+        zoomSnap={0.25}
+        zoomDelta={0.25}
+        wheelPxPerZoomLevel={180}
+        className="w-full h-full"
+        style={{ background: 'var(--color-map-water)' }}
+      >
+        {map.image && <ImageOverlay url={map.image} bounds={bounds} />}
 
-      {editMode && <MapClickCapture onMapClick={setPendingLatLng} />}
+        {/* Stop listening once a pin is pending — otherwise a click on the
+            picker overlay below (rendered outside MapContainer, but Leaflet
+            still owns pointer events inside its own container bounds) could
+            leak through and silently move pendingLatLng before onPick runs. */}
+        {editMode && !pendingLatLng && <MapClickCapture onMapClick={setPendingLatLng} />}
 
-      {pins.map(pin => (
-        <PinMarker
-          key={pin.id}
-          pin={pin}
-          dimensions={dimensions}
-          editMode={editMode}
-          onDelete={() => { void handleDeletePin(pin.id) }}
-        />
-      ))}
+        {pins.map(pin => (
+          <PinMarker
+            key={pin.id}
+            pin={pin}
+            dimensions={dimensions}
+            editMode={editMode}
+            onMove={(normalizedX, normalizedY) => { void handleMovePin(pin.id, normalizedX, normalizedY) }}
+            onDelete={() => { void handleDeletePin(pin.id) }}
+          />
+        ))}
+      </MapContainer>
 
+      {/* Rendered as a sibling of MapContainer, not a child — a picker
+          nested inside MapContainer sits in the same DOM subtree Leaflet
+          attaches its own native click handling to, and this is exactly what
+          caused the reported bug: selecting an entity from the list could
+          register as a second map click, silently overwriting pendingLatLng
+          with wherever the list happened to render on screen before onPick
+          ever ran, so the pin landed at that spot instead of the original click. */}
       {editMode && pendingLatLng && (
         <EntityPickerOverlay
           onCancel={() => setPendingLatLng(null)}
           onPick={entity => { void handlePickEntity(entity) }}
         />
       )}
-    </MapContainer>
+    </div>
   )
 }
 
@@ -342,17 +408,20 @@ interface PinMarkerProps {
   pin: MapPinData
   dimensions: { width: number; height: number }
   editMode: boolean
+  onMove: (normalizedX: number, normalizedY: number) => void
   onDelete: () => void
 }
 
-function PinMarker({ pin, dimensions, editMode, onDelete }: PinMarkerProps) {
+function PinMarker({ pin, dimensions, editMode, onMove, onDelete }: PinMarkerProps) {
   const ctx = useAppContext()
   const position = toLatLng(pin.normalizedX, pin.normalizedY, dimensions.width, dimensions.height)
+  const icon = useMemo(() => createPinIcon(pin.entity.name), [pin.entity.name])
 
   return (
     <Marker
       position={position}
-      icon={pinIcon}
+      icon={icon}
+      draggable={editMode}
       eventHandlers={{
         click: () => {
           if (editMode) {
@@ -360,6 +429,15 @@ function PinMarker({ pin, dimensions, editMode, onDelete }: PinMarkerProps) {
             return
           }
           ctx.setSelectedEntity(pin.entity.id)
+        },
+        // Leaflet suppresses the click event that would otherwise follow a
+        // real drag (L.Draggable tracks whether the pointer moved past a
+        // threshold), so this doesn't also trigger the click-to-delete
+        // handler above.
+        dragend: (e: L.DragEndEvent) => {
+          const { lat, lng } = e.target.getLatLng()
+          const { normalizedX, normalizedY } = fromLatLng(lat, lng, dimensions.width, dimensions.height)
+          onMove(normalizedX, normalizedY)
         },
       }}
     />

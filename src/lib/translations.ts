@@ -28,6 +28,10 @@ const TRANSLATIONS = {
   auth_login: { en: 'Sign in as inputter', pt: 'Entrar como inputter' },
   auth_logout: { en: 'Sign out', pt: 'Sair' },
   auth_inputter_badge: { en: 'Inputter', pt: 'Inputter' },
+  auth_session_expired: {
+    en: 'Your session expired — signed out. Please sign in again.',
+    pt: 'Sua sessão expirou — você foi desconectado. Faça login novamente.',
+  },
 
   map_edit_mode_on: { en: 'Editing pins — click the map to add one', pt: 'Editando pins — clique no mapa para adicionar' },
   map_edit_mode_enter: { en: 'Edit pins', pt: 'Editar pins' },

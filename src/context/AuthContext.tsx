@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { generateCodeVerifier, generateCodeChallenge, generateState } from '@/lib/pkce'
@@ -55,6 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(() => sessionStorage.getItem(TOKEN_KEY))
   const [isAuthenticating, setIsAuthenticating] = useState(false)
   const navigate = useNavigate()
+  // React StrictMode (dev only) intentionally runs this effect twice. Without
+  // this guard, the first run consumes and clears the PKCE verifier/state from
+  // sessionStorage, then the second run reads an already-empty sessionStorage
+  // and rejects a callback the first run was already correctly processing.
+  const processedCodeRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (window.location.pathname !== REDIRECT_PATH) return
@@ -62,6 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
     const state = params.get('state')
+    if (code && processedCodeRef.current === code) return
+    if (code) processedCodeRef.current = code
+
     const storedState = sessionStorage.getItem(STATE_KEY)
     const verifier = sessionStorage.getItem(VERIFIER_KEY)
     sessionStorage.removeItem(STATE_KEY)
