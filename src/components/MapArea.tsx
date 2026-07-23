@@ -16,7 +16,7 @@ import { logger } from '@/lib/logger'
 import { ApiError } from '@/api/keynorCoreClient'
 import { useAspectRatioBox } from '@/hooks/useAspectRatioBox'
 import type { AspectRatioBox } from '@/hooks/useAspectRatioBox'
-import { useRevalidatedImage } from '@/hooks/useRevalidatedImage'
+import { useImageDimensions } from '@/hooks/useImageDimensions'
 import type { GameMap, MapPin as MapPinData, Entity } from '@/types/universe'
 
 // Lets map images be authored at a known, fixed ratio (e.g. 1920x1080)
@@ -222,11 +222,6 @@ interface MapSurfaceProps {
 
 function MapSurface({ map, editMode, containerSize }: MapSurfaceProps) {
   const t = useTranslation()
-  // Called unconditionally (Rules of Hooks) — only actually fetches when
-  // this is an abstract map with an image; useRevalidatedImage no-ops on
-  // an undefined url. See that hook for why map.image can't be used
-  // directly as the <img> src.
-  const abstractImage = useRevalidatedImage(map?.type === 'abstract' ? map.image : undefined)
 
   if (!map) {
     return (
@@ -244,12 +239,9 @@ function MapSurface({ map, editMode, containerSize }: MapSurfaceProps) {
         </div>
       )
     }
-    if (!abstractImage) {
-      return <div className="w-full h-full bg-map-land" />
-    }
     return (
       <img
-        src={abstractImage.objectUrl}
+        src={map.image}
         alt={map.name}
         className="w-full h-full object-cover"
       />
@@ -291,7 +283,7 @@ function createPinIcon(name: string): L.DivIcon {
 function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode: boolean; containerSize: AspectRatioBox | null }) {
   const auth = useAuth()
   const t = useTranslation()
-  const image = useRevalidatedImage(map.image)
+  const dimensions = useImageDimensions(map.image)
   const { data: pins, addPin, movePin, removePin } = useMapPins(map.id)
   const [pendingLatLng, setPendingLatLng] = useState<[number, number] | null>(null)
   // Memoized: L.latLngBounds(...) creates a new object identity on every
@@ -300,15 +292,13 @@ function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode
   // re-running on every unrelated re-render (creating/moving/deleting any
   // pin, toggling editMode, anything) — each re-run called map.fitBounds()
   // again, silently resetting the user's manual pan/zoom back to the fitted
-  // view every time. Memoizing on `image` (stable identity from useState,
-  // only changes when the fetch actually resolves with new bytes) keeps
-  // bounds's identity stable otherwise. Deriving a fresh {width,height}
-  // object from image on every render — even one that reads the same
-  // values — would defeat this exact memoization, so use image directly.
+  // view every time. Memoizing on `dimensions` (stable identity from
+  // useState, only changes when the image actually reloads) keeps bounds's
+  // identity stable otherwise.
   const bounds = useMemo(() => {
-    if (!image) return null
-    return L.latLngBounds([0, 0], [image.height, image.width])
-  }, [image])
+    if (!dimensions) return null
+    return L.latLngBounds([0, 0], [dimensions.height, dimensions.width])
+  }, [dimensions])
 
   // Map changed out from under an in-progress pin placement — discard it
   // rather than let it apply against the wrong map.
@@ -316,13 +306,13 @@ function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode
     setPendingLatLng(null)
   }, [map.id])
 
-  if (!image || !bounds) {
+  if (!dimensions || !bounds) {
     return <div className="w-full h-full bg-map-water" />
   }
 
   async function handlePickEntity(entity: Entity) {
     if (!pendingLatLng || !auth.accessToken) return
-    const { normalizedX, normalizedY } = fromLatLng(pendingLatLng[0], pendingLatLng[1], image!.width, image!.height)
+    const { normalizedX, normalizedY } = fromLatLng(pendingLatLng[0], pendingLatLng[1], dimensions!.width, dimensions!.height)
     const entityType = typeForCategory(entity.category)
     setPendingLatLng(null)
     if (!entityType) {
@@ -393,10 +383,7 @@ function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode
         className="w-full h-full"
         style={{ background: 'var(--color-map-water)' }}
       >
-        {/* image.objectUrl, not map.image — see useRevalidatedImage: this is
-            what forces the browser to actually revalidate with the server
-            instead of trusting a long-lived cached copy of the raw URL. */}
-        {image && <ImageOverlay url={image.objectUrl} bounds={bounds} />}
+        {map.image && <ImageOverlay url={map.image} bounds={bounds} />}
 
         {/* bounds={...} above only fits the image once, on mount. This keeps
             minZoom pinned to "the whole image exactly fills the viewport" —
@@ -416,7 +403,7 @@ function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode
           <PinMarker
             key={pin.id}
             pin={pin}
-            dimensions={image}
+            dimensions={dimensions}
             editMode={editMode}
             onMove={(normalizedX, normalizedY) => { void handleMovePin(pin.id, normalizedX, normalizedY) }}
             onDelete={() => { void handleDeletePin(pin.id) }}
