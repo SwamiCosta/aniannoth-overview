@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { MapPin, ChevronDown, Pencil, LogIn, LogOut } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
-import { MapContainer, ImageOverlay, Marker, useMapEvents } from 'react-leaflet'
+import { MapContainer, ImageOverlay, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { useAppContext } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
@@ -15,6 +15,7 @@ import { typeForCategory } from '@/lib/entityCategory'
 import { logger } from '@/lib/logger'
 import { ApiError } from '@/api/keynorCoreClient'
 import { useAspectRatioBox } from '@/hooks/useAspectRatioBox'
+import type { AspectRatioBox } from '@/hooks/useAspectRatioBox'
 import type { GameMap, MapPin as MapPinData, Entity } from '@/types/universe'
 
 // Lets map images be authored at a known, fixed ratio (e.g. 1920x1080)
@@ -157,12 +158,17 @@ export default function MapArea() {
       {/* Map surface — letterboxed to a fixed 16:9 box within the panel, so
           authored map images can target a known ratio instead of whatever
           the browser window happens to be. Falls back to filling the panel
-          until the first measurement lands (see useAspectRatioBox). */}
+          until the first measurement lands (see useAspectRatioBox).
+          z-0 is load-bearing, not decorative: Leaflet's internal panes use
+          z-index values up to 700 (marker/popup panes), and without an
+          explicit (non-auto) z-index here this div never becomes its own
+          stacking context — Leaflet's high z-index then compares directly
+          against the badges below (z-10) and covers them. z-0 contains it. */}
       <div
-        className="relative overflow-hidden"
+        className="relative z-0 overflow-hidden"
         style={box ? { width: box.width, height: box.height } : { width: '100%', height: '100%' }}
       >
-        <MapSurface map={selectedMap} editMode={editMode} />
+        <MapSurface map={selectedMap} editMode={editMode} containerSize={box} />
       </div>
 
       {/* Toast notification */}
@@ -210,9 +216,10 @@ function AuthControl() {
 interface MapSurfaceProps {
   map: GameMap | undefined
   editMode: boolean
+  containerSize: AspectRatioBox | null
 }
 
-function MapSurface({ map, editMode }: MapSurfaceProps) {
+function MapSurface({ map, editMode, containerSize }: MapSurfaceProps) {
   const t = useTranslation()
 
   if (!map) {
@@ -241,7 +248,7 @@ function MapSurface({ map, editMode }: MapSurfaceProps) {
   }
 
   // navigable map — Leaflet
-  return <NavigableMap map={map} editMode={editMode} />
+  return <NavigableMap map={map} editMode={editMode} containerSize={containerSize} />
 }
 
 function useImageDimensions(url: string | undefined): { width: number; height: number } | null {
@@ -293,7 +300,7 @@ function createPinIcon(name: string): L.DivIcon {
   })
 }
 
-function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
+function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode: boolean; containerSize: AspectRatioBox | null }) {
   const auth = useAuth()
   const t = useTranslation()
   const dimensions = useImageDimensions(map.image)
@@ -366,9 +373,7 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
     <div className="relative w-full h-full">
       <MapContainer
         crs={L.CRS.Simple}
-        center={[dimensions.height / 2, dimensions.width / 2]}
-        zoom={0}
-        minZoom={-3}
+        bounds={bounds}
         // Finer-grained zoom steps than Leaflet's default (zoomSnap/zoomDelta=1,
         // wheelPxPerZoomLevel=60) — the default felt like each wheel tick jumped
         // a full zoom level, too aggressive for a CRS.Simple image overlay.
@@ -379,6 +384,14 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
         style={{ background: 'var(--color-map-water)' }}
       >
         {map.image && <ImageOverlay url={map.image} bounds={bounds} />}
+
+        {/* bounds={...} above only fits the image once, on mount. This keeps
+            minZoom pinned to "the whole image exactly fills the viewport" —
+            without it, minZoom defaulted to an arbitrary fixed value that let
+            users zoom out past the image and see the empty background color
+            (bg-map-water) as visible borders. Recomputed on resize since the
+            "fits the viewport" zoom level depends on the viewport's size. */}
+        <FitImageToViewport bounds={bounds} containerSize={containerSize} />
 
         {/* Stop listening once a pin is pending — otherwise a click on the
             picker overlay below (rendered outside MapContainer, but Leaflet
@@ -421,6 +434,34 @@ function MapClickCapture({ onMapClick }: { onMapClick: (latlng: [number, number]
       onMapClick([e.latlng.lat, e.latlng.lng])
     },
   })
+  return null
+}
+
+function FitImageToViewport({ bounds, containerSize }: { bounds: L.LatLngBounds; containerSize: AspectRatioBox | null }) {
+  const map = useMap()
+
+  // containerSize comes from useAspectRatioBox's ResizeObserver (in the
+  // parent MapArea) — Leaflet has no way to know its own container's pixel
+  // size changed unless told. Without invalidateSize() first, getBoundsZoom
+  // computes against Leaflet's stale cached size, not the letterboxed box's
+  // actual current dimensions, and both the fit and the minZoom floor drift.
+  useEffect(() => {
+    function fit() {
+      map.invalidateSize()
+      // getBoundsZoom(bounds, false) = the zoom level at which the whole
+      // image is exactly as large as possible while still fully visible —
+      // exactly the "can't zoom out past the image" floor requested.
+      const fitZoom = map.getBoundsZoom(bounds, false)
+      map.setMinZoom(fitZoom)
+      map.fitBounds(bounds)
+    }
+    fit()
+    map.on('resize', fit)
+    return () => {
+      map.off('resize', fit)
+    }
+  }, [map, bounds, containerSize?.width, containerSize?.height])
+
   return null
 }
 
