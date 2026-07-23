@@ -460,29 +460,24 @@ function FitImageToViewport({ bounds, containerSize }: { bounds: L.LatLngBounds;
   // actual current dimensions, and both the fit and the minZoom floor drift.
   useEffect(() => {
     function fit() {
-      const sizeBefore = map.getSize()
       map.invalidateSize()
-      const sizeAfter = map.getSize()
+      // Leaflet's getBoundsZoom() clamps its result to the map's CURRENT
+      // minZoom/maxZoom (Math.max(currentMinZoom, computed), not a bounds-
+      // specific calculation). Confirmed via logging: with no minZoom set,
+      // Leaflet's own default (0) clamped the correctly-computed ~-0.75 back
+      // up to 0 — then that wrong 0 got applied as the new minZoom, so every
+      // subsequent call clamped against its own previous (wrong) answer and
+      // could never correct itself. This is the actual cause of both "loads
+      // already cropped" and "can't zoom out past the image": the floor was
+      // permanently stuck at 0 instead of the correct fit level. Lifting the
+      // floor immediately before computing breaks that self-reinforcing loop.
+      map.setMinZoom(-10)
       // getBoundsZoom(bounds, false) = the zoom level at which the whole
       // image is exactly as large as possible while still fully visible —
       // exactly the "can't zoom out past the image" floor requested.
       const fitZoom = map.getBoundsZoom(bounds, false)
       map.setMinZoom(fitZoom)
       map.fitBounds(bounds)
-      // TEMPORARY diagnostic — remove once the "initial view is cropped"
-      // bug is confirmed fixed. Logs the actual numbers Leaflet computed,
-      // since reasoning about the fit math in the abstract hasn't found the
-      // bug and guessing further isn't productive without real values.
-      console.log('[FitImageToViewport]', {
-        containerSizeProp: containerSize,
-        leafletSizeBeforeInvalidate: sizeBefore,
-        leafletSizeAfterInvalidate: sizeAfter,
-        boundsSouthWest: bounds.getSouthWest(),
-        boundsNorthEast: bounds.getNorthEast(),
-        computedFitZoom: fitZoom,
-        mapZoomAfterFit: map.getZoom(),
-        mapMinZoom: map.getMinZoom(),
-      })
     }
     fit()
     map.on('resize', fit)
