@@ -306,6 +306,18 @@ function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode
   const dimensions = useImageDimensions(map.image)
   const { data: pins, addPin, movePin, removePin } = useMapPins(map.id)
   const [pendingLatLng, setPendingLatLng] = useState<[number, number] | null>(null)
+  // Memoized: L.latLngBounds(...) creates a new object identity on every
+  // call. Without this, a plain `const bounds = ...` recreated on every
+  // render kept FitImageToViewport's effect (which depends on `bounds`)
+  // re-running on every unrelated re-render (creating/moving/deleting any
+  // pin, toggling editMode, anything) — each re-run called map.fitBounds()
+  // again, silently resetting the user's manual pan/zoom back to the fitted
+  // view every time. Memoizing on dimensions (only updates when the image
+  // itself changes) keeps the identity stable otherwise.
+  const bounds = useMemo(() => {
+    if (!dimensions) return null
+    return L.latLngBounds([0, 0], [dimensions.height, dimensions.width])
+  }, [dimensions])
 
   // Map changed out from under an in-progress pin placement — discard it
   // rather than let it apply against the wrong map.
@@ -313,11 +325,9 @@ function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode
     setPendingLatLng(null)
   }, [map.id])
 
-  if (!dimensions) {
+  if (!dimensions || !bounds) {
     return <div className="w-full h-full bg-map-water" />
   }
-
-  const bounds = L.latLngBounds([0, 0], [dimensions.height, dimensions.width])
 
   async function handlePickEntity(entity: Entity) {
     if (!pendingLatLng || !auth.accessToken) return
@@ -373,7 +383,16 @@ function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode
     <div className="relative w-full h-full">
       <MapContainer
         crs={L.CRS.Simple}
-        bounds={bounds}
+        // No bounds/center/zoom fit here on purpose — FitImageToViewport
+        // below is the single source of truth for the initial view and
+        // every re-fit. Using MapContainer's own `bounds` prop AS WELL used
+        // to race it: MapContainer applies its initial fit against whatever
+        // the container's DOM size already is at mount time, which can be
+        // the pre-letterbox fallback size (useAspectRatioBox's box state
+        // hasn't committed yet) — a real, too-zoomed-in initial view that
+        // FitImageToViewport's later correction wasn't reliably overriding.
+        center={[0, 0]}
+        zoom={0}
         // Finer-grained zoom steps than Leaflet's default (zoomSnap/zoomDelta=1,
         // wheelPxPerZoomLevel=60) — the default felt like each wheel tick jumped
         // a full zoom level, too aggressive for a CRS.Simple image overlay.
