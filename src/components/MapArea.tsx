@@ -408,6 +408,16 @@ function NavigableMap({
         zoomSnap={0}
         zoomDelta={0.25}
         wheelPxPerZoomLevel={180}
+        // Stops the viewport from ever panning past the image's own edges
+        // (which is what was leaving bg-map-water visible as a "green
+        // area"). maxBoundsViscosity=1 makes this a hard stop with no give
+        // — 0 (the default) lets the user drag past the edge and then
+        // animates back, which would still show the gap mid-drag. At
+        // exactly the fit zoom (no zoom-in), this alone also makes
+        // dragging impossible, since there's no slack in any direction —
+        // no separate "disable drag at minZoom" logic needed.
+        maxBounds={bounds}
+        maxBoundsViscosity={1}
         className="w-full h-full"
         style={{ background: 'var(--color-map-water)' }}
       >
