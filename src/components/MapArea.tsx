@@ -17,14 +17,13 @@ import { ApiError } from '@/api/keynorCoreClient'
 import { useAspectRatioBox } from '@/hooks/useAspectRatioBox'
 import type { AspectRatioBox } from '@/hooks/useAspectRatioBox'
 import { useRevalidatedImage } from '@/hooks/useRevalidatedImage'
+import type { RevalidatedImage } from '@/hooks/useRevalidatedImage'
 import type { GameMap, MapPin as MapPinData, Entity } from '@/types/universe'
 
-// Lets map images be authored at a known, fixed ratio (e.g. 1920x1080)
-// instead of whatever the browser window happens to be. The Leaflet
-// CRS.Simple + real-pixel-bounds setup (see NavigableMap) already handles
-// any image ratio via pan/zoom — this is purely about how much of the panel
-// the map viewport itself occupies, not a Leaflet concern.
-const MAP_ASPECT_RATIO = 16 / 9
+// Fallback only — used before a navigable map's image has loaded (so the
+// panel isn't a random shape for a moment) and for abstract maps, which
+// use object-cover and don't need their container shape to match anything.
+const FALLBACK_ASPECT_RATIO = 16 / 9
 
 export default function MapArea() {
   const ctx = useAppContext()
@@ -40,7 +39,21 @@ export default function MapArea() {
   const [editMode, setEditMode] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { containerRef, box } = useAspectRatioBox(MAP_ASPECT_RATIO)
+  // Loaded here, at the top, rather than down in NavigableMap: the
+  // letterbox panel's own shape needs to match THIS image's aspect ratio
+  // (see the ratio calc below), so the fit has to be known before we can
+  // size the panel — not just used once the panel already has some other
+  // (previously arbitrary, fixed 16:9) shape. Passed down as a prop so
+  // NavigableMap doesn't duplicate the fetch.
+  const navigableImage = useRevalidatedImage(selectedMap?.type === 'navigable' ? selectedMap.image : undefined)
+  // Matching the container's shape to the image's own shape (instead of a
+  // fixed 16:9) means: no letterbox borders regardless of what resolution
+  // future map images are authored at, and different eras/maps can freely
+  // use different ratios — requested explicitly, and it also sidesteps the
+  // whole "compute a zoom level that fits an arbitrary ratio into a fixed
+  // 16:9 box" problem (see FitImageToViewport) rather than working around it.
+  const mapAspectRatio = navigableImage ? navigableImage.width / navigableImage.height : FALLBACK_ASPECT_RATIO
+  const { containerRef, box } = useAspectRatioBox(mapAspectRatio)
 
   // Edit mode only ever makes sense for an inputter session — drop out of it
   // automatically if the token disappears (logout) mid-edit.
@@ -156,10 +169,10 @@ export default function MapArea() {
         </div>
       )}
 
-      {/* Map surface — letterboxed to a fixed 16:9 box within the panel, so
-          authored map images can target a known ratio instead of whatever
-          the browser window happens to be. Falls back to filling the panel
-          until the first measurement lands (see useAspectRatioBox).
+      {/* Map surface — letterboxed to a box matching the current navigable
+          image's own aspect ratio (falling back to 16:9 while it loads, or
+          for abstract maps). Falls back to filling the panel until the
+          first measurement lands (see useAspectRatioBox).
           z-0 is load-bearing, not decorative: Leaflet's internal panes use
           z-index values up to 700 (marker/popup panes), and without an
           explicit (non-auto) z-index here this div never becomes its own
@@ -169,7 +182,7 @@ export default function MapArea() {
         className="relative z-0 overflow-hidden"
         style={box ? { width: box.width, height: box.height } : { width: '100%', height: '100%' }}
       >
-        <MapSurface map={selectedMap} editMode={editMode} containerSize={box} />
+        <MapSurface map={selectedMap} editMode={editMode} containerSize={box} navigableImage={navigableImage} />
       </div>
 
       {/* Toast notification */}
@@ -218,9 +231,10 @@ interface MapSurfaceProps {
   map: GameMap | undefined
   editMode: boolean
   containerSize: AspectRatioBox | null
+  navigableImage: RevalidatedImage | null
 }
 
-function MapSurface({ map, editMode, containerSize }: MapSurfaceProps) {
+function MapSurface({ map, editMode, containerSize, navigableImage }: MapSurfaceProps) {
   const t = useTranslation()
   // Called unconditionally (Rules of Hooks) — only actually fetches when
   // this is an abstract map with an image; useRevalidatedImage no-ops on
@@ -256,8 +270,12 @@ function MapSurface({ map, editMode, containerSize }: MapSurfaceProps) {
     )
   }
 
-  // navigable map — Leaflet
-  return <NavigableMap map={map} editMode={editMode} containerSize={containerSize} />
+  // navigable map — Leaflet. image is loaded by the parent (MapArea), not
+  // here — see the comment there for why (the panel's own shape needs it).
+  if (!navigableImage) {
+    return <div className="w-full h-full bg-map-water" />
+  }
+  return <NavigableMap map={map} editMode={editMode} containerSize={containerSize} image={navigableImage} />
 }
 
 function escapeHtml(value: string): string {
@@ -288,25 +306,29 @@ function createPinIcon(name: string): L.DivIcon {
   })
 }
 
-function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode: boolean; containerSize: AspectRatioBox | null }) {
+function NavigableMap({
+  map,
+  editMode,
+  containerSize,
+  image,
+}: {
+  map: GameMap
+  editMode: boolean
+  containerSize: AspectRatioBox | null
+  image: RevalidatedImage
+}) {
   const auth = useAuth()
   const t = useTranslation()
-  const image = useRevalidatedImage(map.image)
   const { data: pins, addPin, movePin, removePin } = useMapPins(map.id)
   const [pendingLatLng, setPendingLatLng] = useState<[number, number] | null>(null)
   // Memoized: L.latLngBounds(...) creates a new object identity on every
   // call. Without this, a plain `const bounds = ...` recreated on every
-  // render kept FitImageToViewport's effect (which depends on `bounds`)
-  // re-running on every unrelated re-render (creating/moving/deleting any
-  // pin, toggling editMode, anything) — each re-run called map.fitBounds()
-  // again, silently resetting the user's manual pan/zoom back to the fitted
-  // view every time. Memoizing on `image` (stable identity from useState,
-  // only changes when the fetch actually resolves with new bytes) keeps
-  // bounds's identity stable otherwise — deriving a fresh {width,height}
-  // object from image on every render would defeat this, so use image
-  // directly rather than destructuring it into a new object first.
+  // render would have re-triggered anything depending on it (e.g. an
+  // ImageOverlay re-render) on every unrelated re-render (creating/moving/
+  // deleting any pin, toggling editMode, anything) for no reason. Keyed on
+  // `image` (stable identity from useState) rather than deriving a fresh
+  // {width,height} object every render, which would defeat this.
   const bounds = useMemo(() => {
-    if (!image) return null
     return L.latLngBounds([0, 0], [image.height, image.width])
   }, [image])
 
@@ -316,13 +338,9 @@ function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode
     setPendingLatLng(null)
   }, [map.id])
 
-  if (!image || !bounds) {
-    return <div className="w-full h-full bg-map-water" />
-  }
-
   async function handlePickEntity(entity: Entity) {
     if (!pendingLatLng || !auth.accessToken) return
-    const { normalizedX, normalizedY } = fromLatLng(pendingLatLng[0], pendingLatLng[1], image!.width, image!.height)
+    const { normalizedX, normalizedY } = fromLatLng(pendingLatLng[0], pendingLatLng[1], image.width, image.height)
     const entityType = typeForCategory(entity.category)
     setPendingLatLng(null)
     if (!entityType) {
@@ -376,18 +394,18 @@ function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode
         crs={L.CRS.Simple}
         // No bounds/center/zoom fit here on purpose — FitImageToViewport
         // below is the single source of truth for the initial view and
-        // every re-fit. Using MapContainer's own `bounds` prop AS WELL used
-        // to race it: MapContainer applies its initial fit against whatever
-        // the container's DOM size already is at mount time, which can be
-        // the pre-letterbox fallback size (useAspectRatioBox's box state
-        // hasn't committed yet) — a real, too-zoomed-in initial view that
-        // FitImageToViewport's later correction wasn't reliably overriding.
+        // every re-fit.
         center={[0, 0]}
         zoom={0}
-        // Finer-grained zoom steps than Leaflet's default (zoomSnap/zoomDelta=1,
-        // wheelPxPerZoomLevel=60) — the default felt like each wheel tick jumped
-        // a full zoom level, too aggressive for a CRS.Simple image overlay.
-        zoomSnap={0.25}
+        // zoomSnap=0: continuous zoom, not steps of a fixed grid. The
+        // letterbox panel's aspect ratio matches this image's own ratio
+        // exactly (see MapArea), so FitImageToViewport computes a precise
+        // fractional zoom where the image exactly fills the panel — any
+        // non-zero zoomSnap would round that to the nearest grid line,
+        // reintroducing a small border. zoomDelta still controls how big a
+        // step +/- buttons and the keyboard take; wheelPxPerZoomLevel still
+        // controls wheel sensitivity — neither depends on snapping.
+        zoomSnap={0}
         zoomDelta={0.25}
         wheelPxPerZoomLevel={180}
         className="w-full h-full"
@@ -396,15 +414,9 @@ function NavigableMap({ map, editMode, containerSize }: { map: GameMap; editMode
         {/* image.objectUrl, not map.image — see useRevalidatedImage: this is
             what forces the browser to actually revalidate with the server
             instead of trusting a long-lived cached copy of the raw URL. */}
-        {image && <ImageOverlay url={image.objectUrl} bounds={bounds} />}
+        <ImageOverlay url={image.objectUrl} bounds={bounds} />
 
-        {/* bounds={...} above only fits the image once, on mount. This keeps
-            minZoom pinned to "the whole image exactly fills the viewport" —
-            without it, minZoom defaulted to an arbitrary fixed value that let
-            users zoom out past the image and see the empty background color
-            (bg-map-water) as visible borders. Recomputed on resize since the
-            "fits the viewport" zoom level depends on the viewport's size. */}
-        <FitImageToViewport bounds={bounds} containerSize={containerSize} />
+        <FitImageToViewport image={image} containerSize={containerSize} />
 
         {/* Stop listening once a pin is pending — otherwise a click on the
             picker overlay below (rendered outside MapContainer, but Leaflet
@@ -450,41 +462,43 @@ function MapClickCapture({ onMapClick }: { onMapClick: (latlng: [number, number]
   return null
 }
 
-function FitImageToViewport({ bounds, containerSize }: { bounds: L.LatLngBounds; containerSize: AspectRatioBox | null }) {
+function FitImageToViewport({ image, containerSize }: { image: RevalidatedImage; containerSize: AspectRatioBox | null }) {
   const map = useMap()
 
-  // containerSize comes from useAspectRatioBox's ResizeObserver (in the
-  // parent MapArea) — Leaflet has no way to know its own container's pixel
-  // size changed unless told. Without invalidateSize() first, getBoundsZoom
-  // computes against Leaflet's stale cached size, not the letterboxed box's
-  // actual current dimensions, and both the fit and the minZoom floor drift.
+  // Earlier version relied on Leaflet's map.getBoundsZoom(), which clamps
+  // its result to the map's CURRENT minZoom/maxZoom — not a bounds-specific
+  // calculation. Confirmed via logging: with no minZoom set explicitly,
+  // Leaflet's own default (0) clamped the correctly-computed fit zoom back
+  // up to 0, that wrong 0 then got applied as the new minZoom via
+  // setMinZoom(), and every subsequent call clamped against its own
+  // previous wrong answer — a permanently stuck state, not a transient one,
+  // matching both "loads already cropped" and "can't zoom out past the
+  // image". Computing the zoom directly here sidesteps that clamp entirely:
+  // since the letterbox container's aspect ratio is derived FROM this
+  // image's own ratio (see MapArea), containerSize.width/image.width and
+  // containerSize.height/image.height are the same scale factor (up to
+  // rounding) — no fitting/searching needed, just log2(scale).
+  const containerWidth = containerSize?.width
+  const containerHeight = containerSize?.height
+
   useEffect(() => {
+    if (containerWidth === undefined || containerHeight === undefined) return
     function fit() {
       map.invalidateSize()
-      // Leaflet's getBoundsZoom() clamps its result to the map's CURRENT
-      // minZoom/maxZoom (Math.max(currentMinZoom, computed), not a bounds-
-      // specific calculation). Confirmed via logging: with no minZoom set,
-      // Leaflet's own default (0) clamped the correctly-computed ~-0.75 back
-      // up to 0 — then that wrong 0 got applied as the new minZoom, so every
-      // subsequent call clamped against its own previous (wrong) answer and
-      // could never correct itself. This is the actual cause of both "loads
-      // already cropped" and "can't zoom out past the image": the floor was
-      // permanently stuck at 0 instead of the correct fit level. Lifting the
-      // floor immediately before computing breaks that self-reinforcing loop.
-      map.setMinZoom(-10)
-      // getBoundsZoom(bounds, false) = the zoom level at which the whole
-      // image is exactly as large as possible while still fully visible —
-      // exactly the "can't zoom out past the image" floor requested.
-      const fitZoom = map.getBoundsZoom(bounds, false)
-      map.setMinZoom(fitZoom)
-      map.fitBounds(bounds)
+      const zoom = Math.log2(containerWidth! / image.width)
+      map.setMinZoom(zoom)
+      map.setView([image.height / 2, image.width / 2], zoom, { animate: false })
     }
     fit()
+    // Also re-fit on Leaflet's own resize event (e.g. a real window resize
+    // it detects independently) as a defensive fallback — the effect's own
+    // dependency on containerWidth/containerHeight already covers the
+    // primary case (the letterboxed panel changing size).
     map.on('resize', fit)
     return () => {
       map.off('resize', fit)
     }
-  }, [map, bounds, containerSize?.width, containerSize?.height])
+  }, [map, image, containerWidth, containerHeight])
 
   return null
 }
