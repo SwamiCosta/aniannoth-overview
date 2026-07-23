@@ -460,13 +460,29 @@ function FitImageToViewport({ bounds, containerSize }: { bounds: L.LatLngBounds;
   // actual current dimensions, and both the fit and the minZoom floor drift.
   useEffect(() => {
     function fit() {
+      const sizeBefore = map.getSize()
       map.invalidateSize()
+      const sizeAfter = map.getSize()
       // getBoundsZoom(bounds, false) = the zoom level at which the whole
       // image is exactly as large as possible while still fully visible —
       // exactly the "can't zoom out past the image" floor requested.
       const fitZoom = map.getBoundsZoom(bounds, false)
       map.setMinZoom(fitZoom)
       map.fitBounds(bounds)
+      // TEMPORARY diagnostic — remove once the "initial view is cropped"
+      // bug is confirmed fixed. Logs the actual numbers Leaflet computed,
+      // since reasoning about the fit math in the abstract hasn't found the
+      // bug and guessing further isn't productive without real values.
+      console.log('[FitImageToViewport]', {
+        containerSizeProp: containerSize,
+        leafletSizeBeforeInvalidate: sizeBefore,
+        leafletSizeAfterInvalidate: sizeAfter,
+        boundsSouthWest: bounds.getSouthWest(),
+        boundsNorthEast: bounds.getNorthEast(),
+        computedFitZoom: fitZoom,
+        mapZoomAfterFit: map.getZoom(),
+        mapMinZoom: map.getMinZoom(),
+      })
     }
     fit()
     map.on('resize', fit)
