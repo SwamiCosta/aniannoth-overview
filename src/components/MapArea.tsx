@@ -14,7 +14,15 @@ import { toLatLng, fromLatLng } from '@/lib/mapCoordinates'
 import { typeForCategory } from '@/lib/entityCategory'
 import { logger } from '@/lib/logger'
 import { ApiError } from '@/api/keynorCoreClient'
+import { useAspectRatioBox } from '@/hooks/useAspectRatioBox'
 import type { GameMap, MapPin as MapPinData, Entity } from '@/types/universe'
+
+// Lets map images be authored at a known, fixed ratio (e.g. 1920x1080)
+// instead of whatever the browser window happens to be. The Leaflet
+// CRS.Simple + real-pixel-bounds setup (see NavigableMap) already handles
+// any image ratio via pan/zoom — this is purely about how much of the panel
+// the map viewport itself occupies, not a Leaflet concern.
+const MAP_ASPECT_RATIO = 16 / 9
 
 export default function MapArea() {
   const ctx = useAppContext()
@@ -30,6 +38,7 @@ export default function MapArea() {
   const [editMode, setEditMode] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { containerRef, box } = useAspectRatioBox(MAP_ASPECT_RATIO)
 
   // Edit mode only ever makes sense for an inputter session — drop out of it
   // automatically if the token disappears (logout) mid-edit.
@@ -72,7 +81,10 @@ export default function MapArea() {
   }
 
   return (
-    <div className="flex-1 relative min-h-[500px] bg-background">
+    <div
+      ref={containerRef}
+      className="flex-1 relative min-h-[500px] bg-background overflow-hidden flex items-center justify-center"
+    >
       {/* Top-left: map name badge */}
       <div className="absolute top-3 left-3 z-10 bg-surface border border-border text-sm px-3 py-1 rounded-full flex items-center gap-1.5 text-foreground select-none">
         <MapPin size={14} />
@@ -142,8 +154,16 @@ export default function MapArea() {
         </div>
       )}
 
-      {/* Map surface */}
-      <MapSurface map={selectedMap} editMode={editMode} />
+      {/* Map surface — letterboxed to a fixed 16:9 box within the panel, so
+          authored map images can target a known ratio instead of whatever
+          the browser window happens to be. Falls back to filling the panel
+          until the first measurement lands (see useAspectRatioBox). */}
+      <div
+        className="relative overflow-hidden"
+        style={box ? { width: box.width, height: box.height } : { width: '100%', height: '100%' }}
+      >
+        <MapSurface map={selectedMap} editMode={editMode} />
+      </div>
 
       {/* Toast notification */}
       <div
