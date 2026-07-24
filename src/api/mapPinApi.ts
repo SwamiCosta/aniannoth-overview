@@ -5,8 +5,9 @@ import { logger } from '@/lib/logger'
 interface ApiLinkedEntity {
   type: string
   id: string
-  name: string
-  status: string
+  name: string | null
+  status: string | null
+  hidden: boolean
 }
 
 interface ApiMapPin {
@@ -21,8 +22,9 @@ function toLinkedEntity(api: ApiLinkedEntity): LinkedEntity {
   return {
     type: api.type,
     id: api.id,
-    name: api.name,
-    status: api.status.toLowerCase() as LinkedEntity['status'],
+    name: api.name ?? '',
+    status: (api.status?.toLowerCase() ?? 'draft') as LinkedEntity['status'],
+    hidden: api.hidden,
   }
 }
 
