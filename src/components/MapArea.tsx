@@ -9,6 +9,8 @@ import { useMaps } from '@/hooks/useMaps'
 import { useMapPins } from '@/hooks/useMapPins'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useHiddenContentUnlock } from '@/hooks/useHiddenContentUnlock'
+import { HiddenContentModal } from '@/components/HiddenContentModal'
 import { cn } from '@/lib/utils'
 import { toLatLng, fromLatLng } from '@/lib/mapCoordinates'
 import { typeForCategory } from '@/lib/entityCategory'
@@ -292,6 +294,19 @@ function escapeHtml(value: string): string {
 // instead of introducing a second Leaflet primitive with its own pane and
 // interaction behavior. pointer-events: none on the label keeps it purely
 // visual — the dot itself remains the only clickable area.
+// A black pin (hidden entity target) is deliberately unlabeled and rendered
+// small/plain — the whole point is that an inattentive visitor scanning the
+// map does not notice it. See root ARCHITECTURE.md — "Cross-Project
+// Feature: Hidden Content & Black Pins".
+function createHiddenPinIcon(): L.DivIcon {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:8px;height:8px;border-radius:50%;background:#1a1a1a;"></div>`,
+    iconSize: [8, 8],
+    iconAnchor: [4, 4],
+  })
+}
+
 function createPinIcon(name: string): L.DivIcon {
   return L.divIcon({
     className: '',
@@ -318,8 +333,10 @@ function NavigableMap({
   image: RevalidatedImage
 }) {
   const auth = useAuth()
+  const ctx = useAppContext()
   const t = useTranslation()
   const { data: pins, addPin, movePin, removePin } = useMapPins(map.id)
+  const { isUnlocked } = useHiddenContentUnlock()
   const [pendingLatLng, setPendingLatLng] = useState<[number, number] | null>(null)
   // Memoized: L.latLngBounds(...) creates a new object identity on every
   // call. Without this, a plain `const bounds = ...` recreated on every
@@ -331,6 +348,15 @@ function NavigableMap({
   const bounds = useMemo(() => {
     return L.latLngBounds([0, 0], [image.height, image.width])
   }, [image])
+  const [pendingHiddenPin, setPendingHiddenPin] = useState<{ type: string; id: string } | null>(null)
+
+  function handleHiddenPinClick(entityType: string, entityId: string) {
+    if (isUnlocked(entityType, entityId)) {
+      ctx.setSelectedHiddenEntity({ type: entityType, id: entityId })
+      return
+    }
+    setPendingHiddenPin({ type: entityType, id: entityId })
+  }
 
   // Map changed out from under an in-progress pin placement — discard it
   // rather than let it apply against the wrong map.
@@ -442,9 +468,22 @@ function NavigableMap({
             editMode={editMode}
             onMove={(normalizedX, normalizedY) => { void handleMovePin(pin.id, normalizedX, normalizedY) }}
             onDelete={() => { void handleDeletePin(pin.id) }}
+            onHiddenPinClick={handleHiddenPinClick}
           />
         ))}
       </MapContainer>
+
+      {pendingHiddenPin && (
+        <HiddenContentModal
+          entityType={pendingHiddenPin.type}
+          entityId={pendingHiddenPin.id}
+          onClose={() => setPendingHiddenPin(null)}
+          onUnlocked={() => {
+            ctx.setSelectedHiddenEntity(pendingHiddenPin)
+            setPendingHiddenPin(null)
+          }}
+        />
+      )}
 
       {/* Rendered as a sibling of MapContainer, not a child — a picker
           nested inside MapContainer sits in the same DOM subtree Leaflet
@@ -519,12 +558,16 @@ interface PinMarkerProps {
   editMode: boolean
   onMove: (normalizedX: number, normalizedY: number) => void
   onDelete: () => void
+  onHiddenPinClick: (entityType: string, entityId: string) => void
 }
 
-function PinMarker({ pin, dimensions, editMode, onMove, onDelete }: PinMarkerProps) {
+function PinMarker({ pin, dimensions, editMode, onMove, onDelete, onHiddenPinClick }: PinMarkerProps) {
   const ctx = useAppContext()
   const position = toLatLng(pin.normalizedX, pin.normalizedY, dimensions.width, dimensions.height)
-  const icon = useMemo(() => createPinIcon(pin.entity.name), [pin.entity.name])
+  const icon = useMemo(
+    () => (pin.entity.hidden ? createHiddenPinIcon() : createPinIcon(pin.entity.name)),
+    [pin.entity.hidden, pin.entity.name],
+  )
 
   return (
     <Marker
@@ -535,6 +578,10 @@ function PinMarker({ pin, dimensions, editMode, onMove, onDelete }: PinMarkerPro
         click: () => {
           if (editMode) {
             onDelete()
+            return
+          }
+          if (pin.entity.hidden) {
+            onHiddenPinClick(pin.entity.type, pin.entity.id)
             return
           }
           ctx.setSelectedEntity(pin.entity.id)
