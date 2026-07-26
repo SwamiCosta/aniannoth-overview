@@ -82,7 +82,6 @@ const LINKED_CANON_PLACE = {
   id: 'place-001',
   name: 'The Hollow Spire',
   status: 'canon' as const,
-  hidden: false,
 }
 
 const LINKED_DRAFT_CHARACTER = {
@@ -90,7 +89,6 @@ const LINKED_DRAFT_CHARACTER = {
   id: 'char-draft-001',
   name: 'An Unfinished Soul',
   status: 'draft' as const,
-  hidden: false,
 }
 
 const ENTITY_WITH_LINKS = {
@@ -122,7 +120,6 @@ const LINKED_RESOLVABLE_CHARACTER = {
   id: TEST_ENTITY.id,
   name: TEST_ENTITY.name,
   status: 'canon' as const,
-  hidden: false,
 }
 
 const ENTITY_WITH_RESOLVABLE_LINK = {

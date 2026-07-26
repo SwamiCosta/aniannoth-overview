@@ -1,19 +1,14 @@
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Lock, Maximize2, Minimize2, User, XCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, User, XCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import type { Components } from 'react-markdown'
 import { useAppContext } from '@/context/AppContext'
-import type { SelectedHiddenEntity } from '@/context/AppContext'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useEras } from '@/hooks/useEras'
 import { useFactionMembers } from '@/hooks/useFactionMembers'
-import { useHiddenContentUnlock } from '@/hooks/useHiddenContentUnlock'
-import { fetchHiddenEntity } from '@/api/hiddenContentApi'
-import { HiddenContentModal } from '@/components/HiddenContentModal'
 import { categoryForType, imageAlignmentClass } from '@/lib/entityCategory'
-import { useTranslation } from '@/hooks/useTranslation'
 import { cn } from '@/lib/utils'
-import type { HiddenEntity, LinkedEntity } from '@/types/universe'
+import type { LinkedEntity } from '@/types/universe'
 
 const markdownComponents: Components = {
   h2: ({ children }) => (
@@ -166,21 +161,10 @@ function ImageLightbox({
 
 function RelatedEntities({ links }: { links: LinkedEntity[] }) {
   const ctx = useAppContext()
-  const t = useTranslation()
-  const { isUnlocked } = useHiddenContentUnlock()
-  const [pendingHiddenLink, setPendingHiddenLink] = useState<LinkedEntity | null>(null)
 
   if (links.length === 0) return null
 
   function handleClick(link: LinkedEntity) {
-    if (link.hidden) {
-      if (isUnlocked(link.type, link.id)) {
-        ctx.setSelectedHiddenEntity({ type: link.type, id: link.id })
-      } else {
-        setPendingHiddenLink(link)
-      }
-      return
-    }
     const category = categoryForType(link.type)
     if (category && category !== ctx.filters.category) {
       ctx.setFilter(category)
@@ -195,19 +179,6 @@ function RelatedEntities({ links }: { links: LinkedEntity[] }) {
       </h3>
       <div className="flex flex-wrap gap-1.5">
         {links.map(link => {
-          if (link.hidden) {
-            return (
-              <button
-                key={link.id}
-                onClick={() => handleClick(link)}
-                title={t('hidden_content_locked_link')}
-                className="bg-border hover:bg-primary-light text-foreground text-xs px-2 py-1 rounded-full transition-colors cursor-pointer flex items-center gap-1"
-              >
-                <Lock size={10} />
-                {isUnlocked(link.type, link.id) ? link.name || t('hidden_content_locked_link') : t('hidden_content_locked_link')}
-              </button>
-            )
-          }
           const isAvailable = link.status === 'canon'
           return isAvailable ? (
             <button
@@ -230,91 +201,6 @@ function RelatedEntities({ links }: { links: LinkedEntity[] }) {
             </span>
           )
         })}
-      </div>
-
-      {pendingHiddenLink && (
-        <HiddenContentModal
-          entityType={pendingHiddenLink.type}
-          entityId={pendingHiddenLink.id}
-          onClose={() => setPendingHiddenLink(null)}
-          onUnlocked={() => {
-            ctx.setSelectedHiddenEntity({ type: pendingHiddenLink.type, id: pendingHiddenLink.id })
-            setPendingHiddenLink(null)
-          }}
-        />
-      )}
-    </div>
-  )
-}
-
-function HiddenEntityDetail({ selection }: { selection: SelectedHiddenEntity }) {
-  const ctx = useAppContext()
-  const { token } = useHiddenContentUnlock()
-  const [entity, setEntity] = useState<HiddenEntity | null>(null)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    setEntity(null)
-    setError(false)
-    if (!token) {
-      setError(true)
-      return
-    }
-    fetchHiddenEntity(selection.type, selection.id, token)
-      .then(result => { if (!cancelled) setEntity(result) })
-      .catch(() => { if (!cancelled) setError(true) })
-    return () => { cancelled = true }
-  }, [selection.type, selection.id, token])
-
-  if (error) {
-    return (
-      <div className="border-t border-border bg-surface h-72 shrink-0 p-4 flex items-center justify-center relative">
-        <button
-          onClick={() => ctx.setSelectedHiddenEntity(null)}
-          className="absolute top-3 right-3 text-muted hover:text-foreground transition-colors"
-          aria-label="Close detail panel"
-        >
-          <XCircle size={16} />
-        </button>
-        <span className="text-muted text-sm">Could not load this hidden entity — the unlock may have expired.</span>
-      </div>
-    )
-  }
-
-  if (!entity) {
-    return (
-      <div className="border-t border-border bg-surface h-72 shrink-0 p-4 flex items-center justify-center">
-        <span className="text-muted text-sm">Loading…</span>
-      </div>
-    )
-  }
-
-  return (
-    <div className="border-t border-border bg-surface h-72 shrink-0 p-4 flex flex-row gap-4 relative">
-      <button
-        onClick={() => ctx.setSelectedHiddenEntity(null)}
-        className="absolute top-3 right-3 text-muted hover:text-foreground transition-colors"
-        aria-label="Close detail panel"
-      >
-        <XCircle size={16} />
-      </button>
-
-      <div className="w-32 flex-shrink-0">
-        <ImageGallery key={entity.id} images={entity.images} name={entity.name} category={categoryForType(entity.type) ?? ''} />
-      </div>
-
-      <div className="flex-1 flex flex-col gap-2 overflow-hidden">
-        <div className="flex items-center gap-2">
-          <Lock size={14} className="text-primary" />
-          <h2 className="text-xl font-medium text-foreground">{entity.name}</h2>
-        </div>
-
-        <div className="overflow-y-auto flex-1">
-          <ReactMarkdown components={markdownComponents}>{entity.body}</ReactMarkdown>
-        </div>
-
-        <RelatedEntities links={entity.links} />
       </div>
     </div>
   )
@@ -374,13 +260,6 @@ export default function DetailPanel() {
   useEffect(() => {
     if (ctx.selectedEntityId === null) setIsBodyExpanded(false)
   }, [ctx.selectedEntityId])
-
-  // Priority 0: hidden entity detail — never part of `entities` (useAllEntities
-  // never returns hidden rows), so it is handled entirely separately from
-  // Priority 1 below rather than trying to fold it into the same branch.
-  if (ctx.selectedHiddenEntity !== null) {
-    return <HiddenEntityDetail selection={ctx.selectedHiddenEntity} />
-  }
 
   // Priority 1: entity detail
   if (ctx.selectedEntityId !== null) {
