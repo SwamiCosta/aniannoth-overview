@@ -7,8 +7,9 @@ import { logger } from '@/lib/logger'
 interface ApiLinkedEntity {
   type: string
   id: string
-  name: string
-  status: string
+  name: string | null
+  status: string | null
+  hidden: boolean
 }
 
 interface ApiEntity {
@@ -40,8 +41,9 @@ function toLinkedEntity(apiLink: ApiLinkedEntity): LinkedEntity {
   return {
     type: apiLink.type,
     id: apiLink.id,
-    name: apiLink.name,
-    status: apiLink.status.toLowerCase() as LinkedEntity['status'],
+    name: apiLink.name ?? '',
+    status: (apiLink.status?.toLowerCase() ?? 'draft') as LinkedEntity['status'],
+    hidden: apiLink.hidden,
   }
 }
 

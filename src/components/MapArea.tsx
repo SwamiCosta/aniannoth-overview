@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { MapPin, ChevronDown, Pencil, LogIn, LogOut } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
-import { MapContainer, ImageOverlay, Marker, useMapEvents } from 'react-leaflet'
+import { MapContainer, ImageOverlay, Marker, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { useAppContext } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
@@ -9,12 +9,23 @@ import { useMaps } from '@/hooks/useMaps'
 import { useMapPins } from '@/hooks/useMapPins'
 import { useAllEntities } from '@/hooks/useEntities'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useHiddenContentUnlock } from '@/hooks/useHiddenContentUnlock'
+import { HiddenContentModal } from '@/components/HiddenContentModal'
 import { cn } from '@/lib/utils'
 import { toLatLng, fromLatLng } from '@/lib/mapCoordinates'
 import { typeForCategory } from '@/lib/entityCategory'
 import { logger } from '@/lib/logger'
 import { ApiError } from '@/api/keynorCoreClient'
+import { useAspectRatioBox } from '@/hooks/useAspectRatioBox'
+import type { AspectRatioBox } from '@/hooks/useAspectRatioBox'
+import { useRevalidatedImage } from '@/hooks/useRevalidatedImage'
+import type { RevalidatedImage } from '@/hooks/useRevalidatedImage'
 import type { GameMap, MapPin as MapPinData, Entity } from '@/types/universe'
+
+// Fallback only — used before a navigable map's image has loaded (so the
+// panel isn't a random shape for a moment) and for abstract maps, which
+// use object-cover and don't need their container shape to match anything.
+const FALLBACK_ASPECT_RATIO = 16 / 9
 
 export default function MapArea() {
   const ctx = useAppContext()
@@ -30,6 +41,21 @@ export default function MapArea() {
   const [editMode, setEditMode] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Loaded here, at the top, rather than down in NavigableMap: the
+  // letterbox panel's own shape needs to match THIS image's aspect ratio
+  // (see the ratio calc below), so the fit has to be known before we can
+  // size the panel — not just used once the panel already has some other
+  // (previously arbitrary, fixed 16:9) shape. Passed down as a prop so
+  // NavigableMap doesn't duplicate the fetch.
+  const navigableImage = useRevalidatedImage(selectedMap?.type === 'navigable' ? selectedMap.image : undefined)
+  // Matching the container's shape to the image's own shape (instead of a
+  // fixed 16:9) means: no letterbox borders regardless of what resolution
+  // future map images are authored at, and different eras/maps can freely
+  // use different ratios — requested explicitly, and it also sidesteps the
+  // whole "compute a zoom level that fits an arbitrary ratio into a fixed
+  // 16:9 box" problem (see FitImageToViewport) rather than working around it.
+  const mapAspectRatio = navigableImage ? navigableImage.width / navigableImage.height : FALLBACK_ASPECT_RATIO
+  const { containerRef, box } = useAspectRatioBox(mapAspectRatio)
 
   // Edit mode only ever makes sense for an inputter session — drop out of it
   // automatically if the token disappears (logout) mid-edit.
@@ -72,7 +98,10 @@ export default function MapArea() {
   }
 
   return (
-    <div className="flex-1 relative min-h-[500px] bg-background">
+    <div
+      ref={containerRef}
+      className="flex-1 relative min-h-[500px] bg-background overflow-hidden flex items-center justify-center"
+    >
       {/* Top-left: map name badge */}
       <div className="absolute top-3 left-3 z-10 bg-surface border border-border text-sm px-3 py-1 rounded-full flex items-center gap-1.5 text-foreground select-none">
         <MapPin size={14} />
@@ -142,8 +171,21 @@ export default function MapArea() {
         </div>
       )}
 
-      {/* Map surface */}
-      <MapSurface map={selectedMap} editMode={editMode} />
+      {/* Map surface — letterboxed to a box matching the current navigable
+          image's own aspect ratio (falling back to 16:9 while it loads, or
+          for abstract maps). Falls back to filling the panel until the
+          first measurement lands (see useAspectRatioBox).
+          z-0 is load-bearing, not decorative: Leaflet's internal panes use
+          z-index values up to 700 (marker/popup panes), and without an
+          explicit (non-auto) z-index here this div never becomes its own
+          stacking context — Leaflet's high z-index then compares directly
+          against the badges below (z-10) and covers them. z-0 contains it. */}
+      <div
+        className="relative z-0 overflow-hidden"
+        style={box ? { width: box.width, height: box.height } : { width: '100%', height: '100%' }}
+      >
+        <MapSurface map={selectedMap} editMode={editMode} containerSize={box} navigableImage={navigableImage} />
+      </div>
 
       {/* Toast notification */}
       <div
@@ -190,10 +232,17 @@ function AuthControl() {
 interface MapSurfaceProps {
   map: GameMap | undefined
   editMode: boolean
+  containerSize: AspectRatioBox | null
+  navigableImage: RevalidatedImage | null
 }
 
-function MapSurface({ map, editMode }: MapSurfaceProps) {
+function MapSurface({ map, editMode, containerSize, navigableImage }: MapSurfaceProps) {
   const t = useTranslation()
+  // Called unconditionally (Rules of Hooks) — only actually fetches when
+  // this is an abstract map with an image; useRevalidatedImage no-ops on
+  // an undefined url. See that hook for why map.image can't be used
+  // directly as the <img> src.
+  const abstractImage = useRevalidatedImage(map?.type === 'abstract' ? map.image : undefined)
 
   if (!map) {
     return (
@@ -211,38 +260,24 @@ function MapSurface({ map, editMode }: MapSurfaceProps) {
         </div>
       )
     }
+    if (!abstractImage) {
+      return <div className="w-full h-full bg-map-land" />
+    }
     return (
       <img
-        src={map.image}
+        src={abstractImage.objectUrl}
         alt={map.name}
         className="w-full h-full object-cover"
       />
     )
   }
 
-  // navigable map — Leaflet
-  return <NavigableMap map={map} editMode={editMode} />
-}
-
-function useImageDimensions(url: string | undefined): { width: number; height: number } | null {
-  const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null)
-
-  useEffect(() => {
-    setDimensions(null)
-    if (!url) return
-    let cancelled = false
-    const img = new Image()
-    img.onload = () => {
-      if (!cancelled) setDimensions({ width: img.naturalWidth, height: img.naturalHeight })
-    }
-    img.onerror = () => {
-      if (!cancelled) logger.error(`Failed to load map image for dimension detection: ${url}`)
-    }
-    img.src = url
-    return () => { cancelled = true }
-  }, [url])
-
-  return dimensions
+  // navigable map — Leaflet. image is loaded by the parent (MapArea), not
+  // here — see the comment there for why (the panel's own shape needs it).
+  if (!navigableImage) {
+    return <div className="w-full h-full bg-map-water" />
+  }
+  return <NavigableMap map={map} editMode={editMode} containerSize={containerSize} image={navigableImage} />
 }
 
 function escapeHtml(value: string): string {
@@ -259,6 +294,19 @@ function escapeHtml(value: string): string {
 // instead of introducing a second Leaflet primitive with its own pane and
 // interaction behavior. pointer-events: none on the label keeps it purely
 // visual — the dot itself remains the only clickable area.
+// A black pin (hidden entity target) is deliberately unlabeled and rendered
+// small/plain — the whole point is that an inattentive visitor scanning the
+// map does not notice it. See root ARCHITECTURE.md — "Cross-Project
+// Feature: Hidden Content & Black Pins".
+function createHiddenPinIcon(): L.DivIcon {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:8px;height:8px;border-radius:50%;background:#1a1a1a;"></div>`,
+    iconSize: [8, 8],
+    iconAnchor: [4, 4],
+  })
+}
+
 function createPinIcon(name: string): L.DivIcon {
   return L.divIcon({
     className: '',
@@ -273,12 +321,42 @@ function createPinIcon(name: string): L.DivIcon {
   })
 }
 
-function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
+function NavigableMap({
+  map,
+  editMode,
+  containerSize,
+  image,
+}: {
+  map: GameMap
+  editMode: boolean
+  containerSize: AspectRatioBox | null
+  image: RevalidatedImage
+}) {
   const auth = useAuth()
+  const ctx = useAppContext()
   const t = useTranslation()
-  const dimensions = useImageDimensions(map.image)
   const { data: pins, addPin, movePin, removePin } = useMapPins(map.id)
+  const { isUnlocked } = useHiddenContentUnlock()
   const [pendingLatLng, setPendingLatLng] = useState<[number, number] | null>(null)
+  // Memoized: L.latLngBounds(...) creates a new object identity on every
+  // call. Without this, a plain `const bounds = ...` recreated on every
+  // render would have re-triggered anything depending on it (e.g. an
+  // ImageOverlay re-render) on every unrelated re-render (creating/moving/
+  // deleting any pin, toggling editMode, anything) for no reason. Keyed on
+  // `image` (stable identity from useState) rather than deriving a fresh
+  // {width,height} object every render, which would defeat this.
+  const bounds = useMemo(() => {
+    return L.latLngBounds([0, 0], [image.height, image.width])
+  }, [image])
+  const [pendingHiddenPin, setPendingHiddenPin] = useState<{ type: string; id: string } | null>(null)
+
+  function handleHiddenPinClick(entityType: string, entityId: string) {
+    if (isUnlocked(entityType, entityId)) {
+      ctx.setSelectedHiddenEntity({ type: entityType, id: entityId })
+      return
+    }
+    setPendingHiddenPin({ type: entityType, id: entityId })
+  }
 
   // Map changed out from under an in-progress pin placement — discard it
   // rather than let it apply against the wrong map.
@@ -286,15 +364,9 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
     setPendingLatLng(null)
   }, [map.id])
 
-  if (!dimensions) {
-    return <div className="w-full h-full bg-map-water" />
-  }
-
-  const bounds = L.latLngBounds([0, 0], [dimensions.height, dimensions.width])
-
   async function handlePickEntity(entity: Entity) {
     if (!pendingLatLng || !auth.accessToken) return
-    const { normalizedX, normalizedY } = fromLatLng(pendingLatLng[0], pendingLatLng[1], dimensions!.width, dimensions!.height)
+    const { normalizedX, normalizedY } = fromLatLng(pendingLatLng[0], pendingLatLng[1], image.width, image.height)
     const entityType = typeForCategory(entity.category)
     setPendingLatLng(null)
     if (!entityType) {
@@ -346,19 +418,41 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
     <div className="relative w-full h-full">
       <MapContainer
         crs={L.CRS.Simple}
-        center={[dimensions.height / 2, dimensions.width / 2]}
+        // No bounds/center/zoom fit here on purpose — FitImageToViewport
+        // below is the single source of truth for the initial view and
+        // every re-fit.
+        center={[0, 0]}
         zoom={0}
-        minZoom={-3}
-        // Finer-grained zoom steps than Leaflet's default (zoomSnap/zoomDelta=1,
-        // wheelPxPerZoomLevel=60) — the default felt like each wheel tick jumped
-        // a full zoom level, too aggressive for a CRS.Simple image overlay.
-        zoomSnap={0.25}
+        // zoomSnap=0: continuous zoom, not steps of a fixed grid. The
+        // letterbox panel's aspect ratio matches this image's own ratio
+        // exactly (see MapArea), so FitImageToViewport computes a precise
+        // fractional zoom where the image exactly fills the panel — any
+        // non-zero zoomSnap would round that to the nearest grid line,
+        // reintroducing a small border. zoomDelta still controls how big a
+        // step +/- buttons and the keyboard take; wheelPxPerZoomLevel still
+        // controls wheel sensitivity — neither depends on snapping.
+        zoomSnap={0}
         zoomDelta={0.25}
         wheelPxPerZoomLevel={180}
+        // Stops the viewport from ever panning past the image's own edges
+        // (which is what was leaving bg-map-water visible as a "green
+        // area"). maxBoundsViscosity=1 makes this a hard stop with no give
+        // — 0 (the default) lets the user drag past the edge and then
+        // animates back, which would still show the gap mid-drag. At
+        // exactly the fit zoom (no zoom-in), this alone also makes
+        // dragging impossible, since there's no slack in any direction —
+        // no separate "disable drag at minZoom" logic needed.
+        maxBounds={bounds}
+        maxBoundsViscosity={1}
         className="w-full h-full"
         style={{ background: 'var(--color-map-water)' }}
       >
-        {map.image && <ImageOverlay url={map.image} bounds={bounds} />}
+        {/* image.objectUrl, not map.image — see useRevalidatedImage: this is
+            what forces the browser to actually revalidate with the server
+            instead of trusting a long-lived cached copy of the raw URL. */}
+        <ImageOverlay url={image.objectUrl} bounds={bounds} />
+
+        <FitImageToViewport image={image} containerSize={containerSize} />
 
         {/* Stop listening once a pin is pending — otherwise a click on the
             picker overlay below (rendered outside MapContainer, but Leaflet
@@ -370,13 +464,26 @@ function NavigableMap({ map, editMode }: { map: GameMap; editMode: boolean }) {
           <PinMarker
             key={pin.id}
             pin={pin}
-            dimensions={dimensions}
+            dimensions={image}
             editMode={editMode}
             onMove={(normalizedX, normalizedY) => { void handleMovePin(pin.id, normalizedX, normalizedY) }}
             onDelete={() => { void handleDeletePin(pin.id) }}
+            onHiddenPinClick={handleHiddenPinClick}
           />
         ))}
       </MapContainer>
+
+      {pendingHiddenPin && (
+        <HiddenContentModal
+          entityType={pendingHiddenPin.type}
+          entityId={pendingHiddenPin.id}
+          onClose={() => setPendingHiddenPin(null)}
+          onUnlocked={() => {
+            ctx.setSelectedHiddenEntity(pendingHiddenPin)
+            setPendingHiddenPin(null)
+          }}
+        />
+      )}
 
       {/* Rendered as a sibling of MapContainer, not a child — a picker
           nested inside MapContainer sits in the same DOM subtree Leaflet
@@ -404,18 +511,63 @@ function MapClickCapture({ onMapClick }: { onMapClick: (latlng: [number, number]
   return null
 }
 
+function FitImageToViewport({ image, containerSize }: { image: RevalidatedImage; containerSize: AspectRatioBox | null }) {
+  const map = useMap()
+
+  // Earlier version relied on Leaflet's map.getBoundsZoom(), which clamps
+  // its result to the map's CURRENT minZoom/maxZoom — not a bounds-specific
+  // calculation. Confirmed via logging: with no minZoom set explicitly,
+  // Leaflet's own default (0) clamped the correctly-computed fit zoom back
+  // up to 0, that wrong 0 then got applied as the new minZoom via
+  // setMinZoom(), and every subsequent call clamped against its own
+  // previous wrong answer — a permanently stuck state, not a transient one,
+  // matching both "loads already cropped" and "can't zoom out past the
+  // image". Computing the zoom directly here sidesteps that clamp entirely:
+  // since the letterbox container's aspect ratio is derived FROM this
+  // image's own ratio (see MapArea), containerSize.width/image.width and
+  // containerSize.height/image.height are the same scale factor (up to
+  // rounding) — no fitting/searching needed, just log2(scale).
+  const containerWidth = containerSize?.width
+  const containerHeight = containerSize?.height
+
+  useEffect(() => {
+    if (containerWidth === undefined || containerHeight === undefined) return
+    function fit() {
+      map.invalidateSize()
+      const zoom = Math.log2(containerWidth! / image.width)
+      map.setMinZoom(zoom)
+      map.setView([image.height / 2, image.width / 2], zoom, { animate: false })
+    }
+    fit()
+    // Also re-fit on Leaflet's own resize event (e.g. a real window resize
+    // it detects independently) as a defensive fallback — the effect's own
+    // dependency on containerWidth/containerHeight already covers the
+    // primary case (the letterboxed panel changing size).
+    map.on('resize', fit)
+    return () => {
+      map.off('resize', fit)
+    }
+  }, [map, image, containerWidth, containerHeight])
+
+  return null
+}
+
 interface PinMarkerProps {
   pin: MapPinData
   dimensions: { width: number; height: number }
   editMode: boolean
   onMove: (normalizedX: number, normalizedY: number) => void
   onDelete: () => void
+  onHiddenPinClick: (entityType: string, entityId: string) => void
 }
 
-function PinMarker({ pin, dimensions, editMode, onMove, onDelete }: PinMarkerProps) {
+function PinMarker({ pin, dimensions, editMode, onMove, onDelete, onHiddenPinClick }: PinMarkerProps) {
   const ctx = useAppContext()
   const position = toLatLng(pin.normalizedX, pin.normalizedY, dimensions.width, dimensions.height)
-  const icon = useMemo(() => createPinIcon(pin.entity.name), [pin.entity.name])
+  const icon = useMemo(
+    () => (pin.entity.hidden ? createHiddenPinIcon() : createPinIcon(pin.entity.name)),
+    [pin.entity.hidden, pin.entity.name],
+  )
 
   return (
     <Marker
@@ -426,6 +578,10 @@ function PinMarker({ pin, dimensions, editMode, onMove, onDelete }: PinMarkerPro
         click: () => {
           if (editMode) {
             onDelete()
+            return
+          }
+          if (pin.entity.hidden) {
+            onHiddenPinClick(pin.entity.type, pin.entity.id)
             return
           }
           ctx.setSelectedEntity(pin.entity.id)

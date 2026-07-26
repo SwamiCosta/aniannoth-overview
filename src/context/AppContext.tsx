@@ -16,6 +16,11 @@ interface AppState {
   selectedEntityId: string | null
 }
 
+export interface SelectedHiddenEntity {
+  type: string
+  id: string
+}
+
 interface AppContextValue extends AppState {
   setEra: (eraId: string) => void
   setMap: (mapId: string) => void
@@ -29,6 +34,12 @@ interface AppContextValue extends AppState {
   setEraDetailOpen: (open: boolean) => void
   timelineDetailId: string | null
   openTimelineDetail: (entryId: string) => void
+  // Hidden content (see root ARCHITECTURE.md — "Cross-Project Feature:
+  // Hidden Content & Black Pins") is never part of the normal entities
+  // list, so it is tracked separately from selectedEntityId rather than
+  // overloading it with ids that useAllEntities() would never resolve.
+  selectedHiddenEntity: SelectedHiddenEntity | null
+  setSelectedHiddenEntity: (entity: SelectedHiddenEntity | null) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -45,6 +56,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [mapResetTriggered, setMapResetTriggered] = useState(false)
   const [eraDetailOpen, setEraDetailOpen] = useState(false)
   const [timelineDetailId, setTimelineDetailId] = useState<string | null>(null)
+  const [selectedHiddenEntity, setSelectedHiddenEntityState] = useState<SelectedHiddenEntity | null>(null)
 
   // Era/entity ids are per-language rows (one row per translation, linked by
   // translationGroupId — see keynor-core EraResponse/CharacterResponse etc).
@@ -168,6 +180,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedEntityGroupIdRef.current = id ? (entities.find(e => e.id === id)?.translationGroupId ?? null) : null
     if (id !== null) {
       setEraDetailOpen(false)
+      setSelectedHiddenEntityState(null)
+    }
+  }
+
+  function setSelectedHiddenEntity(entity: SelectedHiddenEntity | null) {
+    setSelectedHiddenEntityState(entity)
+    if (entity !== null) {
+      setEraDetailOpen(false)
+      setSelectedEntityId(null)
     }
   }
 
@@ -201,6 +222,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setEraDetailOpen,
         timelineDetailId,
         openTimelineDetail,
+        selectedHiddenEntity,
+        setSelectedHiddenEntity,
       }}
     >
       {children}
