@@ -27,8 +27,22 @@ export interface EntityTimeline {
 export interface LinkedEntity {
   type: string
   id: string
+  // Empty string / 'draft' when hidden is true and still locked (the API
+  // redacts the real name/status until unlocked) — components must branch on
+  // `hidden` first, never assume `name`/`status` are meaningful on their own.
   name: string
   status: 'canon' | 'draft' | 'deprecated'
+  hidden: boolean
+}
+
+export interface HiddenEntity {
+  id: string
+  type: string
+  name: string
+  summary: string
+  body: string
+  images: string[]
+  links: LinkedEntity[]
 }
 
 export interface FactionMember {
