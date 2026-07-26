@@ -50,7 +50,13 @@ export function HiddenContentModal({ entityType, entityId, onUnlocked, onClose }
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/60" onClick={onClose}>
+    // z-[1000], not the page-overlay z-[100] convention (see aniannoth-overview
+    // CLAUDE.md — that tier is only above TopBar/TimelineBar). This modal is
+    // also rendered from MapArea, nested inside the same Leaflet stacking
+    // context as EntityPickerOverlay — Leaflet's own panes reach z-index 700
+    // internally, so anything below that renders behind the map. Matches
+    // EntityPickerOverlay's z-[1000] for the same reason.
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-foreground/60" onClick={onClose}>
       <div
         className="bg-surface border border-border rounded-lg shadow-xl w-96 p-4"
         onClick={e => e.stopPropagation()}
