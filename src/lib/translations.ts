@@ -41,14 +41,6 @@ const TRANSLATIONS = {
   map_pin_no_matches: { en: 'No matching entities', pt: 'Nenhuma entidade encontrada' },
   map_pin_cancel: { en: 'Cancel', pt: 'Cancelar' },
   map_pin_delete_confirm: { en: 'Delete this pin?', pt: 'Excluir este pin?' },
-
-  hidden_content_title: { en: 'A riddle blocks your way', pt: 'Um enigma bloqueia seu caminho' },
-  hidden_content_password_placeholder: { en: 'Answer…', pt: 'Resposta…' },
-  hidden_content_submit: { en: 'Submit', pt: 'Enviar' },
-  hidden_content_submitting: { en: 'Checking…', pt: 'Verificando…' },
-  hidden_content_wrong_password: { en: 'That is not the answer.', pt: 'Essa não é a resposta.' },
-  hidden_content_load_error: { en: 'Could not load the riddle.', pt: 'Não foi possível carregar o enigma.' },
-  hidden_content_locked_link: { en: 'Locked content', pt: 'Conteúdo bloqueado' },
 } as const
 
 export type TranslationKey = keyof typeof TRANSLATIONS
