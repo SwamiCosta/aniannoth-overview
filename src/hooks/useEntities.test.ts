@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { LanguageProvider } from '@/context/LanguageContext'
-import { useEntities, useAllEntities } from './useEntities'
+import { useEntities, useAllEntities, useAllEntitiesForAuthoring } from './useEntities'
 
 // ---------------------------------------------------------------------------
 // Mock the API module so tests run without a real backend.
@@ -9,11 +9,13 @@ import { useEntities, useAllEntities } from './useEntities'
 
 vi.mock('@/api/entityApi', () => ({
   fetchEntities: vi.fn(),
+  fetchEntitiesForAuthoring: vi.fn(),
 }))
 
-import { fetchEntities } from '@/api/entityApi'
+import { fetchEntities, fetchEntitiesForAuthoring } from '@/api/entityApi'
 
 const mockFetchEntities = vi.mocked(fetchEntities)
+const mockFetchEntitiesForAuthoring = vi.mocked(fetchEntitiesForAuthoring)
 
 // ---------------------------------------------------------------------------
 // Shared test fixtures
@@ -138,5 +140,32 @@ describe('useAllEntities', () => {
     await waitFor(() => expect(result.current.loading).toBe(false))
     expect(result.current.error).toBeInstanceOf(Error)
     expect(result.current.data).toEqual([])
+  })
+})
+
+describe('useAllEntitiesForAuthoring', () => {
+  const MOCK_HIDDEN_LORE = { ...MOCK_LORE, id: 'hidden-truth', name: 'The Hidden Truth' }
+
+  beforeEach(() => {
+    mockFetchEntitiesForAuthoring.mockClear()
+    mockFetchEntitiesForAuthoring.mockImplementation((category: string) => {
+      if (category === 'characters') return Promise.resolve([MOCK_CHARACTER])
+      if (category === 'lore') return Promise.resolve([MOCK_LORE, MOCK_HIDDEN_LORE])
+      return Promise.resolve([])
+    })
+  })
+
+  it('returns entities from all categories, including hidden ones, when given a token', async () => {
+    const { result } = renderHook(() => useAllEntitiesForAuthoring('token-123'), { wrapper: LanguageProvider })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.data.map(e => e.id)).toContain('hidden-truth')
+    expect(mockFetchEntitiesForAuthoring).toHaveBeenCalledWith('lore', expect.any(String), 'token-123')
+  })
+
+  it('returns no data and makes no request when there is no access token', async () => {
+    const { result } = renderHook(() => useAllEntitiesForAuthoring(null), { wrapper: LanguageProvider })
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.data).toEqual([])
+    expect(mockFetchEntitiesForAuthoring).not.toHaveBeenCalled()
   })
 })

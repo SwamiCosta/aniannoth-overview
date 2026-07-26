@@ -7,7 +7,7 @@ import { useAppContext } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { useMaps } from '@/hooks/useMaps'
 import { useMapPins } from '@/hooks/useMapPins'
-import { useAllEntities } from '@/hooks/useEntities'
+import { useAllEntitiesForAuthoring } from '@/hooks/useEntities'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useHiddenContentUnlock } from '@/hooks/useHiddenContentUnlock'
 import { HiddenContentModal } from '@/components/HiddenContentModal'
@@ -494,6 +494,7 @@ function NavigableMap({
           ever ran, so the pin landed at that spot instead of the original click. */}
       {editMode && pendingLatLng && (
         <EntityPickerOverlay
+          accessToken={auth.accessToken}
           onCancel={() => setPendingLatLng(null)}
           onPick={entity => { void handlePickEntity(entity) }}
         />
@@ -601,13 +602,14 @@ function PinMarker({ pin, dimensions, editMode, onMove, onDelete, onHiddenPinCli
 }
 
 interface EntityPickerOverlayProps {
+  accessToken: string | null
   onPick: (entity: Entity) => void
   onCancel: () => void
 }
 
-function EntityPickerOverlay({ onPick, onCancel }: EntityPickerOverlayProps) {
+function EntityPickerOverlay({ accessToken, onPick, onCancel }: EntityPickerOverlayProps) {
   const t = useTranslation()
-  const { data: entities } = useAllEntities()
+  const { data: entities } = useAllEntitiesForAuthoring(accessToken)
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
