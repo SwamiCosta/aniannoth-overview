@@ -18,16 +18,17 @@ export async function apiFetch<T>(path: string): Promise<T> {
 }
 
 interface AuthenticatedFetchOptions {
-  method: 'POST' | 'PATCH' | 'DELETE'
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE'
   accessToken: string
   body?: unknown
 }
 
 /**
- * For internal (/api/v1/**) endpoints that require a Bearer JWT — currently
- * only the map pin create/update/delete endpoints, restricted server-side to
- * ADMIN. Hiding the calling UI from readers is not what enforces this; the
- * server does.
+ * For internal (/api/v1/**) endpoints that require a Bearer JWT — the map pin
+ * create/update/delete endpoints (ADMIN-restricted server-side), and GET
+ * entity listing for the pin-target picker, which unlike the public listing
+ * endpoints includes hidden entities. Hiding the calling UI from readers is
+ * not what enforces any of this; the server does.
  */
 export async function apiFetchAuthenticated<T>(path: string, options: AuthenticatedFetchOptions): Promise<T | undefined> {
   const response = await fetch(`${BASE_URL}${path}`, {

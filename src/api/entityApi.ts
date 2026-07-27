@@ -1,4 +1,4 @@
-import { apiFetch } from './keynorCoreClient'
+import { apiFetch, apiFetchAuthenticated } from './keynorCoreClient'
 import type { PagedResponse } from './keynorCoreClient'
 import type { Entity, FactionMember, LinkedEntity } from '@/types/universe'
 import type { Language } from '@/context/LanguageContext'
@@ -74,6 +74,26 @@ export async function fetchEntities(category: string, language: Language): Promi
     return data.content.map(item => toEntity(item, category))
   } catch (error) {
     logger.error(`Failed to fetch entities — category: ${category}`, error)
+    throw error
+  }
+}
+
+// Same shape as fetchEntities, but hits the internal (/api/v1) listing
+// instead of /api/public/v1 — the public endpoint deliberately excludes
+// hidden entities (excludeHidden: true server-side, see keynor-core's
+// hidden-content-implementation skill), which is correct for public browsing
+// but wrong for the map-pin-target picker: a black pin's only purpose is to
+// point at a hidden entity, so the picker needs to see it. Requires an
+// authenticated inputter session, matching the pin-creation call itself.
+export async function fetchEntitiesForAuthoring(category: string, language: Language, accessToken: string): Promise<Entity[]> {
+  try {
+    const data = await apiFetchAuthenticated<PagedResponse<ApiEntity>>(
+      `/api/v1/${encodeURIComponent(category)}?size=100&language=${language}`,
+      { method: 'GET', accessToken },
+    )
+    return (data?.content ?? []).map(item => toEntity(item, category))
+  } catch (error) {
+    logger.error(`Failed to fetch entities for authoring — category: ${category}`, error)
     throw error
   }
 }
