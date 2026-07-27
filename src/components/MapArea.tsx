@@ -444,6 +444,12 @@ function NavigableMap({
         // no separate "disable drag at minZoom" logic needed.
         maxBounds={bounds}
         maxBoundsViscosity={1}
+        // This map only ever renders our own custom images via ImageOverlay
+        // — no OpenStreetMap (or any) TileLayer — so there's no map-data
+        // attribution requirement to satisfy. The default "Leaflet" watermark
+        // link is a library courtesy, not something its BSD-2-Clause license
+        // requires displaying.
+        attributionControl={false}
         className="w-full h-full"
         style={{ background: 'var(--color-map-water)' }}
       >
