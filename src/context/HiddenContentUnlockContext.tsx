@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react'
+import { createContext, useContext, useCallback, useState } from 'react'
+import type { ReactNode } from 'react'
 import { unlockHiddenContent } from '@/api/hiddenContentApi'
 import { logger } from '@/lib/logger'
 
@@ -47,13 +48,31 @@ function readStoredToken(): string | null {
   return token
 }
 
-export interface UseHiddenContentUnlockResult {
+export interface HiddenContentUnlockContextValue {
   token: string | null
   isUnlocked: (entityType: string, entityId: string) => boolean
   unlock: (entityType: string, entityId: string, password: string) => Promise<void>
 }
 
-export function useHiddenContentUnlock(): UseHiddenContentUnlockResult {
+const HiddenContentUnlockContext = createContext<HiddenContentUnlockContextValue | null>(null)
+
+// A single, app-wide unlock state. Previously this was a plain hook with its
+// own local useState, called independently from the map pin, the entity
+// picker overlay, the related-entities links, and the hidden entity detail
+// panel — each call site got its own isolated copy of `token`, so unlocking
+// content in one place (which writes the new token to sessionStorage) never
+// updated the `token` any of the other already-mounted call sites were
+// holding onto. Two symptoms were reported from that: (1) re-clicking an
+// already-unlocked black pin asked for the password again, because the map's
+// own stale `token` never saw the unlock that happened inside the modal's
+// separate hook instance, and (2) unlocking a hidden entity linked from
+// another hidden entity failed to load ("unlock may have expired"), because
+// the already-mounted detail panel kept the token captured when its own
+// hidden entity was first opened, never the newer one returned after
+// unlocking the link. A Context makes `token` one shared value that every
+// consumer re-renders from, matching AuthContext/AppContext's own pattern in
+// this app.
+export function HiddenContentUnlockProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => readStoredToken())
 
   const isUnlocked = useCallback(
@@ -72,5 +91,15 @@ export function useHiddenContentUnlock(): UseHiddenContentUnlockResult {
     setToken(result.token)
   }, [])
 
-  return { token, isUnlocked, unlock }
+  return (
+    <HiddenContentUnlockContext.Provider value={{ token, isUnlocked, unlock }}>
+      {children}
+    </HiddenContentUnlockContext.Provider>
+  )
+}
+
+export function useHiddenContentUnlock(): HiddenContentUnlockContextValue {
+  const ctx = useContext(HiddenContentUnlockContext)
+  if (!ctx) throw new Error('useHiddenContentUnlock must be used inside HiddenContentUnlockProvider')
+  return ctx
 }

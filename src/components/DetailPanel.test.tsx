@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act, waitFor } from '@testing-library/react'
 import { AppProvider, useAppContext } from '@/context/AppContext'
 import { LanguageProvider } from '@/context/LanguageContext'
+import { HiddenContentUnlockProvider } from '@/context/HiddenContentUnlockContext'
 import DetailPanel from './DetailPanel'
 
 // ---------------------------------------------------------------------------
@@ -158,7 +159,13 @@ const ENTITY_FACTION_NO_MEMBERS = {
 // ---------------------------------------------------------------------------
 
 function ControlledWrapper({ children }: { children: React.ReactNode }) {
-  return <LanguageProvider><AppProvider>{children}</AppProvider></LanguageProvider>
+  return (
+    <LanguageProvider>
+      <AppProvider>
+        <HiddenContentUnlockProvider>{children}</HiddenContentUnlockProvider>
+      </AppProvider>
+    </LanguageProvider>
+  )
 }
 
 function SelectEntityButton({ entityId }: { entityId: string | null }) {

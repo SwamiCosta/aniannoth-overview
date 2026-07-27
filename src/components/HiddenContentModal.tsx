@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Lock, XCircle } from 'lucide-react'
 import { fetchHiddenContentRiddle } from '@/api/hiddenContentApi'
 import { InvalidHiddenContentPasswordError } from '@/api/hiddenContentApi'
-import { useHiddenContentUnlock } from '@/hooks/useHiddenContentUnlock'
+import { useHiddenContentUnlock } from '@/context/HiddenContentUnlockContext'
 import { useTranslation } from '@/hooks/useTranslation'
 import { logger } from '@/lib/logger'
 
