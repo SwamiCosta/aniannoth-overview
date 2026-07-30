@@ -6,6 +6,7 @@ export interface Era {
   importance: 'STANDARD' | 'MAJOR' | null
   description: string
   translationGroupId: string
+  links: LinkedEntity[]
 }
 
 export interface GameMap {

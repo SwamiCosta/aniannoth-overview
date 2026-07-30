@@ -43,6 +43,7 @@ const ERA_PRIMORDIAL = {
   importance: null,
   description: '',
   translationGroupId: 'primordial-group',
+  links: [],
 }
 
 const POINT_SUNDERING = {
@@ -53,6 +54,7 @@ const POINT_SUNDERING = {
   importance: 'MAJOR' as const,
   description: 'The moment the material world split from the Omniverse.',
   translationGroupId: 'sundering-group',
+  links: [],
 }
 
 const MAP_OMNIVERSE = {
@@ -92,6 +94,12 @@ const LINKED_DRAFT_CHARACTER = {
   name: 'An Unfinished Soul',
   status: 'draft' as const,
   hidden: false,
+}
+
+const POINT_WITH_LINKS = {
+  ...POINT_SUNDERING,
+  id: 'point-with-links',
+  links: [LINKED_CANON_PLACE],
 }
 
 const ENTITY_WITH_LINKS = {
@@ -438,6 +446,23 @@ describe('DetailPanel', () => {
 
     // The map-driving era selection is untouched
     expect(screen.getByTestId('selected-era').textContent).toBe(ERA_PRIMORDIAL.id)
+  })
+
+  it('shows related entities below a timeline entry description when it has links', async () => {
+    mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, POINT_WITH_LINKS])
+
+    render(
+      <ControlledWrapper>
+        <OpenTimelineDetailButton entryId={POINT_WITH_LINKS.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`open-detail-${POINT_WITH_LINKS.id}`).click()
+    })
+
+    expect(await screen.findByText(LINKED_CANON_PLACE.name)).toBeInTheDocument()
   })
 
   it('clicking the close button hides the timeline detail panel', async () => {

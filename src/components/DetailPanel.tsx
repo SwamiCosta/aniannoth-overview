@@ -522,6 +522,9 @@ export default function DetailPanel() {
 
         {/* Description */}
         <p className="text-sm text-muted leading-relaxed">{entry.description}</p>
+
+        {/* Related entities */}
+        <RelatedEntities links={entry.links} />
       </div>
     )
   }
