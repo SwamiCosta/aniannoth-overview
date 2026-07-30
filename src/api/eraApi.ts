@@ -1,7 +1,15 @@
 import { apiFetch } from './keynorCoreClient'
-import type { Era } from '@/types/universe'
+import type { Era, LinkedEntity } from '@/types/universe'
 import type { Language } from '@/context/LanguageContext'
 import { logger } from '@/lib/logger'
+
+interface ApiLinkedEntity {
+  type: string
+  id: string
+  name: string | null
+  status: string | null
+  hidden: boolean
+}
 
 interface ApiEra {
   id: string
@@ -11,6 +19,17 @@ interface ApiEra {
   importance: string | null
   description: string
   translationGroupId: string
+  links?: ApiLinkedEntity[] | null
+}
+
+function toLinkedEntity(apiLink: ApiLinkedEntity): LinkedEntity {
+  return {
+    type: apiLink.type,
+    id: apiLink.id,
+    name: apiLink.name ?? '',
+    status: (apiLink.status?.toLowerCase() ?? 'draft') as LinkedEntity['status'],
+    hidden: apiLink.hidden,
+  }
 }
 
 function toEra(api: ApiEra): Era {
@@ -22,6 +41,7 @@ function toEra(api: ApiEra): Era {
     importance: (api.importance ?? null) as Era['importance'],
     description: api.description,
     translationGroupId: api.translationGroupId,
+    links: (api.links ?? []).map(toLinkedEntity),
   }
 }
 
