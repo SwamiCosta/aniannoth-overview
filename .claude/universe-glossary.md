@@ -52,6 +52,24 @@ The same pattern extends to larger units:
 
 ---
 
+## E
+
+### elevani
+**English equivalent:** elevani (no translation — the word is used as-is in English text)
+**Meaning:** a semi-divine individual; one elevated to divinity
+
+`elevani` refers to one or more individuals who wield or embody divine power despite not having been divine from their origin — semi-gods, avatars, individuals initially mortal who were chosen to ascend, or who acquired divine power through their own talent and deeds. Like `valkani`, the word does not change form between singular and plural.
+
+**Interchangeability:** `elevani` and `valkari` (see the V section) denote the same category of being and are used interchangeably — there is no difference of nuance, register, or context between them.
+
+**Usage notes:**
+- Always lowercase in running text, following the same convention as `valkani`
+- Refers only to individuals who began as mortal (or otherwise non-divine) and rose to divine status — never to a deity divine from origin
+
+**Etymology:** `eleve` (from above, superior, elevated) + `ani` (one) — literal translation: "the superior individual"
+
+---
+
 ## K
 
 ### Keynør
@@ -96,4 +114,20 @@ According to the cosmology of the universe, all that exists — and all that doe
 
 ---
 
-*Last updated: 2026-06-09*
+### valkari
+**English equivalent:** valkari (no translation — the word is used as-is in English text)
+**Meaning:** a semi-divine individual; one of the people who ascended
+
+`valkari` refers to one or more individuals who wield or embody divine power despite not having been divine from their origin — semi-gods, avatars, individuals initially mortal who were chosen to ascend, or who acquired divine power through their own talent and deeds. Like `valkani`, the word does not change form between singular and plural.
+
+**Interchangeability:** `valkari` and `elevani` (see the E section) denote the same category of being and are used interchangeably — there is no difference of nuance, register, or context between them.
+
+**Usage notes:**
+- Always lowercase in running text, following the same convention as `valkani`
+- Refers only to individuals who began as mortal (or otherwise non-divine) and rose to divine status — never to a deity divine from origin
+
+**Etymology:** `valk` (people) + `ari` (divine, in this context) — literal translation: "the one of the people who ascended"
+
+---
+
+*Last updated: 2026-07-30 (added `elevani` and `valkari`, two interchangeable terms for semi-divine individuals — mortals elevated to divinity or who acquired divine power through their own deeds. Added by Aniannoth per user request.)*
