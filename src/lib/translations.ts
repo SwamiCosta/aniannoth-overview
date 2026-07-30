@@ -10,6 +10,8 @@ const TRANSLATIONS = {
   filter_all: { en: 'All', pt: 'Todos' },
   filter_characters: { en: 'Characters', pt: 'Personagens' },
   filter_lore: { en: 'Lore', pt: 'Lore' },
+  filter_items: { en: 'Items', pt: 'Itens' },
+  filter_factions: { en: 'Factions', pt: 'Facções' },
   sidebar_no_entities: { en: 'No entities found.', pt: 'Nenhuma entidade encontrada.' },
   sidebar_expand: { en: 'Expand sidebar', pt: 'Expandir menu lateral' },
   sidebar_collapse: { en: 'Collapse sidebar', pt: 'Colapsar menu lateral' },

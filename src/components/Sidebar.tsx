@@ -13,6 +13,8 @@ const FILTER_CHIPS: { key: TranslationKey; value: string | null }[] = [
   { key: 'filter_all', value: null },
   { key: 'filter_characters', value: 'characters' },
   { key: 'filter_lore', value: 'lore' },
+  { key: 'filter_items', value: 'items' },
+  { key: 'filter_factions', value: 'factions' },
 ]
 
 export default function Sidebar() {
