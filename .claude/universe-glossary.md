@@ -128,6 +128,58 @@ According to the cosmology of the universe, all that exists — and all that doe
 
 **Etymology:** `valk` (people) + `ari` (divine, in this context) — literal translation: "the one of the people who ascended"
 
+## Primordial Era — Character & Faction Quick Reference
+
+> Compact cross-session context for any agent (especially Lethra) that needs to recognize a Primordial Era name without re-querying keynor-core. Sourced from the live database by Dixia, 2026-08-01. Character names are identical across EN/PT per the workspace's translation convention.
+
+### Factions
+
+- **The Amets** — the oldest, most powerful beings in the universe, "concepts given sovereignty." Fathered by Imaws and Ælime. Thirteen listed members even though every lore piece says "the twelve Amets". that is because the Aleph was one of them but passed its position to his son, Verum. — `The Thirteen` (lore) however, opens the possibility for a thirteenth member: Punic secretly took a seat to become an unlisted 13th, and isn't in the official member list. Not a data error, a deliberate in-universe mystery.
+- **The Numeric Gods** — fourteen members, each embodying a number 0–13, ranked below the Amets. The faction's own summary claims descent from "Alveolar's lineage".
+
+### Characters
+
+- **Ædræ** — Amet goddess of Sensitivity, Beauty, Purity. Never witnessed directly; only reflections move through the world via the *Mirror of Ædræ*, which protects the universe from her and traps her in its geometry. Imprisoned during Punic's war.
+- **Ælime** — with Imaws, one half of the oldest union in creation; together they fathered the twelve Amets. She is impulse/becoming to his form/law.
+- **Aggraxæmon** — Amet, "Father of All Monsters," source of every abomination in existence. Father of Z'Mthun and Eradis. His *Crown* is the engine that emanates his creatures.
+- **Aleph** — Amet, God of Consciousness, first bearer of the *Lantern of True Light*. Three wives: Khratøn (mother of Neghalem), Δrøx (mother of Verum), Ψykhör (mother of Myr). Lost the Lantern — and his central role — to his son Verum after the war against Z'Mthun.
+- **Alveolar** — Amet, god of Mathematics/Exactitude; followers believe technology is discovered, not invented. Ancestor of the Numeric Gods. His *Lens* delivers total, instant comprehension of anything it's pointed at.
+- **Ani** — Numeric God, "the Firstborn and the Primordial," embodies unity/oneness itself (see the `ani` glossary entry above). Predates the Amets' generation.
+- **Deca** — Numeric God, daughter of Tetros, goddess of Completeness and Reward — returns what is given rather than granting gifts outright.
+- **Dixia** — Numeric God, daughter of Trios and Tetros (twin/rival of Trixia), goddess of Perfection and Harmony, rules the number twelve. Tricked into that union by her brother Duo.
+- **Duo** — Numeric God, firstborn child of Ani and Zςanser, god of Duality; wields twin swords that join into one. Able to separate any concept into two complementary ones.
+- **Enea** — Numeric God, goddess of Worlds/Kingdoms/Planets — operates at civilization scale. Daughter of Trios
+- **Hecta** — Numeric God, daughter of Trios, mistress of Magic and Mysticism.
+- **Hexas** — Numeric God, daughter of Tetros, goddess of Union and Protection of Family.
+- **Imaws** — with Ælime, the other half of the oldest union in creation; gives form/law to what she sets in motion.
+- **Khratøn** — Amet, first wife of Aleph, Empress of Adamantium; entity of pure transformation. Godmother to Dixia and Trixia; biological mother of Neghalem. Her *Hammer* carries creation and destruction on opposite faces.
+- **Neghalem** — firstborn son of Aleph and Khratøn, god of Negation and Indignation; refused to fight Z'Mthun, letting Verum rise instead.
+- **Octo** — Numeric God, son of Tetros, god of Eternal Growth and Evolution.
+- **Omnia** — deity of totality, "the final word of all things." Owns the *Scepter of Infinity and Jewel of Existence*. Sits above all other gods.
+- **Oon** — Amet, Lady of Bells, a divine sound/vibration older than language. It is said her sound supports existence itself. Her *Bell* resonates endlessly, self-sourced.
+- **Pentos** — Numeric God, son of Trios, god of Spirituality and Religion.
+- **Punic** — the secret, unlisted "Thirteenth" Amet. A shadow that unravels reality and slowly consumes those he attaches to. Orchestrated the Primordial-era war, the theft of Zςanser's veil, and Ædræ's imprisonment.
+- **Slronöir** — Amet, "the Ancient," oldest and largest of them all — fused permanently into his tower (the *Scepter of Slronöir*) and chair .
+- **Tetros** — Numeric God, god of Stability and Balance; father of Deca, Hexas, Octo; with Trios, father of Dixia and Trixia.
+- **Trios** — Numeric God, god of Chaos and Movement; father of Hecta, Enea, Pentos, Unixia; with Tetros, father of Dixia and Trixia. Founding figure behind the Triarchy of Trios at Singisdônia.
+- **Trixia** — Numeric God, shadow/twin of Dixia, goddess of Imperfection and Particularity.
+- **Ulusuros** — "the Whispering Emperor," said to be an Amet but reads like an inserted human legend — in-universe scholars suspect fabrication. Owns the *Sword* (strips fear entirely) and *Mask* of Ulusuros.
+- **Unixia** — Numeric God, daughter of Trios, goddess of the Union between the Material and Spiritual Worlds.
+- **Verum** — Amet, son of Aleph and Δrøx, God of Truth. Inherited the Lantern of True Light after defeating Z'Mthun; built Singisdônia and consecrated twelve knights; became King and God of the Alephs.
+- **Z'Mthun** — son of Aggraxæmon, devotee of Zςanser; greatest cosmic abomination, waged the war for the Lantern; defeated by Verum's twelve knights.
+- **Zςanser** — Amet, wrongly called "Goddess of Nothing" — an absence outside the totality of existence; matrix from which all creation is carved. Her *Chalice* removes the drinker from mortality's notice.
+- **Δrøx** — Amet, second wife of Aleph, mother of Verum; embodies the connective mesh holding the universe together. Her *Rings* are that mesh's physical anchors.
+- **Ξottum** — Amet, "Lady of Colors, the Invisible Mistress" — a presence felt only as absence. Her *Veil* extends that imperceptibility to its wearer.
+- **Ψykhör** — Amet, third wife of Aleph, "the Golden/Blazing Lady" — a legion of simultaneous intellects, not one mind. Her *Dress* holds the accumulated cognition of the gods.
+
+### Mentioned in Primordial-era content, not yet their own entity
+
+- **Singisdônia** — the sacred city Verum built after the war; site of the Triarchy of Trios and the Twelve Aelimic Signs' living knights. Named in at least 4 Primordial-era lore entries. No `Place` row exists for it yet — canonical spelling is **Singisdônia** (see spelling flag below).
+- **The Winged King / the Golden King / the Rooted King** — the three rulers of the Triarchy of Trios (`We, Three Kings`). Named only by epithet, no character rows.
+- **The Twelve Original Knights of Singisdônia** — consecrated by Verum, each gave living form to one of the Twelve Aelimic Signs. Only `Knight Without a Name` exists as a character, and even he's tagged to the "Era of Vestiges" with no link back to any Primordial entity.
+
 ---
 
-*Last updated: 2026-07-30 (added `elevani` and `valkari`, two interchangeable terms for semi-divine individuals — mortals elevated to divinity or who acquired divine power through their own deeds. Added by Aniannoth per user request.)*
+---
+
+*Last updated: 2026-08-01 (added the "Primordial Era — Character & Faction Quick Reference" section, sourced from the live keynor-core database by Dixia, so Lethra and other agents can recognize existing Primordial-era characters/factions without a fresh DB query each session. Previous entry, 2026-07-30: added `elevani` and `valkari`.)*
