@@ -394,9 +394,11 @@ export default function DetailPanel() {
       )
     }
 
-    const eraName = entity.timeline.founded ?? undefined
-
-    const metadataParts = [entity.category, entity.location, eraName].filter(
+    // Deliberately excludes the era name: once an entity can be visible
+    // across a founded-to-destroyed span (or a single founded era), showing
+    // its founded era here no longer matches whichever era the user is
+    // currently browsing in, and was reported as confusing rather than useful.
+    const metadataParts = [entity.category, entity.location].filter(
       (part): part is string => Boolean(part)
     )
 
