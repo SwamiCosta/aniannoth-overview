@@ -289,7 +289,7 @@ describe('AppContext — language switch remapping', () => {
     summary: '',
     body: '',
     location: '',
-    timeline: { era: 'The Primordial Era' },
+    timeline: { founded: 'The Primordial Era', destroyed: null },
     status: 'canon' as const,
     links: [],
     members: [],

@@ -18,11 +18,8 @@ export interface GameMap {
 }
 
 export interface EntityTimeline {
-  era: string
-  born?: number
-  died?: number
-  founded?: number
-  destroyed?: number
+  founded: string | null
+  destroyed: string | null
 }
 
 export interface LinkedEntity {

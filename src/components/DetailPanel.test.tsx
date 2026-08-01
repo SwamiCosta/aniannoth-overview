@@ -73,7 +73,7 @@ const TEST_ENTITY = {
   summary: 'A being from before time.',
   body: '## Origins\n\nVerath existed before the first dawn.',
   location: '',
-  timeline: { era: 'primordial' },
+  timeline: { founded: 'primordial', destroyed: null },
   status: 'canon' as const,
   links: [],
   members: [],
