@@ -26,10 +26,12 @@ describe('isEntityVisibleInEra', () => {
     expect(isEntityVisibleInEra(timeline, PRIMORDIAL, ERAS)).toBe(false)
   })
 
-  it('stays visible indefinitely when destroyed is null', () => {
+  it('is visible only in the founded era when destroyed is not declared', () => {
     const timeline = { founded: 'Primordial', destroyed: null }
 
-    expect(isEntityVisibleInEra(timeline, MODERN, ERAS)).toBe(true)
+    expect(isEntityVisibleInEra(timeline, PRIMORDIAL, ERAS)).toBe(true)
+    expect(isEntityVisibleInEra(timeline, ANCIENT, ERAS)).toBe(false)
+    expect(isEntityVisibleInEra(timeline, MODERN, ERAS)).toBe(false)
   })
 
   it('is not visible after it was destroyed', () => {

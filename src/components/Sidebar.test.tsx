@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act, waitFor } from '@testing-library/react'
-import { AppProvider } from '@/context/AppContext'
+import { AppProvider, useAppContext } from '@/context/AppContext'
 import { LanguageProvider } from '@/context/LanguageContext'
 import type { Entity } from '@/types/universe'
 import Sidebar from './Sidebar'
@@ -151,6 +151,14 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   return <LanguageProvider><AppProvider>{children}</AppProvider></LanguageProvider>
 }
 
+// Test-only helper — Sidebar itself has no era switcher; TimelineBar owns
+// that UI. This lets tests drive `ctx.setEra` directly to exercise Sidebar's
+// visibility filter against an era other than the default (lowest `order`).
+function EraSwitcher({ eraId }: { eraId: string }) {
+  const ctx = useAppContext()
+  return <button onClick={() => ctx.setEra(eraId)}>switch-era</button>
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -232,19 +240,48 @@ describe('Sidebar', () => {
   })
 
   it('keeps an entity visible for every era in its founded-to-destroyed interval, not just the founded era', async () => {
-    // Default selected era is the first entry returned by fetchEras (Ancient
-    // here) — strictly between SPANNING_ENTITY's founded (Primordial) and
-    // destroyed (Modern) eras. Regression test for the bug where an entity
-    // only appeared in its founded era instead of across the whole interval.
-    mockFetchEras.mockResolvedValue([ERA_ANCIENT, ERA_PRIMORDIAL, ERA_MODERN])
+    // SPANNING_ENTITY is founded in Primordial and destroyed in Modern.
+    // Explicitly select Ancient — strictly between the two — via EraSwitcher,
+    // since the default selected era is always the lowest `order` (Primordial
+    // here), which would trivially pass even with the old founded-only
+    // equality check. Regression test for the bug where an entity only
+    // appeared in its founded era instead of across the whole interval.
+    mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, ERA_ANCIENT, ERA_MODERN])
     setupEntityMock([SPANNING_ENTITY])
 
     render(
       <Wrapper>
+        <EraSwitcher eraId={ERA_ANCIENT.id} />
         <Sidebar />
       </Wrapper>,
     )
 
+    await act(async () => { screen.getByRole('button', { name: 'switch-era' }).click() })
+
     expect(await screen.findByText('Thessaly the Ageless')).toBeInTheDocument()
+  })
+
+  it('hides an entity with no declared destroyed era once a later era is selected', async () => {
+    // CHARACTER_ENTITY only declares `founded` (Primordial), no `destroyed`.
+    // Regression test for the opposite bug: treating a missing `destroyed`
+    // as "visible forever after founded" instead of "visible only in the
+    // founded era unless an ending era is explicitly declared".
+    mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, ERA_ANCIENT])
+    setupEntityMock([CHARACTER_ENTITY])
+
+    render(
+      <Wrapper>
+        <EraSwitcher eraId={ERA_ANCIENT.id} />
+        <Sidebar />
+      </Wrapper>,
+    )
+
+    // Visible in its founded era (Primordial — the default, lowest `order`)
+    expect(await screen.findByText('Aelindra the Wise')).toBeInTheDocument()
+
+    // Switch to a later era — must disappear, since no destroyed era was declared
+    await act(async () => { screen.getByRole('button', { name: 'switch-era' }).click() })
+
+    expect(screen.queryByText('Aelindra the Wise')).not.toBeInTheDocument()
   })
 })
