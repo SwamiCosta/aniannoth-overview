@@ -394,7 +394,7 @@ export default function DetailPanel() {
       )
     }
 
-    const eraName = entity.timeline.era || undefined
+    const eraName = entity.timeline.founded ?? undefined
 
     const metadataParts = [entity.category, entity.location, eraName].filter(
       (part): part is string => Boolean(part)

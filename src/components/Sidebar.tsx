@@ -6,6 +6,7 @@ import { useEras } from '@/hooks/useEras'
 import { useTranslation } from '@/hooks/useTranslation'
 import { cn } from '@/lib/utils'
 import { imageAlignmentClass } from '@/lib/entityCategory'
+import { isEntityVisibleInEra } from '@/lib/entityTimeline'
 import type { Entity } from '@/types/universe'
 import type { TranslationKey } from '@/lib/translations'
 
@@ -27,7 +28,7 @@ export default function Sidebar() {
   const currentEra = eras.find(era => era.id === ctx.selectedEra)
 
   const visibleEntities = allEntities.filter(entity => {
-    if (entity.timeline.era !== currentEra?.name) return false
+    if (!isEntityVisibleInEra(entity.timeline, currentEra, eras)) return false
     if (ctx.filters.category !== null && entity.category !== ctx.filters.category) return false
     return true
   })

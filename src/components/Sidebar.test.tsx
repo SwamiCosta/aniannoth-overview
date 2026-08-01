@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act, waitFor } from '@testing-library/react'
 import { AppProvider } from '@/context/AppContext'
 import { LanguageProvider } from '@/context/LanguageContext'
+import type { Entity } from '@/types/universe'
 import Sidebar from './Sidebar'
 
 // ---------------------------------------------------------------------------
@@ -32,7 +33,7 @@ const mockFetchEntities = vi.mocked(fetchEntities)
 // Test fixtures
 // ---------------------------------------------------------------------------
 
-// Era ids are UUIDs in production (since the V8 migration) — entity.timeline.era
+// Era ids are UUIDs in production (since the V8 migration) — entity.timeline
 // holds the era's *name*, not its id. These fixtures intentionally use distinct
 // id/name values to exercise that real-world mismatch.
 const ERA_PRIMORDIAL = {
@@ -43,6 +44,26 @@ const ERA_PRIMORDIAL = {
   importance: null,
   description: '',
   translationGroupId: 'primordial-group',
+}
+
+const ERA_ANCIENT = {
+  id: 'e0a1b2c3-0000-4000-8000-000000000002',
+  name: 'The Ancient Era',
+  order: 1,
+  type: 'ERA' as const,
+  importance: null,
+  description: '',
+  translationGroupId: 'ancient-group',
+}
+
+const ERA_MODERN = {
+  id: 'e0a1b2c3-0000-4000-8000-000000000003',
+  name: 'The Modern Era',
+  order: 2,
+  type: 'ERA' as const,
+  importance: null,
+  description: '',
+  translationGroupId: 'modern-group',
 }
 
 const MAP_OMNIVERSE = {
@@ -61,7 +82,7 @@ const CHARACTER_ENTITY = {
   summary: 'A powerful arcane scholar.',
   body: '',
   location: '',
-  timeline: { era: ERA_PRIMORDIAL.name },
+  timeline: { founded: ERA_PRIMORDIAL.name, destroyed: null },
   status: 'canon' as const,
   links: [],
   members: [],
@@ -76,14 +97,14 @@ const LORE_ENTITY = {
   summary: 'A record from the beginning.',
   body: '',
   location: '',
-  timeline: { era: ERA_PRIMORDIAL.name },
+  timeline: { founded: ERA_PRIMORDIAL.name, destroyed: null },
   status: 'canon' as const,
   links: [],
   members: [],
   translationGroupId: 'first-codex-group',
 }
 
-// Entity in a different era — must NOT appear in the primordial sidebar
+// Entity founded in a later era — must NOT appear in the primordial sidebar
 const OTHER_ERA_ENTITY = {
   id: 'char-002',
   name: 'Later Character',
@@ -92,16 +113,35 @@ const OTHER_ERA_ENTITY = {
   summary: 'From another era.',
   body: '',
   location: '',
-  timeline: { era: 'The Ancient Era' },
+  timeline: { founded: ERA_ANCIENT.name, destroyed: null },
   status: 'canon' as const,
   links: [],
   members: [],
   translationGroupId: 'later-character-group',
 }
 
+// Founded in the Primordial Era, destroyed in the Modern Era — must remain
+// visible throughout the whole interval, including the era strictly between
+// founded and destroyed (Ancient), not just the founded era itself. This is
+// the regression case for the bug where only the founded era matched.
+const SPANNING_ENTITY = {
+  id: 'char-003',
+  name: 'Thessaly the Ageless',
+  category: 'characters',
+  images: [],
+  summary: 'Lived through three ages.',
+  body: '',
+  location: '',
+  timeline: { founded: ERA_PRIMORDIAL.name, destroyed: ERA_MODERN.name },
+  status: 'canon' as const,
+  links: [],
+  members: [],
+  translationGroupId: 'thessaly-group',
+}
+
 const ALL_CATEGORIES = ['characters', 'places', 'factions', 'items', 'events', 'lore']
 
-function setupEntityMock(entities: typeof CHARACTER_ENTITY[]) {
+function setupEntityMock(entities: Entity[]) {
   mockFetchEntities.mockImplementation(async (category: string) => {
     return entities.filter(e => e.category === category)
   })
@@ -189,5 +229,22 @@ describe('Sidebar', () => {
     // Only the character entity should remain visible
     expect(screen.getByText('Aelindra the Wise')).toBeInTheDocument()
     expect(screen.queryByText('The First Codex')).not.toBeInTheDocument()
+  })
+
+  it('keeps an entity visible for every era in its founded-to-destroyed interval, not just the founded era', async () => {
+    // Default selected era is the first entry returned by fetchEras (Ancient
+    // here) — strictly between SPANNING_ENTITY's founded (Primordial) and
+    // destroyed (Modern) eras. Regression test for the bug where an entity
+    // only appeared in its founded era instead of across the whole interval.
+    mockFetchEras.mockResolvedValue([ERA_ANCIENT, ERA_PRIMORDIAL, ERA_MODERN])
+    setupEntityMock([SPANNING_ENTITY])
+
+    render(
+      <Wrapper>
+        <Sidebar />
+      </Wrapper>,
+    )
+
+    expect(await screen.findByText('Thessaly the Ageless')).toBeInTheDocument()
   })
 })

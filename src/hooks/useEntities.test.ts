@@ -29,7 +29,7 @@ const MOCK_CHARACTER = {
   summary: 'The first being.',
   body: '# Omnia\n\nThe origin of all things.',
   location: '',
-  timeline: { era: 'primordial' },
+  timeline: { founded: 'primordial', destroyed: null },
   status: 'canon' as const,
   links: [],
   members: [],
@@ -44,7 +44,7 @@ const MOCK_LORE = {
   summary: 'How the world began.',
   body: '# Creation\n\nIn the beginning...',
   location: '',
-  timeline: { era: 'primordial' },
+  timeline: { founded: 'primordial', destroyed: null },
   status: 'canon' as const,
   links: [],
   members: [],
@@ -85,7 +85,7 @@ describe('useEntities', () => {
       expect(typeof entity.summary).toBe('string')
       expect(typeof entity.body).toBe('string')
       expect(['canon', 'draft', 'deprecated']).toContain(entity.status)
-      expect(typeof entity.timeline.era).toBe('string')
+      expect(typeof entity.timeline.founded).toBe('string')
     }
   })
 

@@ -57,7 +57,8 @@ function toEntity(api: ApiEntity, category: string): Entity {
     body: api.body,
     location: '',
     timeline: {
-      era: api.timelineFoundedEra ?? '',
+      founded: api.timelineFoundedEra,
+      destroyed: api.timelineDestroyedEra,
     },
     status: api.status.toLowerCase() as Entity['status'],
     links: (api.links ?? []).map(toLinkedEntity),
