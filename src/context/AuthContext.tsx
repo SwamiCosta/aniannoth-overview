@@ -12,11 +12,15 @@ const VERIFIER_KEY = 'aniannoth_pkce_verifier'
 const STATE_KEY = 'aniannoth_pkce_state'
 const TOKEN_KEY = 'aniannoth_access_token'
 
-// Single fixed inputter (see project-map-pins design decision): possessing a
+// Single fixed admin (see project-map-pins design decision): possessing a
 // valid access token — obtainable only through the ADMIN human login flow —
-// is itself what makes this session "inputter" rather than "reader". There is
+// is itself what makes this session "admin" rather than "reader". There is
 // no separate role lookup call; the token's mere presence is the signal.
-export type UserRole = 'inputter' | 'reader'
+// Renamed from "inputter" (2026-08-05) — that was never a real keynor-core
+// role; the actual role this flow grants is ADMIN (see that project's
+// security-model.md). Root ARCHITECTURE.md had the same stale terminology,
+// corrected in the same cross-project effort.
+export type UserRole = 'admin' | 'reader'
 
 interface AuthContextValue {
   role: UserRole
@@ -119,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem(TOKEN_KEY)
   }, [])
 
-  const role: UserRole = accessToken ? 'inputter' : 'reader'
+  const role: UserRole = accessToken ? 'admin' : 'reader'
 
   return (
     <AuthContext.Provider value={{ role, accessToken, isAuthenticating, login, logout }}>

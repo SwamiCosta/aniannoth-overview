@@ -57,10 +57,10 @@ export default function MapArea() {
   const mapAspectRatio = navigableImage ? navigableImage.width / navigableImage.height : FALLBACK_ASPECT_RATIO
   const { containerRef, box } = useAspectRatioBox(mapAspectRatio)
 
-  // Edit mode only ever makes sense for an inputter session — drop out of it
+  // Edit mode only ever makes sense for an admin session — drop out of it
   // automatically if the token disappears (logout) mid-edit.
   useEffect(() => {
-    if (auth.role !== 'inputter' && editMode) setEditMode(false)
+    if (auth.role !== 'admin' && editMode) setEditMode(false)
   }, [auth.role, editMode])
 
   // Close dropdown on outside click
@@ -110,7 +110,7 @@ export default function MapArea() {
 
       {/* Top-right: map selector + auth/edit controls */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
-        {auth.role === 'inputter' && (
+        {auth.role === 'admin' && (
           <button
             onClick={() => setEditMode(prev => !prev)}
             className={cn(
@@ -204,7 +204,7 @@ function AuthControl() {
   const auth = useAuth()
   const t = useTranslation()
 
-  if (auth.role === 'inputter') {
+  if (auth.role === 'admin') {
     return (
       <button
         onClick={auth.logout}
@@ -212,7 +212,7 @@ function AuthControl() {
         className="bg-primary-light border border-primary-border text-primary text-sm px-3 py-1 rounded-full flex items-center gap-1.5 cursor-pointer"
       >
         <LogOut size={14} />
-        <span>{t('auth_inputter_badge')}</span>
+        <span>{t('auth_admin_badge')}</span>
       </button>
     )
   }
@@ -406,7 +406,7 @@ function NavigableMap({
   // skill) — every backend restart invalidates every previously-issued
   // token. Without this, a stale token in sessionStorage just fails
   // silently (console-only) on every attempt until the user notices the
-  // inputter badge is a lie and manually logs out.
+  // admin badge is a lie and manually logs out.
   function handleAuthErrorIfExpired(error: unknown) {
     if (error instanceof ApiError && error.status === 401) {
       auth.logout()

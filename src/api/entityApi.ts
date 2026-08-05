@@ -85,7 +85,7 @@ export async function fetchEntities(category: string, language: Language): Promi
 // hidden-content-implementation skill), which is correct for public browsing
 // but wrong for the map-pin-target picker: a black pin's only purpose is to
 // point at a hidden entity, so the picker needs to see it. Requires an
-// authenticated inputter session, matching the pin-creation call itself.
+// authenticated admin session, matching the pin-creation call itself.
 export async function fetchEntitiesForAuthoring(category: string, language: Language, accessToken: string): Promise<Entity[]> {
   try {
     const data = await apiFetchAuthenticated<PagedResponse<ApiEntity>>(

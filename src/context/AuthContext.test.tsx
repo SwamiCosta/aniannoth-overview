@@ -29,10 +29,10 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('role')).toHaveTextContent('reader')
   })
 
-  it('resolves to the inputter role when a session already holds an access token', () => {
+  it('resolves to the admin role when a session already holds an access token', () => {
     sessionStorage.setItem('aniannoth_access_token', 'a-valid-token')
     renderWithAuth()
-    expect(screen.getByTestId('role')).toHaveTextContent('inputter')
+    expect(screen.getByTestId('role')).toHaveTextContent('admin')
   })
 })
 
@@ -72,7 +72,7 @@ describe('AuthContext PKCE callback', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByTestId('role')).toHaveTextContent('inputter')
+      expect(screen.getByTestId('role')).toHaveTextContent('admin')
     })
     expect(globalThis.fetch).toHaveBeenCalledTimes(1)
   })
