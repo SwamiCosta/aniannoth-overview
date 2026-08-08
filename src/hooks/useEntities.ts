@@ -50,7 +50,7 @@ export function useAllEntities(): UseEntitiesResult {
   return { data, loading, error }
 }
 
-// Same as useAllEntities, but for the map-pin-target picker (inputter, edit
+// Same as useAllEntities, but for the map-pin-target picker (admin, edit
 // mode only) — uses the authenticated internal listing so hidden entities
 // are included. See fetchEntitiesForAuthoring for why the public listing
 // can't be reused here. No-ops (empty, not loading) without a token, since

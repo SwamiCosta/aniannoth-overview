@@ -27,9 +27,9 @@ const TRANSLATIONS = {
   timeline_label: { en: 'timeline', pt: 'linha do tempo' },
 
   auth_signing_in: { en: 'Signing in…', pt: 'Entrando…' },
-  auth_login: { en: 'Sign in as inputter', pt: 'Entrar como inputter' },
+  auth_login: { en: 'Sign in as admin', pt: 'Entrar como admin' },
   auth_logout: { en: 'Sign out', pt: 'Sair' },
-  auth_inputter_badge: { en: 'Inputter', pt: 'Inputter' },
+  auth_admin_badge: { en: 'Admin', pt: 'Admin' },
   auth_session_expired: {
     en: 'Your session expired — signed out. Please sign in again.',
     pt: 'Sua sessão expirou — você foi desconectado. Faça login novamente.',
