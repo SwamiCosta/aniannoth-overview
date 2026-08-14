@@ -14,6 +14,7 @@ interface AppState {
   selectedMap: string
   filters: Filters
   selectedEntityId: string | null
+  selectedEntityCategory: string | null
 }
 
 export interface SelectedHiddenEntity {
@@ -25,7 +26,14 @@ interface AppContextValue extends AppState {
   setEra: (eraId: string) => void
   setMap: (mapId: string) => void
   setFilter: (category: string | null) => void
-  setSelectedEntity: (id: string | null) => void
+  // `category` lets DetailPanel fall back to fetching the entity directly
+  // (fetchEntityById) when it isn't present in the cached useAllEntities()
+  // list -- the case for a `common` entity, which is deliberately excluded
+  // from that list but still a legitimate link target. Callers that already
+  // have the entity/link's category (Sidebar, RelatedEntities, FactionMembers,
+  // a map pin) should always pass it; omitting it just means a common-entity
+  // link from that call site won't resolve.
+  setSelectedEntity: (id: string | null, category?: string) => void
   mapResetTriggered: boolean
   clearMapResetTrigger: () => void
   erasLoading: boolean
@@ -53,6 +61,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedMap, setSelectedMap] = useState<string>('')
   const [filters, setFilters] = useState<Filters>({ category: null })
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null)
+  const [selectedEntityCategory, setSelectedEntityCategory] = useState<string | null>(null)
   const [mapResetTriggered, setMapResetTriggered] = useState(false)
   const [eraDetailOpen, setEraDetailOpen] = useState(false)
   const [timelineDetailId, setTimelineDetailId] = useState<string | null>(null)
@@ -134,11 +143,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [eras, erasLoading])
 
   // Re-resolve the selected entity after a language switch brings in a new
-  // entities array with different (per-language) ids.
+  // entities array with different (per-language) ids. Does not apply to a
+  // `common` entity (selectedEntityCategory set, never present in `entities`
+  // by design — see fetchEntityById fallback in DetailPanel): there is no
+  // cached groupId to remap from for a common entity, and nulling the
+  // selection out here would silently close the panel on every language
+  // switch. Left showing the same (now possibly wrong-language) row instead,
+  // which DetailPanel's own direct fetch keeps rendering — a known rough
+  // edge, not a regression, since the alternative is losing the selection.
   useEffect(() => {
     if (selectedEntityId === null) return
     if (entitiesLoading) return
     if (entities.some(e => e.id === selectedEntityId)) return
+    if (selectedEntityCategory !== null) return
 
     const groupId = selectedEntityGroupIdRef.current
     const remapped = groupId ? entities.find(e => e.translationGroupId === groupId) : undefined
@@ -149,7 +166,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSelectedEntityId(null)
     }
     // entitiesLoading must be in the dependency array for the same reason as
-    // erasLoading above — see the era/timeline remap effect.
+    // erasLoading above — see the era/timeline remap effect. selectedEntityId
+    // and selectedEntityCategory are deliberately left out: this effect only
+    // needs to react to `entities` changing (a language switch), not to every
+    // selection change — both are read via closure, which is fine since they
+    // change together and this effect re-closes over their latest value the
+    // next time `entities`/`entitiesLoading` actually changes.
   }, [entities, entitiesLoading])
 
   function setEra(eraId: string) {
@@ -175,8 +197,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setFilters(prev => ({ ...prev, category }))
   }
 
-  function setSelectedEntity(id: string | null) {
+  function setSelectedEntity(id: string | null, category?: string) {
     setSelectedEntityId(id)
+    setSelectedEntityCategory(id ? (category ?? null) : null)
     selectedEntityGroupIdRef.current = id ? (entities.find(e => e.id === id)?.translationGroupId ?? null) : null
     if (id !== null) {
       setEraDetailOpen(false)
@@ -189,6 +212,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (entity !== null) {
       setEraDetailOpen(false)
       setSelectedEntityId(null)
+      setSelectedEntityCategory(null)
     }
   }
 
@@ -201,6 +225,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     timelineDetailGroupIdRef.current = eras.find(e => e.id === entryId)?.translationGroupId ?? null
     setEraDetailOpen(true)
     setSelectedEntityId(null)
+    setSelectedEntityCategory(null)
   }
 
   return (
@@ -210,6 +235,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         selectedMap,
         filters,
         selectedEntityId,
+        selectedEntityCategory,
         setEra,
         setMap,
         setFilter,

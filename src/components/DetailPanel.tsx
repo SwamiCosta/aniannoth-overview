@@ -9,11 +9,13 @@ import { useEras } from '@/hooks/useEras'
 import { useFactionMembers } from '@/hooks/useFactionMembers'
 import { useHiddenContentUnlock } from '@/context/HiddenContentUnlockContext'
 import { fetchHiddenEntity } from '@/api/hiddenContentApi'
+import { fetchEntityById } from '@/api/entityApi'
 import { HiddenContentModal } from '@/components/HiddenContentModal'
 import { categoryForType, imageAlignmentClass } from '@/lib/entityCategory'
 import { useTranslation } from '@/hooks/useTranslation'
 import { cn } from '@/lib/utils'
-import type { HiddenEntity, LinkedEntity } from '@/types/universe'
+import { logger } from '@/lib/logger'
+import type { Entity, HiddenEntity, LinkedEntity } from '@/types/universe'
 
 const markdownComponents: Components = {
   h2: ({ children }) => (
@@ -185,7 +187,7 @@ function RelatedEntities({ links }: { links: LinkedEntity[] }) {
     if (category && category !== ctx.filters.category) {
       ctx.setFilter(category)
     }
-    ctx.setSelectedEntity(link.id)
+    ctx.setSelectedEntity(link.id, category)
   }
 
   return (
@@ -340,7 +342,7 @@ function FactionMembers({ memberIds }: { memberIds: string[] }) {
             return isAvailable ? (
               <button
                 key={member.id}
-                onClick={() => ctx.setSelectedEntity(member.id)}
+                onClick={() => ctx.setSelectedEntity(member.id, 'characters')}
                 className="bg-border hover:bg-primary-light text-foreground text-xs px-2 py-1 rounded-full transition-colors cursor-pointer"
               >
                 {member.name}
@@ -362,11 +364,58 @@ function FactionMembers({ memberIds }: { memberIds: string[] }) {
   )
 }
 
+// A `common` entity is deliberately excluded from useAllEntities() (it must
+// never appear in normal browsing/timeline), but is still a legitimate link
+// target — reached only via another entity's Related Entities or a Faction's
+// Members list, never via Sidebar or a map pin. Since it's never in the
+// cached list, DetailPanel falls back to fetching it directly by id, the
+// same way HiddenEntityDetail already fetches independently of the cache.
+// Requires `category` (passed alongside the id to setSelectedEntity by every
+// call site that can reach a common entity — RelatedEntities, FactionMembers)
+// since a bare id alone doesn't say which /api/public/v1/<category>/{id} to call.
+function useSelectedEntityFallback(
+  selectedEntityId: string | null,
+  selectedEntityCategory: string | null,
+  cachedEntity: Entity | undefined,
+): { entity: Entity | undefined; loading: boolean; notFound: boolean } {
+  const [fetched, setFetched] = useState<Entity | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [notFound, setNotFound] = useState(false)
+
+  useEffect(() => {
+    setFetched(null)
+    setNotFound(false)
+    if (selectedEntityId === null || cachedEntity || !selectedEntityCategory) {
+      setLoading(false)
+      return
+    }
+    let cancelled = false
+    setLoading(true)
+    fetchEntityById(selectedEntityCategory, selectedEntityId)
+      .then(result => { if (!cancelled) setFetched(result) })
+      .catch(err => {
+        if (cancelled) return
+        logger.error(
+          `Failed to fetch linked entity — category: ${selectedEntityCategory}, id: ${selectedEntityId}`,
+          err,
+        )
+        setNotFound(true)
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [selectedEntityId, selectedEntityCategory, cachedEntity])
+
+  return { entity: cachedEntity ?? fetched ?? undefined, loading: loading && !cachedEntity, notFound }
+}
+
 export default function DetailPanel() {
   const ctx = useAppContext()
   const { data: entities } = useAllEntities()
   const { data: erasData } = useEras()
   const [isBodyExpanded, setIsBodyExpanded] = useState(false)
+
+  const cachedEntity = entities.find(e => e.id === ctx.selectedEntityId)
+  const fallback = useSelectedEntityFallback(ctx.selectedEntityId, ctx.selectedEntityCategory, cachedEntity)
 
   // Closing the panel always returns to the collapsed reading view —
   // isBodyExpanded otherwise persists across entity switches so that
@@ -384,7 +433,15 @@ export default function DetailPanel() {
 
   // Priority 1: entity detail
   if (ctx.selectedEntityId !== null) {
-    const entity = entities.find(e => e.id === ctx.selectedEntityId)
+    const entity = fallback.entity
+
+    if (fallback.loading) {
+      return (
+        <div className="border-t border-border bg-surface h-12 flex items-center justify-center">
+          <span className="text-muted text-sm">Loading…</span>
+        </div>
+      )
+    }
 
     if (!entity) {
       return (
