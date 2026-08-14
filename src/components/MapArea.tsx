@@ -13,7 +13,7 @@ import { useHiddenContentUnlock } from '@/context/HiddenContentUnlockContext'
 import { HiddenContentModal } from '@/components/HiddenContentModal'
 import { cn } from '@/lib/utils'
 import { toLatLng, fromLatLng } from '@/lib/mapCoordinates'
-import { typeForCategory } from '@/lib/entityCategory'
+import { categoryForType, typeForCategory } from '@/lib/entityCategory'
 import { logger } from '@/lib/logger'
 import { ApiError } from '@/api/keynorCoreClient'
 import { useAspectRatioBox } from '@/hooks/useAspectRatioBox'
@@ -591,7 +591,7 @@ function PinMarker({ pin, dimensions, editMode, onMove, onDelete, onHiddenPinCli
             onHiddenPinClick(pin.entity.type, pin.entity.id)
             return
           }
-          ctx.setSelectedEntity(pin.entity.id)
+          ctx.setSelectedEntity(pin.entity.id, categoryForType(pin.entity.type))
         },
         // Leaflet suppresses the click event that would otherwise follow a
         // real drag (L.Draggable tracks whether the pointer moved past a

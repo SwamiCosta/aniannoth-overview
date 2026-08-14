@@ -20,16 +20,18 @@ vi.mock('@/api/mapApi', () => ({
 vi.mock('@/api/entityApi', () => ({
   fetchEntities: vi.fn(),
   fetchEntitiesBatch: vi.fn(),
+  fetchEntityById: vi.fn(),
 }))
 
 import { fetchEras } from '@/api/eraApi'
 import { fetchMaps } from '@/api/mapApi'
-import { fetchEntities, fetchEntitiesBatch } from '@/api/entityApi'
+import { fetchEntities, fetchEntitiesBatch, fetchEntityById } from '@/api/entityApi'
 
 const mockFetchEras = vi.mocked(fetchEras)
 const mockFetchMaps = vi.mocked(fetchMaps)
 const mockFetchEntities = vi.mocked(fetchEntities)
 const mockFetchEntitiesBatch = vi.mocked(fetchEntitiesBatch)
+const mockFetchEntityById = vi.mocked(fetchEntityById)
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -212,6 +214,25 @@ describe('DetailPanel', () => {
       return []
     })
     mockFetchEntitiesBatch.mockResolvedValue([FACTION_MEMBER_CANON, FACTION_MEMBER_DRAFT])
+    // Default: any id not present in the useAllEntities() cache resolves via
+    // a direct fetch — the fallback path exercised by a `common` entity link
+    // (see the dedicated "common entity" test below) and, incidentally, by
+    // the pre-existing LINKED_CANON_PLACE/FACTION_MEMBER_CANON fixtures below,
+    // which were never added to the mockFetchEntities cache on purpose.
+    mockFetchEntityById.mockImplementation(async (category: string, id: string) => ({
+      id,
+      name: 'Fetched Entity',
+      category,
+      images: [],
+      summary: '',
+      body: 'Fetched body',
+      location: '',
+      timeline: { founded: null, destroyed: null },
+      status: 'canon',
+      links: [],
+      members: [],
+      translationGroupId: id,
+    }))
   })
 
   it('shows the collapsed placeholder when selectedEntityId is null', async () => {
@@ -321,6 +342,35 @@ describe('DetailPanel', () => {
       expect(state.selectedEntityId).toBe(LINKED_CANON_PLACE.id)
       expect(state.category).toBe('places')
     })
+  })
+
+  // Regression test: a `common` entity is deliberately excluded from
+  // useAllEntities() (see keynor-core's common-content-implementation.md),
+  // so a link that targets one can never be resolved from the cache the way
+  // every other link is. Before the fetchEntityById fallback, clicking such
+  // a link left selectedEntityId pointing at an unresolvable id and the
+  // panel stuck showing "Entity not found" — this proves the fallback fetch
+  // actually renders the entity instead. LINKED_CANON_PLACE already stands
+  // in for this case (it deliberately has no matching row in the
+  // mockFetchEntities cache), so it doubles as the common-entity fixture here.
+  it('resolves a linked entity that is not in the cached list via a direct fetch (common entity)', async () => {
+    render(
+      <ControlledWrapper>
+        <SelectEntityButton entityId={ENTITY_WITH_LINKS.id} />
+        <DetailPanel />
+      </ControlledWrapper>,
+    )
+
+    await act(async () => {
+      screen.getByText(`select-${ENTITY_WITH_LINKS.id}`).click()
+    })
+
+    const canonLink = await screen.findByRole('button', { name: new RegExp(LINKED_CANON_PLACE.name) })
+    await act(async () => { canonLink.click() })
+
+    expect(await screen.findByText('Fetched Entity')).toBeInTheDocument()
+    expect(mockFetchEntityById).toHaveBeenCalledWith('places', LINKED_CANON_PLACE.id)
+    expect(screen.queryByText('Entity not found')).not.toBeInTheDocument()
   })
 
   it('renders non-canon linked entities as disabled with a tooltip, not clickable', async () => {

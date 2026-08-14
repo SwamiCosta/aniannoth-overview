@@ -91,7 +91,7 @@ export default function Sidebar() {
               return (
                 <button
                   key={entity.id}
-                  onClick={() => ctx.setSelectedEntity(entity.id)}
+                  onClick={() => ctx.setSelectedEntity(entity.id, entity.category)}
                   className={cn(
                     'w-48 text-left rounded-lg overflow-hidden border transition-colors cursor-pointer',
                     isActive
@@ -123,7 +123,7 @@ export default function Sidebar() {
             return (
               <button
                 key={entity.id}
-                onClick={() => ctx.setSelectedEntity(entity.id)}
+                onClick={() => ctx.setSelectedEntity(entity.id, entity.category)}
                 className={[
                   'w-full text-left px-4 py-3 transition-colors cursor-pointer',
                   isActive
