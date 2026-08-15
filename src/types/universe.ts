@@ -52,7 +52,15 @@ export interface FactionMember {
 export interface MapPin {
   id: string
   mapId: string
-  entity: LinkedEntity
+  // The effective label to render — the pin's own custom name if set,
+  // otherwise the linked entity's live name. Null when the target entity is
+  // still-locked hidden content (black pin — see MapArea's createHiddenPinIcon)
+  // or, in principle, an entity-less pin created with a blank name (rejected
+  // server-side, so this should not happen in practice).
+  name: string | null
+  // Null when the pin has no linked entity yet (see change 3 — a pin can be
+  // created before the element it points to exists).
+  entity: LinkedEntity | null
   normalizedX: number
   normalizedY: number
 }
