@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useEras } from '@/hooks/useEras'
 import { useMaps } from '@/hooks/useMaps'
 import { useAllEntities } from '@/hooks/useEntities'
+import { readPersistedEra, writePersistedEra, readEraMapSelection, writeEraMapSelection } from '@/lib/explorationPersistence'
 import type { Era } from '@/types/universe'
 
 interface Filters {
@@ -81,21 +82,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return maps.find(m => m.availableInEras.includes(eraId))?.id ?? ''
   }
 
+  // Resolves which map an era should show: the map the user last selected
+  // for that specific era (if still valid for it) takes priority over
+  // `fallbackMapId` (typically the map being left), which in turn takes
+  // priority over the era's own default. `wasReset` tells the caller whether
+  // this is a genuine reset (worth a toast) or a silent restore/carry-over.
+  function resolveMapForEra(eraId: string, fallbackMapId?: string): { mapId: string; wasReset: boolean } {
+    const rememberedMapId = readEraMapSelection()[eraId]
+    if (rememberedMapId && maps.some(m => m.id === rememberedMapId && m.availableInEras.includes(eraId))) {
+      return { mapId: rememberedMapId, wasReset: false }
+    }
+    if (fallbackMapId && maps.some(m => m.id === fallbackMapId && m.availableInEras.includes(eraId))) {
+      return { mapId: fallbackMapId, wasReset: false }
+    }
+    return { mapId: defaultMapForEra(eraId), wasReset: true }
+  }
+
   function firstEraByOrder(eraList: Era[]): Era | undefined {
     const eraEntries = eraList.filter(e => !e.type || e.type === 'ERA')
     if (eraEntries.length === 0) return undefined
     return [...eraEntries].sort((a, b) => a.order - b.order)[0]
   }
 
+  // Waits for both eras and maps to finish loading (not just eras) so the
+  // persisted-map lookup below has a populated `maps` array to validate
+  // against instead of racing an empty one.
   useEffect(() => {
-    if (eras.length > 0 && !selectedEra) {
-      const firstEra = firstEraByOrder(eras)
-      if (!firstEra) return
-      setSelectedEra(firstEra.id)
-      selectedEraGroupIdRef.current = firstEra.translationGroupId
-      setSelectedMap(defaultMapForEra(firstEra.id))
-    }
-  }, [eras, selectedEra])
+    if (erasLoading || mapsLoading || selectedEra) return
+
+    const persistedEraId = readPersistedEra()
+    const restoredEra = persistedEraId ? eras.find(e => e.id === persistedEraId) : undefined
+    const initialEra = restoredEra ?? firstEraByOrder(eras)
+    if (!initialEra) return
+
+    setSelectedEra(initialEra.id)
+    selectedEraGroupIdRef.current = initialEra.translationGroupId
+    setSelectedMap(resolveMapForEra(initialEra.id).mapId)
+  }, [eras, erasLoading, maps, mapsLoading, selectedEra])
 
   // Re-resolve the current era and timeline selection after a language switch
   // brings in a new eras array with different (per-language) ids.
@@ -119,7 +142,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (fallback) {
           setSelectedEra(fallback.id)
           selectedEraGroupIdRef.current = fallback.translationGroupId
-          setSelectedMap(defaultMapForEra(fallback.id))
+          setSelectedMap(resolveMapForEra(fallback.id).mapId)
         }
       }
     }
@@ -178,13 +201,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const era = eras.find(e => e.id === eraId)
     if (!era) return
 
-    const currentMap = maps.find(m => m.id === selectedMap)
-    const mapAvailable = currentMap?.availableInEras.includes(eraId) ?? false
+    // Prefer the map this era was last showing over merely checking whether
+    // the map being left happens to also be valid here — two different eras
+    // can share a map, and that coincidence must not overwrite the target
+    // era's own remembered selection.
+    const { mapId, wasReset } = resolveMapForEra(eraId, selectedMap)
 
     setSelectedEra(eraId)
     selectedEraGroupIdRef.current = era.translationGroupId
-    if (!mapAvailable) {
-      setSelectedMap(defaultMapForEra(eraId))
+    if (mapId !== selectedMap) {
+      setSelectedMap(mapId)
+    }
+    if (wasReset) {
       setMapResetTriggered(true)
     }
   }
@@ -215,6 +243,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSelectedEntityCategory(null)
     }
   }
+
+  // Persists the current era so a reload restores it, and records it as the
+  // era last selected for `selectedMap` so a later revisit of this era
+  // restores this exact map — see resolveMapForEra above. Runs after every
+  // render where both are set, including the bootstrap/remap restores
+  // themselves; writeEraMapSelection no-ops when the value hasn't changed.
+  useEffect(() => {
+    if (!selectedEra) return
+    writePersistedEra(selectedEra)
+  }, [selectedEra])
+
+  useEffect(() => {
+    if (!selectedEra || !selectedMap) return
+    writeEraMapSelection(selectedEra, selectedMap)
+  }, [selectedEra, selectedMap])
 
   function clearMapResetTrigger() {
     setMapResetTriggered(false)

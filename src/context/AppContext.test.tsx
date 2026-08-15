@@ -105,6 +105,10 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 
 describe('AppContext', () => {
   beforeEach(() => {
+    // Era/map selection persistence (src/lib/explorationPersistence.ts) writes
+    // to sessionStorage; without clearing it, a selection made in one test
+    // would leak into the next test's fresh AppProvider mount.
+    sessionStorage.clear()
     mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, ERA_ANCIENT])
     mockFetchMaps.mockResolvedValue([MAP_OMNIVERSE, MAP_WORLD])
     mockFetchEntities.mockResolvedValue([])
@@ -250,6 +254,11 @@ function SetEntityButton({ entityId }: { entityId: string }) {
   return <button onClick={() => ctx.setSelectedEntity(entityId)}>{`set-entity-${entityId}`}</button>
 }
 
+function SetMapButton({ mapId }: { mapId: string }) {
+  const ctx = useAppContext()
+  return <button onClick={() => ctx.setMap(mapId)}>{`set-map-${mapId}`}</button>
+}
+
 describe('AppContext — language switch remapping', () => {
   const ERA_PRIMORDIAL_EN = {
     id: 'primordial-en',
@@ -306,6 +315,7 @@ describe('AppContext — language switch remapping', () => {
     // LanguageProvider reads its initial language from localStorage, which
     // otherwise leaks the 'pt' selection from one test into the next.
     localStorage.clear()
+    sessionStorage.clear()
     mockFetchMaps.mockResolvedValue([])
   })
 
@@ -401,5 +411,94 @@ describe('AppContext — language switch remapping', () => {
     await act(async () => { screen.getByText('lang-pt').click() })
 
     await waitFor(() => expect(screen.getByTestId('entity').textContent).toBe('null'))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Era/map selection persistence (src/lib/explorationPersistence.ts) — reload
+// restores the last-selected era, and switching back to a previously-visited
+// era restores the map that era had, rather than only checking whether the
+// map being left happens to also be valid for it.
+// ---------------------------------------------------------------------------
+
+describe('AppContext — era/map selection persistence', () => {
+  const MAP_WORLD_ALT = {
+    id: 'world-map-alt',
+    name: 'World Map (alternate)',
+    type: 'navigable' as const,
+    image: '',
+    availableInEras: ['ancient'],
+  }
+
+  beforeEach(() => {
+    sessionStorage.clear()
+    mockFetchEras.mockResolvedValue([ERA_PRIMORDIAL, ERA_ANCIENT])
+    mockFetchEntities.mockResolvedValue([])
+  })
+
+  it('restores the last-selected era on a fresh mount (reload)', async () => {
+    mockFetchMaps.mockResolvedValue([MAP_OMNIVERSE, MAP_WORLD])
+
+    const { unmount } = render(<Wrapper><Inspector /></Wrapper>)
+    await waitFor(() => expect(screen.getByTestId('era').textContent).toBe('primordial'))
+    await act(async () => { screen.getByText('set-era-ancient').click() })
+    expect(screen.getByTestId('era').textContent).toBe('ancient')
+    unmount()
+
+    render(<Wrapper><Inspector /></Wrapper>)
+    await waitFor(() => expect(screen.getByTestId('era').textContent).toBe('ancient'))
+  })
+
+  it('falls back to the default era when the persisted era id no longer exists', async () => {
+    mockFetchMaps.mockResolvedValue([MAP_OMNIVERSE, MAP_WORLD])
+    sessionStorage.setItem('aniannoth_selected_era', 'no-longer-exists')
+
+    render(<Wrapper><Inspector /></Wrapper>)
+
+    await waitFor(() => expect(screen.getByTestId('era').textContent).toBe('primordial'))
+  })
+
+  it('remembers the map last selected for an era and restores it when switching back', async () => {
+    mockFetchMaps.mockResolvedValue([MAP_OMNIVERSE, MAP_WORLD, MAP_WORLD_ALT])
+
+    render(
+      <Wrapper>
+        <SetMapButton mapId={MAP_WORLD_ALT.id} />
+        <Inspector />
+      </Wrapper>,
+    )
+
+    await waitFor(() => expect(screen.getByTestId('era').textContent).toBe('primordial'))
+
+    // Move to 'ancient' (default map: 'world-map', a genuine reset since no
+    // map was remembered for it yet), then pick the non-default map for it.
+    await act(async () => { screen.getByText('set-era-ancient').click() })
+    expect(screen.getByTestId('map').textContent).toBe('world-map')
+    expect(screen.getByTestId('triggered').textContent).toBe('true')
+    act(() => { screen.getByText('clear-trigger').click() })
+    act(() => { screen.getByText(`set-map-${MAP_WORLD_ALT.id}`).click() })
+    expect(screen.getByTestId('map').textContent).toBe(MAP_WORLD_ALT.id)
+
+    // Back to 'primordial' and forward to 'ancient' again — 'world-map' (the
+    // era's default, and also still a technically-valid map) must NOT win
+    // over the remembered 'world-map-alt'.
+    act(() => { screen.getByText('set-era-primordial').click() })
+    act(() => { screen.getByText('set-era-ancient').click() })
+
+    expect(screen.getByTestId('map').textContent).toBe(MAP_WORLD_ALT.id)
+    expect(screen.getByTestId('triggered').textContent).toBe('false')
+  })
+
+  it('falls back to the era default map when the remembered map is no longer valid for it', async () => {
+    mockFetchMaps.mockResolvedValue([MAP_OMNIVERSE, MAP_WORLD])
+    sessionStorage.setItem('aniannoth_era_map_selection', JSON.stringify({ ancient: 'no-longer-exists' }))
+
+    render(<Wrapper><Inspector /></Wrapper>)
+
+    await waitFor(() => expect(screen.getByTestId('era').textContent).toBe('primordial'))
+    await act(async () => { screen.getByText('set-era-ancient').click() })
+
+    expect(screen.getByTestId('map').textContent).toBe('world-map')
+    expect(screen.getByTestId('triggered').textContent).toBe('true')
   })
 })
