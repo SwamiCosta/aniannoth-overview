@@ -20,7 +20,7 @@ import { useAspectRatioBox } from '@/hooks/useAspectRatioBox'
 import type { AspectRatioBox } from '@/hooks/useAspectRatioBox'
 import { useRevalidatedImage } from '@/hooks/useRevalidatedImage'
 import type { RevalidatedImage } from '@/hooks/useRevalidatedImage'
-import type { GameMap, MapPin as MapPinData, Entity } from '@/types/universe'
+import type { GameMap, MapPin as MapPinData, Entity, LinkedEntity } from '@/types/universe'
 
 // Fallback only — used before a navigable map's image has loaded (so the
 // panel isn't a random shape for a moment) and for abstract maps, which
@@ -338,6 +338,7 @@ function NavigableMap({
   const { data: pins, addPin, movePin, removePin } = useMapPins(map.id)
   const { isUnlocked } = useHiddenContentUnlock()
   const [pendingLatLng, setPendingLatLng] = useState<[number, number] | null>(null)
+  const [editingPin, setEditingPin] = useState<MapPinData | null>(null)
   // Memoized: L.latLngBounds(...) creates a new object identity on every
   // call. Without this, a plain `const bounds = ...` recreated on every
   // render would have re-triggered anything depending on it (e.g. an
@@ -358,25 +359,62 @@ function NavigableMap({
     setPendingHiddenPin({ type: entityType, id: entityId })
   }
 
-  // Map changed out from under an in-progress pin placement — discard it
+  // Map changed out from under an in-progress pin placement/edit — discard it
   // rather than let it apply against the wrong map.
   useEffect(() => {
     setPendingLatLng(null)
+    setEditingPin(null)
   }, [map.id])
 
-  async function handlePickEntity(entity: Entity) {
+  async function handleCreatePin(input: { name: string; entity: Entity | null }) {
     if (!pendingLatLng || !auth.accessToken) return
     const { normalizedX, normalizedY } = fromLatLng(pendingLatLng[0], pendingLatLng[1], image.width, image.height)
-    const entityType = typeForCategory(entity.category)
-    setPendingLatLng(null)
-    if (!entityType) {
-      logger.error(`No EntityType mapping for category: ${entity.category}`)
+    const entityType = input.entity ? typeForCategory(input.entity.category) : undefined
+    if (input.entity && !entityType) {
+      logger.error(`No EntityType mapping for category: ${input.entity.category}`)
       return
     }
+    setPendingLatLng(null)
     try {
-      await addPin({ entityType, entityId: entity.id, normalizedX, normalizedY }, auth.accessToken)
+      await addPin(
+        {
+          entityType,
+          entityId: input.entity?.id,
+          name: input.name.trim() || undefined,
+          normalizedX,
+          normalizedY,
+        },
+        auth.accessToken,
+      )
     } catch (error) {
-      logger.error('Failed to create map pin from picker', error)
+      logger.error('Failed to create map pin', error)
+      handleAuthErrorIfExpired(error)
+    }
+  }
+
+  async function handleSavePinEdit(input: { name: string; entity: Entity | null }) {
+    if (!editingPin || !auth.accessToken) return
+    const entityType = input.entity ? typeForCategory(input.entity.category) : undefined
+    if (input.entity && !entityType) {
+      logger.error(`No EntityType mapping for category: ${input.entity.category}`)
+      return
+    }
+    const pinId = editingPin.id
+    setEditingPin(null)
+    try {
+      await movePin(
+        pinId,
+        {
+          normalizedX: editingPin.normalizedX,
+          normalizedY: editingPin.normalizedY,
+          name: input.name.trim() || undefined,
+          entityType,
+          entityId: input.entity?.id,
+        },
+        auth.accessToken,
+      )
+    } catch (error) {
+      logger.error('Failed to save map pin edits', error)
       handleAuthErrorIfExpired(error)
     }
   }
@@ -394,6 +432,7 @@ function NavigableMap({
   async function handleDeletePin(pinId: string) {
     if (!auth.accessToken) return
     if (!window.confirm(t('map_pin_delete_confirm'))) return
+    setEditingPin(null)
     try {
       await removePin(pinId, auth.accessToken)
     } catch (error) {
@@ -473,7 +512,7 @@ function NavigableMap({
             dimensions={image}
             editMode={editMode}
             onMove={(normalizedX, normalizedY) => { void handleMovePin(pin.id, normalizedX, normalizedY) }}
-            onDelete={() => { void handleDeletePin(pin.id) }}
+            onEdit={() => setEditingPin(pin)}
             onHiddenPinClick={handleHiddenPinClick}
           />
         ))}
@@ -491,18 +530,32 @@ function NavigableMap({
         />
       )}
 
-      {/* Rendered as a sibling of MapContainer, not a child — a picker
+      {/* Rendered as a sibling of MapContainer, not a child — an overlay
           nested inside MapContainer sits in the same DOM subtree Leaflet
           attaches its own native click handling to, and this is exactly what
-          caused the reported bug: selecting an entity from the list could
-          register as a second map click, silently overwriting pendingLatLng
-          with wherever the list happened to render on screen before onPick
-          ever ran, so the pin landed at that spot instead of the original click. */}
+          caused a reported bug on the old entity-picker version of this
+          overlay: interacting with the list could register as a second map
+          click, silently overwriting pendingLatLng with wherever the list
+          happened to render on screen before the pick ever ran, so the pin
+          landed at that spot instead of the original click. */}
       {editMode && pendingLatLng && (
-        <EntityPickerOverlay
+        <PinEditorOverlay
+          mode="create"
           accessToken={auth.accessToken}
           onCancel={() => setPendingLatLng(null)}
-          onPick={entity => { void handlePickEntity(entity) }}
+          onSave={input => { void handleCreatePin(input) }}
+        />
+      )}
+
+      {editMode && editingPin && (
+        <PinEditorOverlay
+          mode="edit"
+          accessToken={auth.accessToken}
+          initialName={editingPin.name ?? ''}
+          initialEntity={editingPin.entity}
+          onCancel={() => setEditingPin(null)}
+          onSave={input => { void handleSavePinEdit(input) }}
+          onDelete={() => { void handleDeletePin(editingPin.id) }}
         />
       )}
     </div>
@@ -564,16 +617,16 @@ interface PinMarkerProps {
   dimensions: { width: number; height: number }
   editMode: boolean
   onMove: (normalizedX: number, normalizedY: number) => void
-  onDelete: () => void
+  onEdit: () => void
   onHiddenPinClick: (entityType: string, entityId: string) => void
 }
 
-function PinMarker({ pin, dimensions, editMode, onMove, onDelete, onHiddenPinClick }: PinMarkerProps) {
+function PinMarker({ pin, dimensions, editMode, onMove, onEdit, onHiddenPinClick }: PinMarkerProps) {
   const ctx = useAppContext()
   const position = toLatLng(pin.normalizedX, pin.normalizedY, dimensions.width, dimensions.height)
   const icon = useMemo(
-    () => (pin.entity.hidden ? createHiddenPinIcon() : createPinIcon(pin.entity.name)),
-    [pin.entity.hidden, pin.entity.name],
+    () => (pin.entity?.hidden ? createHiddenPinIcon() : createPinIcon(pin.name ?? '')),
+    [pin.entity?.hidden, pin.name],
   )
 
   return (
@@ -584,7 +637,11 @@ function PinMarker({ pin, dimensions, editMode, onMove, onDelete, onHiddenPinCli
       eventHandlers={{
         click: () => {
           if (editMode) {
-            onDelete()
+            onEdit()
+            return
+          }
+          if (!pin.entity) {
+            // No linked entity to navigate to — nothing to show outside edit mode.
             return
           }
           if (pin.entity.hidden) {
@@ -607,16 +664,46 @@ function PinMarker({ pin, dimensions, editMode, onMove, onDelete, onHiddenPinCli
   )
 }
 
-interface EntityPickerOverlayProps {
-  accessToken: string | null
-  onPick: (entity: Entity) => void
-  onCancel: () => void
+interface PinEditorOverlaySaveInput {
+  name: string
+  entity: Entity | null
 }
 
-function EntityPickerOverlay({ accessToken, onPick, onCancel }: EntityPickerOverlayProps) {
+interface PinEditorOverlayProps {
+  mode: 'create' | 'edit'
+  accessToken: string | null
+  initialName?: string
+  initialEntity?: LinkedEntity | null
+  onSave: (input: PinEditorOverlaySaveInput) => void
+  onCancel: () => void
+  onDelete?: () => void
+}
+
+// Handles both creating a new pin (entity optional, name required only when
+// no entity is picked — see change 3) and editing an existing one (rename,
+// attach/replace the linked entity, or delete). A single dialog for both
+// flows since the fields are the same; only the footer actions differ.
+function PinEditorOverlay({
+  mode,
+  accessToken,
+  initialName = '',
+  initialEntity = null,
+  onSave,
+  onCancel,
+  onDelete,
+}: PinEditorOverlayProps) {
   const t = useTranslation()
   const { data: entities } = useAllEntitiesForAuthoring(accessToken)
+  const [name, setName] = useState(initialName)
   const [search, setSearch] = useState('')
+  const [pickedEntity, setPickedEntity] = useState<Entity | null>(null)
+
+  // The entity currently in effect: a freshly picked one takes priority over
+  // the pin's pre-existing link (edit mode only — create mode has no
+  // pre-existing link, initialEntity stays null there).
+  const linkedName = pickedEntity?.name ?? initialEntity?.name ?? null
+  const hasEntity = pickedEntity !== null || initialEntity !== null
+  const canSave = name.trim() !== '' || hasEntity
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -624,46 +711,99 @@ function EntityPickerOverlay({ accessToken, onPick, onCancel }: EntityPickerOver
     return entities.filter(e => e.name.toLowerCase().includes(query)).slice(0, 50)
   }, [entities, search])
 
+  function handlePick(entity: Entity) {
+    setPickedEntity(entity)
+    setSearch('')
+    // Convenience default, not a hard rule — an empty name field adopts the
+    // picked entity's name so the pin has a sensible label out of the box,
+    // but stays fully editable before saving.
+    if (name.trim() === '') setName(entity.name)
+  }
+
   return (
     <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-black/30" onClick={onCancel}>
       <div
-        className="bg-surface border border-border rounded-lg shadow-xl w-80 max-h-96 flex flex-col"
+        className="bg-surface border border-border rounded-lg shadow-xl w-80 max-h-[28rem] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
-        <div className="p-3 border-b border-border">
-          <p className="text-sm font-medium text-foreground mb-2">{t('map_pin_pick_entity')}</p>
-          <input
-            autoFocus
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={t('map_pin_search_placeholder')}
-            className="w-full text-sm px-2 py-1 rounded border border-border bg-background text-foreground"
-          />
+        <div className="p-3 border-b border-border space-y-2">
+          <p className="text-sm font-medium text-foreground">
+            {mode === 'create' ? t('map_pin_create_title') : t('map_pin_edit_title')}
+          </p>
+          <div>
+            <label className="block text-xs text-muted mb-1">{t('map_pin_name_label')}</label>
+            <input
+              autoFocus
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder={t('map_pin_name_placeholder')}
+              className="w-full text-sm px-2 py-1 rounded border border-border bg-background text-foreground"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-muted mb-1">{t('map_pin_entity_label')}</label>
+            {linkedName ? (
+              <div className="flex items-center justify-between gap-2 text-sm px-2 py-1 rounded border border-border bg-background">
+                <span className="text-foreground truncate">{linkedName}</span>
+                <button
+                  onClick={() => setPickedEntity(null)}
+                  className="text-primary text-xs shrink-0 cursor-pointer hover:underline"
+                >
+                  {t('map_pin_change_entity')}
+                </button>
+              </div>
+            ) : (
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={t('map_pin_search_placeholder')}
+                className="w-full text-sm px-2 py-1 rounded border border-border bg-background text-foreground"
+              />
+            )}
+          </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          {filtered.length === 0 ? (
-            <p className="text-muted text-sm text-center py-4">{t('map_pin_no_matches')}</p>
-          ) : (
-            filtered.map(entity => (
-              <button
-                key={entity.id}
-                onClick={() => onPick(entity)}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-background transition-colors flex items-center justify-between gap-2"
-              >
-                <span className="text-foreground truncate">{entity.name}</span>
-                <span className="text-primary text-[10px] tracking-widest font-medium uppercase shrink-0">
-                  {entity.category}
-                </span>
-              </button>
-            ))
+        {!linkedName && (
+          <div className="flex-1 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="text-muted text-sm text-center py-4">{t('map_pin_no_matches')}</p>
+            ) : (
+              filtered.map(entity => (
+                <button
+                  key={entity.id}
+                  onClick={() => handlePick(entity)}
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-background transition-colors flex items-center justify-between gap-2"
+                >
+                  <span className="text-foreground truncate">{entity.name}</span>
+                  <span className="text-primary text-[10px] tracking-widest font-medium uppercase shrink-0">
+                    {entity.category}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+        <div className="p-2 border-t border-border flex items-center gap-2">
+          {mode === 'edit' && onDelete && (
+            <button
+              onClick={onDelete}
+              className="text-sm px-3 py-1.5 rounded text-red-600 hover:bg-background transition-colors"
+            >
+              {t('map_pin_delete')}
+            </button>
           )}
-        </div>
-        <div className="p-2 border-t border-border">
+          <div className="flex-1" />
           <button
             onClick={onCancel}
-            className="w-full text-sm px-3 py-1.5 rounded text-muted hover:bg-background transition-colors"
+            className="text-sm px-3 py-1.5 rounded text-muted hover:bg-background transition-colors"
           >
             {t('map_pin_cancel')}
+          </button>
+          <button
+            disabled={!canSave}
+            onClick={() => onSave({ name, entity: pickedEntity })}
+            className="text-sm px-3 py-1.5 rounded bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {mode === 'create' ? t('map_pin_create') : t('map_pin_save')}
           </button>
         </div>
       </div>
