@@ -34,17 +34,17 @@
 ### dohundred
 **Value:** 144 (a dozen dozens)
 
-> **Input note:** The user may refer to this concept in Portuguese as *docentena*, *domilhar*, or *domilhão*. These are Portuguese-only input terms — they must **never** appear in any output, text, or data produced by any agent. Always use the English forms.
+> **Input note:** The user may refer to this concept in Portuguese as *docentena*, *domilhar*, or *domilhão*. These are Portuguese-only input terms — they must be used in portuguese localized outputs.
 
 Many peoples of the Keynor universe use a base-twelve (duodecimal) counting system. Where cultures rooted in base-ten count in hundreds, these peoples count in dohundreds.
 
 The same pattern extends to larger units:
 
-| English term | Value |
-|-------------|-------|
-| dohundred | 144 (12²) |
-| dothousand | 1,728 (12³) |
-| domilion | 20,736 (12⁴) |
+| English term | Portugues term | Value |
+|-------------|------------|-------|
+| dohundred   | docentena  | 144 (12²) |
+| dothousand  | domilhar   | 1,728 (12³) |
+| domilion    | domilhão   | 20,736 (12⁴) |
 
 **Usage notes:**
 - Always use the English terms (`dohundred`, `dothousand`, `domilion`) in all produced text and data
@@ -67,6 +67,36 @@ The same pattern extends to larger units:
 - Refers only to individuals who began as mortal (or otherwise non-divine) and rose to divine status — never to a deity divine from origin
 
 **Etymology:** `eleve` (from above, superior, elevated) + `ani` (one) — literal translation: "the superior individual"
+
+---
+
+## F
+
+### ferais
+**English equivalent:** ferals 
+
+`ferais` refers to a category of races of primitive valkani that lived in the Era of Wrath. They all had limited-level intelect. Some of them still lived in posterior eras,
+but in small unremarkable groups. Ferals have a unique ability to turn themselves into wildshapes based on different animals.
+
+**Usage notes:**
+When you dont know which animal shape a feral can take OR when one of them can take different shapes, you may simply call them a feral. It is a umbrela term for when 
+their animal form is not specified. Otherwise, you must use one of the terms below:
+
+
+They are as listed:
+Khanda - Monkey People 
+Kharal - Feline People
+Varkha - Canine People
+Tarkhan - Equine People, including also Camelids and Cervids
+Zulka - Mustelids and Bat People
+Kharapa - Marsupials and Xenarthran People
+Mokoa - Rhinoceros and Hippo People
+Maru'a - Cetacean and Pinnipeds People
+Krikha  - Rodents and Lagomorphs People
+Ghor - Suine People
+Bramur - Bovine People
+Kragh - Sheep People
+
 
 ---
 
