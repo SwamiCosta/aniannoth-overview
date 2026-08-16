@@ -92,7 +92,7 @@ Zulka - Mustelids and Bat People
 Kharapa - Marsupials and Xenarthran People
 Mokoa - Rhinoceros and Hippo People
 Maru'a - Cetacean and Pinnipeds People
-Krikha  - Rodents and Lagomorphs People
+Barkeith - Ursine People
 Ghor - Suine People
 Bramur - Bovine People
 Kragh - Sheep People
