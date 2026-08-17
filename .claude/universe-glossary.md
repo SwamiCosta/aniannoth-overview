@@ -76,12 +76,12 @@ The same pattern extends to larger units:
 **English equivalent:** ferals 
 
 `ferais` refers to a category of races of primitive valkani that lived in the Era of Wrath. They all had limited-level intelect. Some of them still lived in posterior eras,
-but in small unremarkable groups. Ferals have a unique ability to turn themselves into wildshapes based on different animals.
+but in small unremarkable groups. Ferals have a unique ability to turn themselves into wild shapes based on different animals.
 
 **Usage notes:**
-When you dont know which animal shape a feral can take OR when one of them can take different shapes, you may simply call them a feral. It is a umbrela term for when 
+- When you dont know which animal shape a feral can take OR when one of them can take different shapes, you may simply call them a feral. It is a umbrela term for when 
 their animal form is not specified. Otherwise, you must use one of the terms below:
-
+- Whenever we talk about heir ability to shift into animals, we refer to it as wild shape ("forma selvagem" in portuguese), and not wild form.
 
 They are as listed:
 Khanda - Monkey People 
@@ -93,7 +93,7 @@ Kharapa - Marsupials and Xenarthran People
 Mokoa - Rhinoceros and Hippo People
 Maru'a - Cetacean and Pinnipeds People
 Barkeith - Ursine People
-Ghor - Suine People
+Ghor - Swine People
 Bramur - Bovine People
 Kragh - Sheep People
 
