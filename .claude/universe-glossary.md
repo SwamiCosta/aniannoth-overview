@@ -116,6 +116,21 @@ According to the cosmology of the universe, all that exists — and all that doe
 
 ---
 
+## T
+
+### tritões / sereias
+**English equivalent:** 
+- merfolk = when we talk about the people or group 
+- merman = when we talk about males
+- mermaid = when we talk about females
+
+**Usage notes:**
+- If, at any input, the words in portguese "tritão" or "sereia" (or their plural) are used, the correct distinction must be made as we create the translation. If unsure,
+you must ask the user for the correct usage.
+- never use the word "triton". It does not exist in this universe
+
+---
+
 ## V
 
 ### valkani
