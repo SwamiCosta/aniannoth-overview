@@ -61,6 +61,10 @@ export interface MapPin {
   // Null when the pin has no linked entity yet (see change 3 — a pin can be
   // created before the element it points to exists).
   entity: LinkedEntity | null
+  // Null means the pin is shown regardless of the selected era (default,
+  // preserves pre-existing behavior). A specific era id scopes the pin to
+  // that era only — see MapArea's era filtering of `pins`.
+  eraId: string | null
   normalizedX: number
   normalizedY: number
 }

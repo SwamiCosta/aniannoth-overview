@@ -7,6 +7,7 @@ import { useAppContext } from '@/context/AppContext'
 import { useAuth } from '@/context/AuthContext'
 import { useMaps } from '@/hooks/useMaps'
 import { useMapPins } from '@/hooks/useMapPins'
+import { useEras } from '@/hooks/useEras'
 import { useAllEntitiesForAuthoring } from '@/hooks/useEntities'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useHiddenContentUnlock } from '@/context/HiddenContentUnlockContext'
@@ -336,6 +337,13 @@ function NavigableMap({
   const ctx = useAppContext()
   const t = useTranslation()
   const { data: pins, addPin, movePin, removePin } = useMapPins(map.id)
+  // A map can be shared across several eras (`GameMap.availableInEras`) — a
+  // pin with no eraId persists across all of them (default), one with an
+  // eraId only shows while that specific era is selected.
+  const visiblePins = useMemo(
+    () => pins.filter(pin => pin.eraId == null || pin.eraId === ctx.selectedEra),
+    [pins, ctx.selectedEra],
+  )
   const { isUnlocked } = useHiddenContentUnlock()
   const [pendingLatLng, setPendingLatLng] = useState<[number, number] | null>(null)
   const [editingPin, setEditingPin] = useState<MapPinData | null>(null)
@@ -366,7 +374,7 @@ function NavigableMap({
     setEditingPin(null)
   }, [map.id])
 
-  async function handleCreatePin(input: { name: string; entity: Entity | null }) {
+  async function handleCreatePin(input: { name: string; entity: Entity | null; eraId: string | null }) {
     if (!pendingLatLng || !auth.accessToken) return
     const { normalizedX, normalizedY } = fromLatLng(pendingLatLng[0], pendingLatLng[1], image.width, image.height)
     const entityType = input.entity ? typeForCategory(input.entity.category) : undefined
@@ -381,6 +389,7 @@ function NavigableMap({
           entityType,
           entityId: input.entity?.id,
           name: input.name.trim() || undefined,
+          eraId: input.eraId ?? undefined,
           normalizedX,
           normalizedY,
         },
@@ -392,7 +401,7 @@ function NavigableMap({
     }
   }
 
-  async function handleSavePinEdit(input: { name: string; entity: Entity | null }) {
+  async function handleSavePinEdit(input: { name: string; entity: Entity | null; eraId: string | null }) {
     if (!editingPin || !auth.accessToken) return
     const entityType = input.entity ? typeForCategory(input.entity.category) : undefined
     if (input.entity && !entityType) {
@@ -410,6 +419,7 @@ function NavigableMap({
           name: input.name.trim() || undefined,
           entityType,
           entityId: input.entity?.id,
+          eraId: input.eraId,
         },
         auth.accessToken,
       )
@@ -419,10 +429,12 @@ function NavigableMap({
     }
   }
 
-  async function handleMovePin(pinId: string, normalizedX: number, normalizedY: number) {
+  // eraId is always resent as-is (full-replace field, see UpdateMapPinInput)
+  // so a drag-to-reposition never silently clears the pin's era scope.
+  async function handleMovePin(pinId: string, normalizedX: number, normalizedY: number, eraId: string | null) {
     if (!auth.accessToken) return
     try {
-      await movePin(pinId, { normalizedX, normalizedY }, auth.accessToken)
+      await movePin(pinId, { normalizedX, normalizedY, eraId }, auth.accessToken)
     } catch (error) {
       logger.error('Failed to move map pin', error)
       handleAuthErrorIfExpired(error)
@@ -505,13 +517,13 @@ function NavigableMap({
             leak through and silently move pendingLatLng before onPick runs. */}
         {editMode && !pendingLatLng && <MapClickCapture onMapClick={setPendingLatLng} />}
 
-        {pins.map(pin => (
+        {visiblePins.map(pin => (
           <PinMarker
             key={pin.id}
             pin={pin}
             dimensions={image}
             editMode={editMode}
-            onMove={(normalizedX, normalizedY) => { void handleMovePin(pin.id, normalizedX, normalizedY) }}
+            onMove={(normalizedX, normalizedY) => { void handleMovePin(pin.id, normalizedX, normalizedY, pin.eraId) }}
             onEdit={() => setEditingPin(pin)}
             onHiddenPinClick={handleHiddenPinClick}
           />
@@ -553,6 +565,7 @@ function NavigableMap({
           accessToken={auth.accessToken}
           initialName={editingPin.name ?? ''}
           initialEntity={editingPin.entity}
+          initialEraId={editingPin.eraId}
           onCancel={() => setEditingPin(null)}
           onSave={input => { void handleSavePinEdit(input) }}
           onDelete={() => { void handleDeletePin(editingPin.id) }}
@@ -667,6 +680,7 @@ function PinMarker({ pin, dimensions, editMode, onMove, onEdit, onHiddenPinClick
 interface PinEditorOverlaySaveInput {
   name: string
   entity: Entity | null
+  eraId: string | null
 }
 
 interface PinEditorOverlayProps {
@@ -674,6 +688,10 @@ interface PinEditorOverlayProps {
   accessToken: string | null
   initialName?: string
   initialEntity?: LinkedEntity | null
+  // A pin being edited can only ever be null or the currently selected era
+  // (a pin scoped to a different era would already be filtered out of view
+  // before it could be opened for editing — see MapArea's `visiblePins`).
+  initialEraId?: string | null
   onSave: (input: PinEditorOverlaySaveInput) => void
   onCancel: () => void
   onDelete?: () => void
@@ -688,15 +706,20 @@ function PinEditorOverlay({
   accessToken,
   initialName = '',
   initialEntity = null,
+  initialEraId = null,
   onSave,
   onCancel,
   onDelete,
 }: PinEditorOverlayProps) {
   const t = useTranslation()
+  const ctx = useAppContext()
+  const { data: eras } = useEras()
   const { data: entities } = useAllEntitiesForAuthoring(accessToken)
   const [name, setName] = useState(initialName)
   const [search, setSearch] = useState('')
   const [pickedEntity, setPickedEntity] = useState<Entity | null>(null)
+  const [scopeToCurrentEra, setScopeToCurrentEra] = useState(initialEraId !== null)
+  const currentEraName = eras.find(era => era.id === ctx.selectedEra)?.name ?? ''
 
   // The entity currently in effect: a freshly picked one takes priority over
   // the pin's pre-existing link (edit mode only — create mode has no
@@ -739,6 +762,32 @@ function PinEditorOverlay({
               placeholder={t('map_pin_name_placeholder')}
               className="w-full text-sm px-2 py-1 rounded border border-border bg-background text-foreground"
             />
+          </div>
+          <div>
+            <label className="block text-xs text-muted mb-1">{t('map_pin_era_scope_label')}</label>
+            <div className="flex rounded border border-border overflow-hidden text-sm">
+              <button
+                type="button"
+                onClick={() => setScopeToCurrentEra(false)}
+                className={cn(
+                  'flex-1 px-2 py-1 transition-colors cursor-pointer',
+                  !scopeToCurrentEra ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground hover:bg-primary-light'
+                )}
+              >
+                {t('map_pin_era_scope_all')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setScopeToCurrentEra(true)}
+                className={cn(
+                  'flex-1 px-2 py-1 transition-colors cursor-pointer border-l border-border truncate',
+                  scopeToCurrentEra ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground hover:bg-primary-light'
+                )}
+                title={currentEraName}
+              >
+                {t('map_pin_era_scope_current')}{currentEraName ? `: ${currentEraName}` : ''}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-xs text-muted mb-1">{t('map_pin_entity_label')}</label>
@@ -800,7 +849,7 @@ function PinEditorOverlay({
           </button>
           <button
             disabled={!canSave}
-            onClick={() => onSave({ name, entity: pickedEntity })}
+            onClick={() => onSave({ name, entity: pickedEntity, eraId: scopeToCurrentEra ? ctx.selectedEra : null })}
             className="text-sm px-3 py-1.5 rounded bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {mode === 'create' ? t('map_pin_create') : t('map_pin_save')}

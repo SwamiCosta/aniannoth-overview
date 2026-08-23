@@ -15,6 +15,7 @@ interface ApiMapPin {
   mapId: string
   name: string | null
   entity: ApiLinkedEntity | null
+  eraId: string | null
   normalizedX: number
   normalizedY: number
 }
@@ -35,6 +36,7 @@ function toMapPin(api: ApiMapPin): MapPin {
     mapId: api.mapId,
     name: api.name,
     entity: api.entity ? toLinkedEntity(api.entity) : null,
+    eraId: api.eraId,
     normalizedX: api.normalizedX,
     normalizedY: api.normalizedY,
   }
@@ -54,6 +56,9 @@ export interface CreateMapPinInput {
   entityType?: string
   entityId?: string
   name?: string
+  // Omitted (or undefined) means "all eras" — the pin persists across every
+  // era the map is available in. A value scopes it to that era only.
+  eraId?: string
   normalizedX: number
   normalizedY: number
 }
@@ -81,6 +86,10 @@ export interface UpdateMapPinInput {
   name?: string
   entityType?: string
   entityId?: string
+  // Full-replace, same as normalizedX/normalizedY — always send the pin's
+  // intended era scope explicitly (null for "all eras"), never omit it, or
+  // the server will interpret the omission as null and clear the scope.
+  eraId: string | null
 }
 
 export async function updateMapPin(mapId: string, pinId: string, input: UpdateMapPinInput, accessToken: string): Promise<MapPin> {
