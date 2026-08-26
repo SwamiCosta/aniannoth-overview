@@ -307,12 +307,22 @@ function createHiddenPinIcon(): L.DivIcon {
   })
 }
 
-function createPinIcon(name: string): L.DivIcon {
+// 5-point star, used for both the white "border" layer and the primary fill
+// layer below — same two-layer trick the circle uses (border.width + 2px
+// larger, primary fill centered on top) since clip-path shapes can't take a
+// CSS border directly.
+const STAR_CLIP_PATH = 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'
+
+function createPinIcon(name: string, shape: MapPinData['shape']): L.DivIcon {
+  const markerHtml = shape === 'star'
+    ? `<div style="position:absolute;width:16px;height:16px;left:-2px;top:-2px;background:white;clip-path:${STAR_CLIP_PATH};filter:drop-shadow(0 1px 2px rgba(0,0,0,0.35));"></div>
+       <div style="position:absolute;width:12px;height:12px;background:var(--color-primary);clip-path:${STAR_CLIP_PATH};"></div>`
+    : `<div style="width:12px;height:12px;border-radius:50%;background:var(--color-primary);border:2px solid white;box-shadow:0 1px 2px rgba(0,0,0,0.35);"></div>`
   return L.divIcon({
     className: '',
     html: `
       <div style="position:relative;width:12px;height:12px;">
-        <div style="width:12px;height:12px;border-radius:50%;background:var(--color-primary);border:2px solid white;box-shadow:0 1px 2px rgba(0,0,0,0.35);"></div>
+        ${markerHtml}
         <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:10px;line-height:1;color:var(--color-foreground);opacity:0.8;white-space:nowrap;pointer-events:none;user-select:none;text-shadow:0 1px 2px rgba(255,255,255,0.85),0 -1px 2px rgba(255,255,255,0.85),1px 0 2px rgba(255,255,255,0.85),-1px 0 2px rgba(255,255,255,0.85);">${escapeHtml(name)}</span>
       </div>
     `,
@@ -366,7 +376,7 @@ function NavigableMap({
     setEditingPin(null)
   }, [map.id])
 
-  async function handleCreatePin(input: { name: string; entity: Entity | null }) {
+  async function handleCreatePin(input: { name: string; entity: Entity | null; shape: 'default' | 'star' }) {
     if (!pendingLatLng || !auth.accessToken) return
     const { normalizedX, normalizedY } = fromLatLng(pendingLatLng[0], pendingLatLng[1], image.width, image.height)
     const entityType = input.entity ? typeForCategory(input.entity.category) : undefined
@@ -381,6 +391,7 @@ function NavigableMap({
           entityType,
           entityId: input.entity?.id,
           name: input.name.trim() || undefined,
+          shape: input.shape,
           normalizedX,
           normalizedY,
         },
@@ -392,7 +403,7 @@ function NavigableMap({
     }
   }
 
-  async function handleSavePinEdit(input: { name: string; entity: Entity | null }) {
+  async function handleSavePinEdit(input: { name: string; entity: Entity | null; shape: 'default' | 'star' }) {
     if (!editingPin || !auth.accessToken) return
     const entityType = input.entity ? typeForCategory(input.entity.category) : undefined
     if (input.entity && !entityType) {
@@ -410,6 +421,7 @@ function NavigableMap({
           name: input.name.trim() || undefined,
           entityType,
           entityId: input.entity?.id,
+          shape: input.shape,
         },
         auth.accessToken,
       )
@@ -553,6 +565,7 @@ function NavigableMap({
           accessToken={auth.accessToken}
           initialName={editingPin.name ?? ''}
           initialEntity={editingPin.entity}
+          initialShape={editingPin.shape}
           onCancel={() => setEditingPin(null)}
           onSave={input => { void handleSavePinEdit(input) }}
           onDelete={() => { void handleDeletePin(editingPin.id) }}
@@ -625,8 +638,8 @@ function PinMarker({ pin, dimensions, editMode, onMove, onEdit, onHiddenPinClick
   const ctx = useAppContext()
   const position = toLatLng(pin.normalizedX, pin.normalizedY, dimensions.width, dimensions.height)
   const icon = useMemo(
-    () => (pin.entity?.hidden ? createHiddenPinIcon() : createPinIcon(pin.name ?? '')),
-    [pin.entity?.hidden, pin.name],
+    () => (pin.entity?.hidden ? createHiddenPinIcon() : createPinIcon(pin.name ?? '', pin.shape)),
+    [pin.entity?.hidden, pin.name, pin.shape],
   )
 
   return (
@@ -667,6 +680,7 @@ function PinMarker({ pin, dimensions, editMode, onMove, onEdit, onHiddenPinClick
 interface PinEditorOverlaySaveInput {
   name: string
   entity: Entity | null
+  shape: 'default' | 'star'
 }
 
 interface PinEditorOverlayProps {
@@ -674,6 +688,7 @@ interface PinEditorOverlayProps {
   accessToken: string | null
   initialName?: string
   initialEntity?: LinkedEntity | null
+  initialShape?: 'default' | 'star'
   onSave: (input: PinEditorOverlaySaveInput) => void
   onCancel: () => void
   onDelete?: () => void
@@ -688,6 +703,7 @@ function PinEditorOverlay({
   accessToken,
   initialName = '',
   initialEntity = null,
+  initialShape = 'default',
   onSave,
   onCancel,
   onDelete,
@@ -697,6 +713,7 @@ function PinEditorOverlay({
   const [name, setName] = useState(initialName)
   const [search, setSearch] = useState('')
   const [pickedEntity, setPickedEntity] = useState<Entity | null>(null)
+  const [shape, setShape] = useState<'default' | 'star'>(initialShape)
 
   // The entity currently in effect: a freshly picked one takes priority over
   // the pin's pre-existing link (edit mode only — create mode has no
@@ -739,6 +756,31 @@ function PinEditorOverlay({
               placeholder={t('map_pin_name_placeholder')}
               className="w-full text-sm px-2 py-1 rounded border border-border bg-background text-foreground"
             />
+          </div>
+          <div>
+            <label className="block text-xs text-muted mb-1">{t('map_pin_shape_label')}</label>
+            <div className="flex rounded border border-border overflow-hidden text-sm">
+              <button
+                type="button"
+                onClick={() => setShape('default')}
+                className={cn(
+                  'flex-1 px-2 py-1 transition-colors cursor-pointer',
+                  shape === 'default' ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground hover:bg-primary-light'
+                )}
+              >
+                {t('map_pin_shape_default')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShape('star')}
+                className={cn(
+                  'flex-1 px-2 py-1 transition-colors cursor-pointer border-l border-border',
+                  shape === 'star' ? 'bg-primary text-primary-foreground' : 'bg-background text-foreground hover:bg-primary-light'
+                )}
+              >
+                {t('map_pin_shape_star')}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-xs text-muted mb-1">{t('map_pin_entity_label')}</label>
@@ -800,7 +842,7 @@ function PinEditorOverlay({
           </button>
           <button
             disabled={!canSave}
-            onClick={() => onSave({ name, entity: pickedEntity })}
+            onClick={() => onSave({ name, entity: pickedEntity, shape })}
             className="text-sm px-3 py-1.5 rounded bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {mode === 'create' ? t('map_pin_create') : t('map_pin_save')}
