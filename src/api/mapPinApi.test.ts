@@ -41,6 +41,18 @@ describe('mapPinApi', () => {
     expect(pins[1]).toMatchObject({ id: 'pin-2', name: 'Uncharted Ruins', entity: null })
   })
 
+  it('defaults shape to "default" when omitted from the API response, and passes through "STAR"', async () => {
+    mockFetchOnce([
+      { id: 'pin-1', mapId: 'world-map', name: 'Araveth', entity: null, normalizedX: 0.2, normalizedY: 0.3 },
+      { id: 'pin-2', mapId: 'world-map', name: 'Landmark', entity: null, shape: 'STAR', normalizedX: 0.5, normalizedY: 0.6 },
+    ])
+
+    const pins = await fetchMapPins('world-map')
+
+    expect(pins[0].shape).toBe('default')
+    expect(pins[1].shape).toBe('star')
+  })
+
   it('omits entityType/entityId from the create request when no entity is linked', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

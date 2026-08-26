@@ -15,6 +15,7 @@ interface ApiMapPin {
   mapId: string
   name: string | null
   entity: ApiLinkedEntity | null
+  shape: string
   normalizedX: number
   normalizedY: number
 }
@@ -35,6 +36,7 @@ function toMapPin(api: ApiMapPin): MapPin {
     mapId: api.mapId,
     name: api.name,
     entity: api.entity ? toLinkedEntity(api.entity) : null,
+    shape: (api.shape?.toLowerCase() ?? 'default') as MapPin['shape'],
     normalizedX: api.normalizedX,
     normalizedY: api.normalizedY,
   }
@@ -54,6 +56,8 @@ export interface CreateMapPinInput {
   entityType?: string
   entityId?: string
   name?: string
+  // Omitted defaults to 'default' server-side.
+  shape?: 'default' | 'star'
   normalizedX: number
   normalizedY: number
 }
@@ -81,6 +85,8 @@ export interface UpdateMapPinInput {
   name?: string
   entityType?: string
   entityId?: string
+  // Omitted leaves the pin's current shape untouched, same as `name`.
+  shape?: 'default' | 'star'
 }
 
 export async function updateMapPin(mapId: string, pinId: string, input: UpdateMapPinInput, accessToken: string): Promise<MapPin> {

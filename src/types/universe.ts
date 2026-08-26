@@ -61,6 +61,9 @@ export interface MapPin {
   // Null when the pin has no linked entity yet (see change 3 — a pin can be
   // created before the element it points to exists).
   entity: LinkedEntity | null
+  // Purely visual, independent of every other pin rule (linking, naming,
+  // hidden/black-pin behavior) — see MapArea's createPinIcon.
+  shape: 'default' | 'star'
   normalizedX: number
   normalizedY: number
 }
